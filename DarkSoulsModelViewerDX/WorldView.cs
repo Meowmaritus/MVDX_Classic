@@ -1,0 +1,462 @@
+﻿using DarkSoulsModelViewerDX.GFXShaders;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DarkSoulsModelViewerDX
+{
+    public class WorldView
+    {
+        public Transform CameraTransform;
+        public Transform CameraOrigin;
+        public Transform CameraPositionDefault;
+
+        public float OrbitCamDistance = 0;
+        public bool IsOrbitCam = false;
+
+        public Vector3 LightRotation = Vector3.Zero;
+        public Vector3 LightDirectionVector => 
+            Vector3.Transform(Vector3.Forward,
+            Matrix.CreateRotationY(LightRotation.Y)
+            * Matrix.CreateRotationZ(LightRotation.Z)
+            * Matrix.CreateRotationX(LightRotation.X)
+            );
+
+        public Matrix MatrixWorld;
+        public Matrix MatrixProjection;
+
+        public float FieldOfView = 43;
+        public float NearClipDistance = 0.1f;
+        public float FarClipDistance = 10000;
+        public float CameraTurnSpeed = 2;
+
+        public void ApplyViewToShader(IGFXShader shader)
+        {
+            shader.ApplyWorldView(MatrixWorld, CameraTransform.ViewMatrix, MatrixProjection);
+        }
+
+        public void ApplyViewToShader(IGFXShader shader, Transform modelTransform)
+        {
+            shader.ApplyWorldView(modelTransform.ViewMatrix * MatrixWorld, CameraTransform.ViewMatrix, MatrixProjection);
+        }
+
+        public bool IsInFrustum(BoundingBox objBounds, Transform objTransform)
+        {
+            if (!GFX.EnableFrustumCulling)
+                return true;
+            return new BoundingFrustum(CameraTransform.ViewMatrix * MatrixProjection)
+                .Intersects(new BoundingBox(
+                    Vector3.Transform(objBounds.Min, objTransform.ViewMatrix),
+                    Vector3.Transform(objBounds.Max, objTransform.ViewMatrix)
+                    ));
+        }
+
+        public void SetCameraLocation(Vector3 pos, Vector3 rot)
+        {
+            CameraTransform.Position = pos;
+            CameraTransform.Rotation = rot;
+        }
+
+        public Vector3 ScreenPointToWorld(Vector2 screenPoint)
+        {
+            return GFX.Device.Viewport.Unproject(
+                new Vector3(GFX.Device.Viewport.Width * screenPoint.X, 
+                GFX.Device.Viewport.Height * screenPoint.Y, 0), 
+                MatrixProjection, CameraTransform.ViewMatrix, MatrixWorld);
+        }
+
+        public void UpdateMatrices(GraphicsDevice d)
+        {
+            MatrixWorld = Matrix.CreateRotationY(MathHelper.Pi)
+                * Matrix.CreateTranslation(0, 0, 0)
+                * Matrix.CreateScale(-1, 1, 1)
+                // * Matrix.Invert(CameraOrigin.ViewMatrix)
+                ;
+
+            MatrixProjection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FieldOfView),
+                    (float)d.Viewport.Width / (float)d.Viewport.Height, NearClipDistance, FarClipDistance);
+        }
+
+        public void MoveCamera(float x, float y, float z, float speed)
+        {
+            CameraTransform.Position += Vector3.Transform(new Vector3(-x, -y, z),
+                Matrix.CreateRotationX(-CameraTransform.Rotation.X)
+                * Matrix.CreateRotationY(-CameraTransform.Rotation.Y)
+                * Matrix.CreateRotationZ(-CameraTransform.Rotation.Z)
+                ) * speed;
+        }
+
+        public void RotateCameraOrbit(float h, float v, float speed)
+        {
+            CameraTransform.Rotation.Y -= h * speed;
+            CameraTransform.Rotation.X += v * speed;
+            CameraTransform.Rotation.Z = 0;
+        }
+
+        public void MoveCamera_OrbitOriginVertical(float y, float speed)
+        {
+            CameraTransform.Position.Y -= y * speed;
+            CameraOrigin.Position.Y -= y * speed;
+        }
+
+        public void PointCameraToLocation(Vector3 location)
+        {
+            var newLookDir = Vector3.Normalize(location - (CameraTransform.Position));
+            CameraTransform.Rotation.Y = (float)Math.Atan2(newLookDir.X, newLookDir.Z);
+            CameraTransform.Rotation.X = (float)Math.Asin(newLookDir.Y);
+            CameraTransform.Rotation.Z = 0;
+        }
+
+
+        private Vector2 mousePos = Vector2.Zero;
+        private Vector2 oldMouse = Vector2.Zero;
+        private int oldWheel = 0;
+        private bool currentMouseClick = false;
+        private bool oldMouseClick = false;
+        //軌道カムトグルキー押下
+        bool oldOrbitCamToggleKeyPressed = false;
+        //非常に悪いカメラピッチ制限    ファトキャット
+        const float SHITTY_CAM_PITCH_LIMIT_FATCAT = 0.999f;
+        //非常に悪いカメラピッチ制限リミッタ    ファトキャット
+        const float SHITTY_CAM_PITCH_LIMIT_FATCAT_CLAMP = 0.999f;
+        const float SHITTY_CAM_ZOOM_MIN_DIST = 0.2f;
+
+        private float GetGamepadTriggerDeadzone(float t, float d)
+        {
+            if (t < d)
+                return 0;
+            else if (t >= 1)
+                return 0;
+
+            return (t - d) * (1.0f / (1.0f - d));
+        }
+
+        public void UpdateInput(MODEL_VIEWER_MAIN game, GameTime gameTime)
+        {
+            var gamepad = GamePad.GetState(PlayerIndex.One);
+
+            MouseState mouse = Mouse.GetState();
+            mousePos = new Vector2((float)mouse.X, (float)mouse.Y);
+            KeyboardState keyboard = Keyboard.GetState();
+            int currentWheel = mouse.ScrollWheelValue;
+
+            bool mouseInWindow = mousePos.X > 0 && mousePos.X < game.ClientBounds.Width && mousePos.Y > 0 && mousePos.Y < game.ClientBounds.Height;
+
+            currentMouseClick = mouse.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed && mouseInWindow;
+
+            bool isSpeedupKeyPressed = keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) || keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightControl);
+            bool isSlowdownKeyPressed = keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) || keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
+            bool isResetKeyPressed = false;// keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.R);
+            bool isMoveLightKeyPressed = keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Space);
+            bool isOrbitCamToggleKeyPressed = false;// keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.F);
+            bool isPointCamAtObjectKeyPressed = false;// keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.T);
+            
+
+            if (gamepad.IsConnected)
+            {
+                if (gamepad.IsButtonDown(Buttons.LeftShoulder))
+                    isSlowdownKeyPressed = true;
+                if (gamepad.IsButtonDown(Buttons.RightShoulder))
+                    isSpeedupKeyPressed = true;
+                //if (gamepad.IsButtonDown(Buttons.LeftStick))
+                //    isResetKeyPressed = true;
+                if (gamepad.IsButtonDown(Buttons.LeftStick))
+                    isMoveLightKeyPressed = true;
+                //if (gamepad.IsButtonDown(Buttons.DPadDown))
+                //    isOrbitCamToggleKeyPressed = true;
+                //if (gamepad.IsButtonDown(Buttons.RightStick))
+                //    isPointCamAtObjectKeyPressed = true;
+            }
+
+            
+
+            if (isResetKeyPressed)
+            {
+                SetCameraLocation(CameraPositionDefault.Position, Vector3.Zero);
+                CameraTransform.Position = CameraPositionDefault.Position;
+                CameraOrigin.Position.Y = CameraPositionDefault.Position.Y;
+                OrbitCamDistance = (CameraOrigin.Position - (CameraTransform.Position)).Length();
+                CameraTransform.Rotation = Vector3.Zero;
+                LightRotation = Vector3.Zero;
+            }
+
+            if (isOrbitCamToggleKeyPressed && !oldOrbitCamToggleKeyPressed)
+            {
+                if (!IsOrbitCam)
+                {
+                    CameraOrigin.Position.Y = CameraPositionDefault.Position.Y;
+                    OrbitCamDistance = (CameraOrigin.Position - (CameraTransform.Position)).Length();
+                }
+                IsOrbitCam = !IsOrbitCam;
+            }
+
+            if (isPointCamAtObjectKeyPressed)
+            {
+                PointCameraToLocation(CameraPositionDefault.Position);
+            }
+
+            float moveMult = (float)gameTime.ElapsedGameTime.TotalSeconds * 30f;
+
+            if (isSpeedupKeyPressed)
+            {
+                moveMult *= 10f;
+            }
+
+            if (isSlowdownKeyPressed)
+            {
+                moveMult /= 100f;
+            }
+
+            var cameraDist = CameraOrigin.Position - CameraTransform.Position;
+
+            if (gamepad.IsConnected)
+            {
+                var lt = GetGamepadTriggerDeadzone(gamepad.Triggers.Left, 0.1f);
+                var rt = GetGamepadTriggerDeadzone(gamepad.Triggers.Right, 0.1f);
+
+
+                if (IsOrbitCam && !isMoveLightKeyPressed)
+                {
+                    float camH = gamepad.ThumbSticks.Left.X * (float)1.5f
+                        * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    float camV = gamepad.ThumbSticks.Left.Y * (float)1.5f
+                        * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+
+
+
+                    //DEBUG($"{(CameraTransform.Rotation.X / MathHelper.PiOver2)}");
+                    if (CameraTransform.Rotation.X >= MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
+                    {
+                        //DEBUG("UPPER CAM LIMIT");
+                        camV = Math.Min(camV, 0);
+                    }
+                    if (CameraTransform.Rotation.X <= -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
+                    {
+                        //DEBUG("LOWER CAM LIMIT");
+                        camV = Math.Max(camV, 0);
+                    }
+
+                    RotateCameraOrbit(camH, camV, MathHelper.PiOver2);
+
+                    var zoom = gamepad.Triggers.Right - gamepad.Triggers.Left;
+
+                    if (Math.Abs(cameraDist.Length()) <= SHITTY_CAM_ZOOM_MIN_DIST)
+                    {
+                        zoom = Math.Min(zoom, 0);
+                    }
+
+
+                    OrbitCamDistance -= zoom * moveMult;
+
+
+
+
+                    //PointCameraToModel();
+                    MoveCamera_OrbitOriginVertical(gamepad.ThumbSticks.Right.Y, moveMult);
+                }
+                else
+                {
+                    float camH = gamepad.ThumbSticks.Right.X * (float)1.5f * CameraTurnSpeed
+                            * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    float camV = gamepad.ThumbSticks.Right.Y * (float)1.5f * CameraTurnSpeed
+                        * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                    if (isMoveLightKeyPressed)
+                    {
+                        LightRotation.Y += camH;
+                        LightRotation.X -= camV;
+                    }
+                    else
+                    {
+                        MoveCamera(gamepad.ThumbSticks.Left.X, gamepad.Triggers.Right - gamepad.Triggers.Left, gamepad.ThumbSticks.Left.Y, moveMult);
+
+
+
+                        CameraTransform.Rotation.Y += camH;
+                        CameraTransform.Rotation.X -= camV;
+                    }
+                }
+
+
+            }
+
+
+
+
+            if (IsOrbitCam)
+            {
+                if (game.IsActive)
+                {
+                    float z = 0;
+                    float y = 0;
+
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.W) && Math.Abs(cameraDist.Length()) > 0.1f)
+                        z += 1;
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S))
+                        z -= 1;
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.E))
+                        y += 1;
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Q))
+                        y -= 1;
+
+
+                    if (Math.Abs(cameraDist.Length()) <= SHITTY_CAM_ZOOM_MIN_DIST)
+                    {
+                        z = Math.Min(z, 0);
+                    }
+
+                    OrbitCamDistance -= z * moveMult;
+
+                    MoveCamera_OrbitOriginVertical(y, moveMult);
+                }
+            }
+            else
+            {
+                if (game.IsActive)
+                {
+                    float x = 0;
+                    float y = 0;
+                    float z = 0;
+
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.D))
+                        x += 1;
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.A))
+                        x -= 1;
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.E))
+                        y += 1;
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Q))
+                        y -= 1;
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.W))
+                        z += 1;
+                    if (keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.S))
+                        z -= 1;
+
+                    MoveCamera(x, y, z, moveMult);
+                }
+            }
+
+
+            //if (isToggleAllSubmeshKeyPressed && !prev_isToggleAllSubmeshKeyPressed)
+            //{
+            //    game.ModelListWindow.TOGGLE_ALL_SUBMESH();
+            //}
+
+            //if (isToggleAllDummyKeyPressed && !prev_isToggleAllDummyKeyPressed)
+            //{
+            //    game.ModelListWindow.TOGGLE_ALL_DUMMY();
+            //}
+
+            //if (isToggleAllBonesKeyPressed && !prev_isToggleAllBonesKeyPressed)
+            //{
+            //    game.ModelListWindow.TOGGLE_ALL_BONES();
+            //}
+
+            if (game.IsActive)
+            {
+                if (currentMouseClick)
+                {
+                    if (!oldMouseClick)
+                    {
+                        game.IsMouseVisible = false;
+                        oldMouse = mousePos;
+                        Mouse.SetPosition(game.ClientBounds.Width / 2, game.ClientBounds.Height / 2);
+                        mousePos = new Vector2(game.ClientBounds.Width / 2, game.ClientBounds.Height / 2);
+                        //oldMouseClick = true;
+                        //return;
+                    }
+                    game.IsMouseVisible = false;
+                    Vector2 mouseDelta = mousePos - new Vector2((float)(game.ClientBounds.Width / 2), (float)(game.ClientBounds.Height / 2));
+
+                    float camH = mouseDelta.X * 0.025f * (float)3f * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    float camV = mouseDelta.Y * -0.025f * (float)3f * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                    if (IsOrbitCam && !isMoveLightKeyPressed)
+                    {
+                        if (CameraTransform.Rotation.X >= MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
+                        {
+                            camV = Math.Min(camV, 0);
+                        }
+                        if (CameraTransform.Rotation.X <= -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
+                        {
+                            camV = Math.Max(camV, 0);
+                        }
+
+                        RotateCameraOrbit(camH, camV, MathHelper.PiOver2);
+                        //PointCameraToModel();
+                    }
+                    else if (isMoveLightKeyPressed)
+                    {
+                        LightRotation.Y += camH;
+                        LightRotation.X -= camV;
+                    }
+                    else
+                    {
+                        CameraTransform.Rotation.Y += camH;
+                        CameraTransform.Rotation.X -= camV;
+                    }
+
+
+                    //CameraTransform.Rotation.Z -= (float)Math.Cos(MathHelper.PiOver2 - CameraTransform.Rotation.Y) * camV;
+
+                    //RotateCamera(mouseDelta.Y * -0.01f * (float)moveMult, 0, 0, moveMult);
+                    //RotateCamera(0, mouseDelta.X * 0.01f * (float)moveMult, 0, moveMult);
+
+                    Mouse.SetPosition(game.ClientBounds.Width / 2, game.ClientBounds.Height / 2);
+                }
+                else
+                {
+                    if (oldMouseClick)
+                    {
+                        Mouse.SetPosition((int)oldMouse.X, (int)oldMouse.Y);
+                    }
+                    game.IsMouseVisible = true;
+                }
+            }
+            else
+            {
+                game.IsMouseVisible = true;
+            }
+
+            
+
+            if (IsOrbitCam)
+            {
+                //DEBUG("Dist:" + ORBIT_CAM_DISTANCE);
+                //DEBUG("AngX:" + CameraTransform.Rotation.X / MathHelper.Pi + " PI");
+                //DEBUG("AngY:" + CameraTransform.Rotation.Y / MathHelper.Pi + " PI");
+                //DEBUG("AngZ:" + CameraTransform.Rotation.Z / MathHelper.Pi + " PI");
+
+                CameraTransform.Rotation.X = MathHelper.Clamp(CameraTransform.Rotation.X, -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT_CLAMP, MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT_CLAMP);
+
+                OrbitCamDistance = Math.Max(OrbitCamDistance, SHITTY_CAM_ZOOM_MIN_DIST);
+
+                var distanceVectorAfterMove = Vector3.Transform(Vector3.Forward, CameraTransform.RotationMatrixXYZ * Matrix.CreateRotationY(MathHelper.Pi)) * new Vector3(1, 1, 1);
+                CameraTransform.Position = (Vector3.Zero + (distanceVectorAfterMove * OrbitCamDistance));
+            }
+            else
+            {
+                CameraTransform.Rotation.X = MathHelper.Clamp(CameraTransform.Rotation.X, -MathHelper.PiOver2, MathHelper.PiOver2);
+            }
+
+
+            LightRotation.X = MathHelper.Clamp(LightRotation.X, -MathHelper.PiOver2, MathHelper.PiOver2);
+            oldWheel = currentWheel;
+
+            //prev_isToggleAllSubmeshKeyPressed = isToggleAllSubmeshKeyPressed;
+            //prev_isToggleAllDummyKeyPressed = isToggleAllDummyKeyPressed;
+            //prev_isToggleAllBonesKeyPressed = isToggleAllBonesKeyPressed;
+
+            oldMouseClick = currentMouseClick;
+
+            oldOrbitCamToggleKeyPressed = isOrbitCamToggleKeyPressed;
+
+            
+        }
+    }
+}
