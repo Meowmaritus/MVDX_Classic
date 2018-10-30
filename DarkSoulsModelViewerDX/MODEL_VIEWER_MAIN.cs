@@ -86,48 +86,6 @@ namespace DarkSoulsModelViewerDX
             base.Initialize();
         }
 
-        //private void LoadEntireFuckingMap(string interroot, int area, int block)
-        //{
-        //    string map = $"m{area:D2}_{block:D2}_00_00";
-
-        //    var mapPieceFlverNames = Directory.GetFiles($@"{interroot}\map\{map}", "*.flver");
-        //    var flvers = new Dictionary<string, FLVER>();
-
-        //    var piecePlacements = new List<KeyValuePair<FLVER, FatcatTransform>>();
-
-        //    //foreach (var name in Directory.GetFiles($@"{interroot}\chr\", "*.chrbnd"))
-        //    //{
-        //    //    flvers.Add(MiscUtil.GetFileNameWithoutDirectoryOrExtension(name), DataFile.LoadFromFile<EntityBND>(name).Models[0].Mesh);
-        //    //}
-
-        //    foreach (var name in mapPieceFlverNames)
-        //    {
-        //        flvers.Add(MiscUtil.GetFileNameWithoutDirectoryOrExtension(name), DataFile.LoadFromFile<FLVER>(name));
-        //        break;
-        //    }
-
-        //    var msb = DataFile.LoadFromFile<MSB>($@"{interroot}\map\MapStudio\{map}.msb");
-
-
-        //    foreach (var part in msb.Parts.MapPieces)
-        //    {
-        //        piecePlacements.Add(new KeyValuePair<FLVER, FatcatTransform>(flvers[$"{part.ModelName}A{area}"],
-        //            new FatcatTransform(part.PosX, part.PosY, part.PosZ, part.RotX, part.RotY, part.RotZ)));
-        //        break;
-        //    }
-
-        //    //foreach (var part in msb.Parts.NPCs)
-        //    //{
-        //    //    piecePlacements.Add(new KeyValuePair<FLVER, FatcatTransform>(flvers[$"{part.ModelName}"],
-        //    //        new FatcatTransform(part.PosX, part.PosY, part.PosZ, part.RotX, part.RotY, part.RotZ)));
-        //    //}
-
-        //    foreach (var kvp in piecePlacements)
-        //    {
-        //        GFX.ModelDrawer.ModelInstanceList.Add(new FatcatModelInstance(kvp.Key, kvp.Value));
-        //    }
-        //}
-
         private void TestLoadAllMaps()
         {
 
@@ -136,67 +94,16 @@ namespace DarkSoulsModelViewerDX
         protected override void LoadContent()
         {
             GFX.Init(Content);
-
             DBG.LoadContent(Content);
-
             InterrootLoader.OnLoadError += InterrootLoader_OnLoadError;
 
-            //DEBUG TESTING//
-
-            //LoadEntireFuckingMap(@"G:\SteamLibrary\steamapps\common\Dark Souls Prepare to Die Edition\DATA", 10, 2);
-
-            //InterrootLoader.TexPoolMap.AddMapTexUdsfm();
-
-            //GFX.ModelDrawer.AddMap(15, 1);
-
-            //var rand = new Random();
-            //Vector3 randUnitVector()
-            //{
-            //    return new Vector3((float)rand.NextDouble() - 0.5f,
-            //        (float)rand.NextDouble() - 0.5f,
-            //        (float)rand.NextDouble() - 0.5f) * 2;
-            //}
-
-            //var smough = GFX.ModelDrawer.AddChr(5250, new Transform(randUnitVector() * 10, randUnitVector() * MathHelper.TwoPi));
-
-            //smough.Name = "Model 1";
-
-            //for (int i = 0; i < 999; i++)
-            //{
-            //    GFX.ModelDrawer.AddModelInstance(new ModelInstance($"Model {(i + 2)}", smough.Model, new Transform(randUnitVector() * 10, randUnitVector() * MathHelper.PiOver4)));
-            //}
-
-            //TestLoadAllObj();
-
-            //GFX.ModelDrawer.AddMap(10, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(10, 01, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(10, 02, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(11, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(12, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(12, 01, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(13, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(13, 01, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(13, 02, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(14, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(14, 01, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(15, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(15, 01, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(16, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(17, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(18, 00, excludeScenery: true);
-            //GFX.ModelDrawer.AddMap(18, 01, excludeScenery: true);
+            //////// Here is where you should load things for testing. ////////
+            
+            
+            
+            ///////////////////////////////////////////////////////////////////
 
             DbgPrim_Grid = new DbgPrimGrid(Color.Green, Color.Lime * 0.5f, 10, 1);
-
-            //MCGTEST_MCG = DataFile.LoadFromFile<MCG>(@"D:\FRPG_MOD\ANALYSIS\MCG_MCP\m10_02_00_00.mcg");
-
-            //foreach (var x in GFX.ModelDrawer.ModelInstanceList.Where(x => x.Name.StartsWith("m8") || x.Name.StartsWith("m9")))
-            //{
-            //    x.Model.IsVisible = false;
-            //}
-
-
-            /////////////////
 
             if (GFX.ModelDrawer.ModelInstanceList.Count > 0)
                 GFX.World.CameraTransform.Position = GFX.ModelDrawer.ModelInstanceList[0].Transform.Position + new Vector3(0, -1.5f, -13);
@@ -216,13 +123,14 @@ namespace DarkSoulsModelViewerDX
 
         //}
 
+        // Unused
         private void DebugDraw()
         {
             var dbgList = new List<string>();
             dbgList.Add($"Dark Souls Model Viewer DX ({(IntPtr.Size * 8)}-Bit Version)");
             dbgList.Add(" ");
-            dbgList.Add($"Current FPS: {(Math.Round(GFX.FPS))}");
-            dbgList.Add($"Average FPS: {(Math.Round(GFX.AverageFPS))}");
+            dbgList.Add($"FPS: {(Math.Round(GFX.FPS))}");
+            dbgList.Add($"FPS: {(Math.Round(GFX.AverageFPS))}");
             dbgList.Add(" ");
             dbgList.Add($"Total Model Count: {GFX.ModelDrawer.ModelInstanceList.Count}");
             dbgList.Add($"Total Submesh Count: {GFX.ModelDrawer.Debug_SubmeshCount}");
@@ -280,29 +188,24 @@ namespace DarkSoulsModelViewerDX
 
             DbgPrim_Grid.Transform = GFX.World.CameraPositionDefault;
 
-
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            FpsStopwatch.Restart();
-
             // Actual Draw Below
             GraphicsDevice.Clear(Color.Gray);
 
             if (DBG.ShowGrid)
                 DbgPrim_Grid.Draw();
 
-
             GFX.ModelDrawer.Draw();
             GFX.ModelDrawer.DebugDrawAll();
-
-            //DebugDraw();
 
             DbgMenuItem.CurrentMenu.Draw((float)gameTime.ElapsedGameTime.TotalSeconds);
 
             GFX.UpdateFPS((float)FpsStopwatch.Elapsed.TotalSeconds);
+            DBG.DrawOutlinedText($"FPS: {(Math.Round(GFX.AverageFPS))}", new Vector2(0, GFX.Device.Viewport.Height - 24), Color.Yellow);
             FpsStopwatch.Restart();
         }
     }
