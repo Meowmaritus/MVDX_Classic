@@ -112,22 +112,47 @@ namespace DarkSoulsModelViewerDX
             return DataFile.LoadFromFile<TPF>(path);
         }
 
-        public static Model LoadModelChr(int id)
+        public static Model LoadModelChr(int id, int idx)
         {
             var chrbnd = LoadChr(id);
             if (chrbnd == null)
                 return null;
-            TexPoolChr.AddChrBnd(id);
+            TexPoolChr.AddChrBnd(id, idx);
             TexPoolChr.AddChrTexUdsfm(id);
             return new Model(chrbnd.Models[0].Mesh, TexPoolChr);
         }
 
-        public static Model LoadModelObj(int id)
+        public static Model LoadModelChrOptimized(int id, int idx)
+        {
+            var name = GetInterrootPath($@"chr\c{id:D4}.chrbnd");
+
+            if (!File.Exists(name))
+                return null;
+
+            TexPoolChr.AddChrBnd(id, idx);
+            TexPoolChr.AddChrTexUdsfm(id);
+
+            return new Model(FLVEROptimized.ReadFromBnd(name, 0), TexPoolChr);
+        }
+
+        public static Model LoadModelObjOptimized(int id, int idx)
+        {
+            var name = GetInterrootPath($@"obj\o{id:D4}.objbnd");
+
+            if (!File.Exists(name))
+                return null;
+
+            TexPoolChr.AddObjBnd(id, idx);
+
+            return new Model(FLVEROptimized.ReadFromBnd(name, 0), TexPoolObj);
+        }
+
+        public static Model LoadModelObj(int id, int idx)
         {
             var chrbnd = LoadObj(id);
             if (chrbnd == null)
                 return null;
-            TexPoolChr.AddObjBnd(id);
+            TexPoolChr.AddObjBnd(id, idx);
             return new Model(chrbnd.Models[0].Mesh, TexPoolObj);
         }
 

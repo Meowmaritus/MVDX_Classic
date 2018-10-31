@@ -18,6 +18,8 @@ namespace DarkSoulsModelViewerDX
     /// </summary>
     public class MODEL_VIEWER_MAIN : Game
     {
+        public static bool REQUEST_EXIT = false;
+
         Stopwatch FpsStopwatch = new Stopwatch();
 
         GraphicsDeviceManager graphics;
@@ -110,6 +112,8 @@ namespace DarkSoulsModelViewerDX
             else
                 GFX.World.CameraTransform.Position = new Vector3(0, -1.5f, -13);
 
+            GFX.World.CameraTransform.EulerRotation.X = MathHelper.PiOver4 / 8;
+
             DbgMenuItem.Init();
         }
 
@@ -187,6 +191,9 @@ namespace DarkSoulsModelViewerDX
                 GFX.World.CameraOrigin.Position.Y, GFX.World.CameraPositionDefault.Position.Z);
 
             DbgPrim_Grid.Transform = GFX.World.CameraPositionDefault;
+
+            if (REQUEST_EXIT)
+                Exit();
 
             base.Update(gameTime);
         }

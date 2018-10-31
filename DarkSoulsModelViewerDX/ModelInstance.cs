@@ -20,8 +20,8 @@ namespace DarkSoulsModelViewerDX
         }
 
         public BoundingBox WorldBounds => new BoundingBox(
-                    Vector3.Transform(Model.Bounds.Min, Transform.ViewMatrix),
-                    Vector3.Transform(Model.Bounds.Max, Transform.ViewMatrix)
+                    Vector3.Transform(Model.Bounds.Min, Transform.WorldMatrix),
+                    Vector3.Transform(Model.Bounds.Max, Transform.WorldMatrix)
                     );
 
         public Vector3 GetCenterPoint()

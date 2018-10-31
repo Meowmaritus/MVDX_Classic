@@ -244,7 +244,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public override void OnClick()
         {
-            GFX.ModelDrawer.AddChr(possibleChrIDs[ChrIdIndex], Transform.Zero);
+            GFX.ModelDrawer.AddChr(possibleChrIDs[ChrIdIndex], 0, GFX.World.GetSpawnPointInFrontOfCamera(distance: 5,
+                faceBackwards: false, lockPitch: true, alignToFloor: true));
         }
     }
 }

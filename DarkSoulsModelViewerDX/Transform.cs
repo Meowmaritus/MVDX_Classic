@@ -15,7 +15,7 @@ namespace DarkSoulsModelViewerDX
         public Transform(Vector3 pos, Vector3 rot)
         {
             Position = pos;
-            Rotation = rot;
+            EulerRotation = rot;
         }
 
         public Transform(float x, float y, float z, float rx, float ry, float rz)
@@ -25,18 +25,18 @@ namespace DarkSoulsModelViewerDX
         }
 
         public Vector3 Position;
-        public Vector3 Rotation;
+        public Vector3 EulerRotation;
 
         public Matrix TranslationMatrix => Matrix.CreateTranslation(Position.X, Position.Y, Position.Z);
-        public Matrix RotationMatrix => Matrix.CreateRotationY(Rotation.Y)
-            * Matrix.CreateRotationZ(Rotation.Z)
-            * Matrix.CreateRotationX(Rotation.X);
+        public Matrix RotationMatrix => Matrix.CreateRotationY(EulerRotation.Y)
+            * Matrix.CreateRotationZ(EulerRotation.Z)
+            * Matrix.CreateRotationX(EulerRotation.X);
 
-        public Matrix RotationMatrixXYZ => Matrix.CreateRotationX(Rotation.X)
-            * Matrix.CreateRotationY(Rotation.Y)
-            * Matrix.CreateRotationZ(Rotation.Z);
+        public Matrix RotationMatrixXYZ => Matrix.CreateRotationX(EulerRotation.X)
+            * Matrix.CreateRotationY(EulerRotation.Y)
+            * Matrix.CreateRotationZ(EulerRotation.Z);
 
-        public Matrix ViewMatrix => TranslationMatrix * RotationMatrix;
-        public Matrix ViewMatrix_Draw => TranslationMatrix * RotationMatrix;
+        public Matrix CameraViewMatrix => TranslationMatrix * RotationMatrix;
+        public Matrix WorldMatrix => RotationMatrix * TranslationMatrix;
     }
 }

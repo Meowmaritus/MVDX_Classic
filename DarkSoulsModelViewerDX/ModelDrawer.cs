@@ -38,7 +38,7 @@ namespace DarkSoulsModelViewerDX
 
             for (int i = 0; i <= 9999; i++)
             {
-                var newChr = AddChr(i, new Transform(currentX, 0, 0, 0, 0, 0));
+                var newChr = AddChr(i, 0, new Transform(currentX, 0, 0, 0, 0, 0));
                 if (newChr != null)
                 {
                     float thisChrWidth = new Vector3(newChr.Model.Bounds.Max.X, 0, newChr.Model.Bounds.Max.Z).Length()
@@ -58,7 +58,7 @@ namespace DarkSoulsModelViewerDX
 
             for (int i = 0; i <= 9999; i++)
             {
-                var newChr = AddObj(i, new Transform(currentX, 0, 0, 0, 0, 0));
+                var newChr = AddObj(i, 0, new Transform(currentX, 0, 0, 0, 0, 0));
                 if (newChr != null)
                 {
                     float thisChrWidth = new Vector3(newChr.Model.Bounds.Max.X, 0, newChr.Model.Bounds.Max.Z).Length()
@@ -69,9 +69,9 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public ModelInstance AddChr(int id, Transform location)
+        public ModelInstance AddChr(int id, int idx, Transform location)
         {
-            var model = InterrootLoader.LoadModelChr(id);
+            var model = InterrootLoader.LoadModelChrOptimized(id, idx);
             if (model == null)
                 return null;
             var modelInstance = new ModelInstance($"c{id:D4}", model, location);
@@ -82,9 +82,9 @@ namespace DarkSoulsModelViewerDX
             return modelInstance;
         }
 
-        public ModelInstance AddObj(int id, Transform location)
+        public ModelInstance AddObj(int id, int idx, Transform location)
         {
-            var model = InterrootLoader.LoadModelObj(id);
+            var model = InterrootLoader.LoadModelObjOptimized(id, idx);
             if (model == null)
                 return null;
             var modelInstance = new ModelInstance($"o{id:D4}", model, location);

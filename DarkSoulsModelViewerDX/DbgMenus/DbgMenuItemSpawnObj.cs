@@ -821,7 +821,9 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public override void OnClick()
         {
-            GFX.ModelDrawer.AddObj(possibleObjIDs[ChrIdIndex], Transform.Zero);
+            GFX.ModelDrawer.AddObj(possibleObjIDs[ChrIdIndex], 0,
+                GFX.World.GetSpawnPointInFrontOfCamera(distance: 5, 
+                faceBackwards: false, lockPitch: true, alignToFloor: true));
         }
     }
 }

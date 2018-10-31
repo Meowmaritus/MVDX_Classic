@@ -31,31 +31,27 @@ namespace DarkSoulsModelViewerDX
                 Fetches.Add(shortName, new TextureFetchRequest(type, fetchUri, texName));
         }
 
-        public void AddChrBnd(int id)
+        public void AddChrBnd(int id, int idx)
         {
-            var entityBnd = InterrootLoader.LoadChr(id);
-            if (entityBnd == null)
-                return;
-            foreach (var m in entityBnd.Models)
+            var path = InterrootLoader.GetInterrootPath($@"chr\c{id:D4}.chrbnd");
+
+            var texNames = FLVEROptimized.ReadTextureNamesFromBnd(path, idx);
+
+            foreach (var tn in texNames)
             {
-                foreach (var t in m.Textures)
-                {
-                    AddFetch(TextureFetchRequestType.EntityBnd, entityBnd.FilePath, t.Key);
-                }
+                AddFetch(TextureFetchRequestType.EntityBnd, path, tn);
             }
         }
 
-        public void AddObjBnd(int id)
+        public void AddObjBnd(int id, int idx)
         {
-            var entityBnd = InterrootLoader.LoadObj(id);
-            if (entityBnd == null)
-                return;
-            foreach (var m in entityBnd.Models)
+            var path = InterrootLoader.GetInterrootPath($@"obj\o{id:D4}.objbnd");
+
+            var texNames = FLVEROptimized.ReadTextureNamesFromBnd(path, idx);
+
+            foreach (var tn in texNames)
             {
-                foreach (var t in m.Textures)
-                {
-                    AddFetch(TextureFetchRequestType.EntityBnd, entityBnd.FilePath, t.Key);
-                }
+                AddFetch(TextureFetchRequestType.EntityBnd, path, tn);
             }
         }
 

@@ -33,41 +33,123 @@ namespace DarkSoulsModelViewerDX
         public float FieldOfView = 43;
         public float NearClipDistance = 0.1f;
         public float FarClipDistance = 10000;
-        public float CameraTurnSpeed = 2;
+        public float CameraTurnSpeedGamepad = 1.5f;
+        public float CameraTurnSpeedMouse = 1.5f;
+        public float CameraMoveSpeed = 10;
 
         public void ApplyViewToShader(IGFXShader shader)
         {
-            shader.ApplyWorldView(MatrixWorld, CameraTransform.ViewMatrix, MatrixProjection);
+            shader.ApplyWorldView(MatrixWorld, CameraTransform.CameraViewMatrix, MatrixProjection);
         }
 
         public void ApplyViewToShader(IGFXShader shader, Transform modelTransform)
         {
-            shader.ApplyWorldView(modelTransform.ViewMatrix * MatrixWorld, CameraTransform.ViewMatrix, MatrixProjection);
+            shader.ApplyWorldView(modelTransform.WorldMatrix * MatrixWorld, CameraTransform.CameraViewMatrix, MatrixProjection);
         }
 
         public bool IsInFrustum(BoundingBox objBounds, Transform objTransform)
         {
             if (!GFX.EnableFrustumCulling)
                 return true;
-            return new BoundingFrustum(CameraTransform.ViewMatrix * MatrixProjection)
+            return new BoundingFrustum(CameraTransform.CameraViewMatrix * MatrixProjection)
                 .Intersects(new BoundingBox(
-                    Vector3.Transform(objBounds.Min, objTransform.ViewMatrix),
-                    Vector3.Transform(objBounds.Max, objTransform.ViewMatrix)
+                    Vector3.Transform(objBounds.Min, objTransform.WorldMatrix),
+                    Vector3.Transform(objBounds.Max, objTransform.WorldMatrix)
                     ));
+        }
+
+        public Vector3 ROUGH_GetPointOnFloor(Vector3 pos, Vector3 dir, float stepDist)
+        {
+            Vector3 result = pos;
+            Vector3 nDir = Vector3.Normalize(dir);
+            while (result.Y > 0)
+            {
+                if (result.Y >= 1)
+                    result += nDir * 1;
+                else
+                    result += nDir * stepDist;
+            }
+            result.Y = 0;
+            return result;
+        }
+
+        public Transform GetSpawnPointInFrontOfCamera(float distance, bool faceBackwards, bool lockPitch, bool alignToFloor)
+        {
+            var result = new Transform();
+            var point1 = GFX.Device.Viewport.Unproject(
+                new Vector3(GFX.Device.Viewport.Width * 0.5f,
+                GFX.Device.Viewport.Height * 0.5f, 0),
+                MatrixProjection, CameraTransform.CameraViewMatrix, MatrixWorld);
+
+            var point2 = GFX.Device.Viewport.Unproject(
+                new Vector3(GFX.Device.Viewport.Width * 0.5f,
+                GFX.Device.Viewport.Height * 0.5f, 0.5f),
+                MatrixProjection, CameraTransform.CameraViewMatrix, MatrixWorld);
+
+            
+
+            var directionVector = Vector3.Normalize(point2 - point1);
+
+            //If align to floor is requested, the camera is looking downward, and the camera is above the floor
+            if (alignToFloor && directionVector.Y < 0 && point1.Y > 0)
+            {
+                result.Position = ROUGH_GetPointOnFloor(point1, directionVector, 0.05f);
+            }
+            else
+            {
+                result.Position = point1 + (directionVector * distance);
+            }
+
+            if (faceBackwards)
+                directionVector = -directionVector;
+
+            result.EulerRotation.Y = (float)Math.Atan2(directionVector.X, directionVector.Z);
+            result.EulerRotation.X = lockPitch ? 0 : (float)Math.Asin(directionVector.Y);
+            result.EulerRotation.Z = 0;
+
+            return result;
+        }
+
+        public Transform GetCameraPhysicalLocation()
+        {
+            var result = new Transform();
+            var point1 = GFX.Device.Viewport.Unproject(
+                new Vector3(GFX.Device.Viewport.Width * 0.5f,
+                GFX.Device.Viewport.Height * 0.5f, 0),
+                MatrixProjection, CameraTransform.CameraViewMatrix, MatrixWorld);
+
+            var point2 = GFX.Device.Viewport.Unproject(
+                new Vector3(GFX.Device.Viewport.Width * 0.5f,
+                GFX.Device.Viewport.Height * 0.5f, 0.5f),
+                MatrixProjection, CameraTransform.CameraViewMatrix, MatrixWorld);
+
+            result.Position = point1;
+
+            var directionVector = Vector3.Normalize(point2 - point1);
+            result.EulerRotation.Y = (float)Math.Atan2(directionVector.X, directionVector.Z);
+            result.EulerRotation.X = (float)Math.Asin(directionVector.Y);
+            result.EulerRotation.Z = 0;
+
+            return result;
         }
 
         public void SetCameraLocation(Vector3 pos, Vector3 rot)
         {
             CameraTransform.Position = pos;
-            CameraTransform.Rotation = rot;
+            CameraTransform.EulerRotation = rot;
         }
 
-        public Vector3 ScreenPointToWorld(Vector2 screenPoint)
+        private float GetDistanceFromCam(Vector3 location)
+        {
+            return (location - ScreenPointToWorld(Vector2.One / 2)).Length();
+        }
+
+        public Vector3 ScreenPointToWorld(Vector2 screenPoint, float depth = 0)
         {
             return GFX.Device.Viewport.Unproject(
                 new Vector3(GFX.Device.Viewport.Width * screenPoint.X, 
-                GFX.Device.Viewport.Height * screenPoint.Y, 0), 
-                MatrixProjection, CameraTransform.ViewMatrix, MatrixWorld);
+                GFX.Device.Viewport.Height * screenPoint.Y, depth), 
+                MatrixProjection, CameraTransform.CameraViewMatrix, MatrixWorld);
         }
 
         public void UpdateMatrices(GraphicsDevice d)
@@ -85,17 +167,17 @@ namespace DarkSoulsModelViewerDX
         public void MoveCamera(float x, float y, float z, float speed)
         {
             CameraTransform.Position += Vector3.Transform(new Vector3(-x, -y, z),
-                Matrix.CreateRotationX(-CameraTransform.Rotation.X)
-                * Matrix.CreateRotationY(-CameraTransform.Rotation.Y)
-                * Matrix.CreateRotationZ(-CameraTransform.Rotation.Z)
+                Matrix.CreateRotationX(-CameraTransform.EulerRotation.X)
+                * Matrix.CreateRotationY(-CameraTransform.EulerRotation.Y)
+                * Matrix.CreateRotationZ(-CameraTransform.EulerRotation.Z)
                 ) * speed;
         }
 
         public void RotateCameraOrbit(float h, float v, float speed)
         {
-            CameraTransform.Rotation.Y -= h * speed;
-            CameraTransform.Rotation.X += v * speed;
-            CameraTransform.Rotation.Z = 0;
+            CameraTransform.EulerRotation.Y -= h * speed;
+            CameraTransform.EulerRotation.X += v * speed;
+            CameraTransform.EulerRotation.Z = 0;
         }
 
         public void MoveCamera_OrbitOriginVertical(float y, float speed)
@@ -107,9 +189,9 @@ namespace DarkSoulsModelViewerDX
         public void PointCameraToLocation(Vector3 location)
         {
             var newLookDir = Vector3.Normalize(location - (CameraTransform.Position));
-            CameraTransform.Rotation.Y = (float)Math.Atan2(newLookDir.X, newLookDir.Z);
-            CameraTransform.Rotation.X = (float)Math.Asin(newLookDir.Y);
-            CameraTransform.Rotation.Z = 0;
+            CameraTransform.EulerRotation.Y = (float)Math.Atan2(newLookDir.X, newLookDir.Z);
+            CameraTransform.EulerRotation.X = (float)Math.Asin(newLookDir.Y);
+            CameraTransform.EulerRotation.Z = 0;
         }
 
 
@@ -181,7 +263,7 @@ namespace DarkSoulsModelViewerDX
                 CameraTransform.Position = CameraPositionDefault.Position;
                 CameraOrigin.Position.Y = CameraPositionDefault.Position.Y;
                 OrbitCamDistance = (CameraOrigin.Position - (CameraTransform.Position)).Length();
-                CameraTransform.Rotation = Vector3.Zero;
+                CameraTransform.EulerRotation = Vector3.Zero;
                 LightRotation = Vector3.Zero;
             }
 
@@ -200,7 +282,7 @@ namespace DarkSoulsModelViewerDX
                 PointCameraToLocation(CameraPositionDefault.Position);
             }
 
-            float moveMult = (float)gameTime.ElapsedGameTime.TotalSeconds * 30f;
+            float moveMult = (float)gameTime.ElapsedGameTime.TotalSeconds * CameraMoveSpeed;
 
             if (isSpeedupKeyPressed)
             {
@@ -231,12 +313,12 @@ namespace DarkSoulsModelViewerDX
 
 
                     //DEBUG($"{(CameraTransform.Rotation.X / MathHelper.PiOver2)}");
-                    if (CameraTransform.Rotation.X >= MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
+                    if (CameraTransform.EulerRotation.X >= MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
                     {
                         //DEBUG("UPPER CAM LIMIT");
                         camV = Math.Min(camV, 0);
                     }
-                    if (CameraTransform.Rotation.X <= -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
+                    if (CameraTransform.EulerRotation.X <= -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
                     {
                         //DEBUG("LOWER CAM LIMIT");
                         camV = Math.Max(camV, 0);
@@ -262,9 +344,9 @@ namespace DarkSoulsModelViewerDX
                 }
                 else
                 {
-                    float camH = gamepad.ThumbSticks.Right.X * (float)1.5f * CameraTurnSpeed
+                    float camH = gamepad.ThumbSticks.Right.X * (float)1.5f * CameraTurnSpeedGamepad
                             * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    float camV = gamepad.ThumbSticks.Right.Y * (float)1.5f * CameraTurnSpeed
+                    float camV = gamepad.ThumbSticks.Right.Y * (float)1.5f * CameraTurnSpeedGamepad
                         * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
                     if (isMoveLightKeyPressed)
@@ -278,8 +360,8 @@ namespace DarkSoulsModelViewerDX
 
 
 
-                        CameraTransform.Rotation.Y += camH;
-                        CameraTransform.Rotation.X -= camV;
+                        CameraTransform.EulerRotation.Y += camH;
+                        CameraTransform.EulerRotation.X -= camV;
                     }
                 }
 
@@ -373,16 +455,16 @@ namespace DarkSoulsModelViewerDX
                     game.IsMouseVisible = false;
                     Vector2 mouseDelta = mousePos - new Vector2((float)(game.ClientBounds.Width / 2), (float)(game.ClientBounds.Height / 2));
 
-                    float camH = mouseDelta.X * 0.025f * (float)3f * (float)gameTime.ElapsedGameTime.TotalSeconds;
-                    float camV = mouseDelta.Y * -0.025f * (float)3f * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    float camH = mouseDelta.X * 0.025f * CameraTurnSpeedMouse * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    float camV = mouseDelta.Y * -0.025f * CameraTurnSpeedMouse * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
                     if (IsOrbitCam && !isMoveLightKeyPressed)
                     {
-                        if (CameraTransform.Rotation.X >= MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
+                        if (CameraTransform.EulerRotation.X >= MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
                         {
                             camV = Math.Min(camV, 0);
                         }
-                        if (CameraTransform.Rotation.X <= -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
+                        if (CameraTransform.EulerRotation.X <= -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT)
                         {
                             camV = Math.Max(camV, 0);
                         }
@@ -397,8 +479,8 @@ namespace DarkSoulsModelViewerDX
                     }
                     else
                     {
-                        CameraTransform.Rotation.Y += camH;
-                        CameraTransform.Rotation.X -= camV;
+                        CameraTransform.EulerRotation.Y += camH;
+                        CameraTransform.EulerRotation.X -= camV;
                     }
 
 
@@ -432,7 +514,7 @@ namespace DarkSoulsModelViewerDX
                 //DEBUG("AngY:" + CameraTransform.Rotation.Y / MathHelper.Pi + " PI");
                 //DEBUG("AngZ:" + CameraTransform.Rotation.Z / MathHelper.Pi + " PI");
 
-                CameraTransform.Rotation.X = MathHelper.Clamp(CameraTransform.Rotation.X, -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT_CLAMP, MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT_CLAMP);
+                CameraTransform.EulerRotation.X = MathHelper.Clamp(CameraTransform.EulerRotation.X, -MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT_CLAMP, MathHelper.PiOver2 * SHITTY_CAM_PITCH_LIMIT_FATCAT_CLAMP);
 
                 OrbitCamDistance = Math.Max(OrbitCamDistance, SHITTY_CAM_ZOOM_MIN_DIST);
 
@@ -441,7 +523,7 @@ namespace DarkSoulsModelViewerDX
             }
             else
             {
-                CameraTransform.Rotation.X = MathHelper.Clamp(CameraTransform.Rotation.X, -MathHelper.PiOver2, MathHelper.PiOver2);
+                CameraTransform.EulerRotation.X = MathHelper.Clamp(CameraTransform.EulerRotation.X, -MathHelper.PiOver2, MathHelper.PiOver2);
             }
 
 

@@ -38,6 +38,29 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
+        public Model(FLVEROptimized flver, TexturePool texPool)
+        {
+            Submeshes = new List<FlverSubmeshRenderer>();
+            var subBoundsPoints = new List<Vector3>();
+            foreach (var submesh in flver.Submeshes)
+            {
+                var smm = new FlverSubmeshRenderer(submesh, texPool);
+                Submeshes.Add(smm);
+                subBoundsPoints.Add(smm.Bounds.Min);
+                subBoundsPoints.Add(smm.Bounds.Max);
+            }
+
+            if (Submeshes.Count == 0)
+            {
+                Bounds = new BoundingBox();
+                IsVisible = false;
+            }
+            else
+            {
+                Bounds = BoundingBox.CreateFromPoints(subBoundsPoints);
+            }
+        }
+
         public void Draw(Transform modelLocation, bool forceRender = false)
         {
             if (forceRender ||(IsVisible && GFX.World.IsInFrustum(Bounds, modelLocation)))

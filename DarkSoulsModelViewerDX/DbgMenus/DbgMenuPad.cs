@@ -60,7 +60,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             = new DbgMenuPadRepeater(Buttons.A, float.PositiveInfinity, float.PositiveInfinity);
 
         public static DbgMenuPadRepeater MiddleClickMouse
-            = new DbgMenuPadRepeater(Buttons.Y, float.PositiveInfinity, float.PositiveInfinity);
+            = new DbgMenuPadRepeater(Buttons.Start, float.PositiveInfinity, float.PositiveInfinity);
 
         public static Vector2 MenuRectMove = Vector2.Zero;
         public static Vector2 MenuRectResize = Vector2.Zero;
@@ -70,8 +70,6 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             var gamepad = GamePad.GetState(0);
             var keyboard = Keyboard.GetState();
             var mouse = Mouse.GetState();
-
-            
 
             if (DbgMenuItem.MenuOpenState == DbgMenuOpenState.Open)
             {

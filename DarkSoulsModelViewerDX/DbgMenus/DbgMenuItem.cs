@@ -23,6 +23,24 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             CurrentMenu.Text = "Main Menu";
             CurrentMenu.Items = new List<DbgMenuItem>()
             {
+                //new DbgMenuItem()
+                //{
+                //    Text = "<-- TESTING -->",
+                //    Items = new List<DbgMenuItem>
+                //    {
+                //        new DbgMenuItem()
+                //        {
+                //            Text = "Write TextureFetchRequest.DEBUG_AllKnownDS1Formats to Console",
+                //            ClickAction = () =>
+                //            {
+                //                foreach (var f in TextureFetchRequest.DEBUG_AllKnownDS1Formats)
+                //                {
+                //                    Console.WriteLine(f.ToString());
+                //                }
+                //            }
+                //        }
+                //    }
+                //},
                 new DbgMenuItemSceneList()
                 {
                     Text = "SCENE"
@@ -35,6 +53,11 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         new DbgMenuItemTextLabel(() => $"Data Root: \"{InterrootLoader.Interroot}\"\n     [Click to Browse...]")
                         {
                             ClickAction = () => InterrootLoader.Browse()
+                        },
+                        new DbgMenuItem()
+                        {
+                            Text = "Scan All Map Textures\n     (Needed for most objects)",
+                            ClickAction = () => InterrootLoader.TexPoolObj.AddMapTexUdsfm()
                         },
                         new DbgMenuItemSpawnChr(),
                         new DbgMenuItemSpawnObj(),
@@ -65,6 +88,24 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         },
                     }
                 },
+                //new DbgMenuItem()
+                //{
+                //    Text = "[DIAGNOSTICS]",
+                //    Items = new List<DbgMenuItem>
+                //    {
+                //        new DbgMenuItem()
+                //        {
+                //            Text = $"Log {nameof(InterrootLoader)}.{nameof(InterrootLoader.DDS_INFO)}",
+                //            ClickAction = () =>
+                //            {
+                //                foreach (var x in InterrootLoader.DDS_INFO)
+                //                {
+                //                    Console.WriteLine($"{x.Name} - {x.DDSFormat}");
+                //                }
+                //            }
+                //        }
+                //    }
+                //},
                 new DbgMenuItem()
                 {
                     Text = "Display Options",
@@ -85,8 +126,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         new DbgMenuItemNumber("Vertical Field of View (Degrees)", 20, 150, 1,
                             (f) => GFX.World.FieldOfView = f, () => GFX.World.FieldOfView,
                             (f) => $"{((int)(Math.Round(f)))}"),
-                        new DbgMenuItemNumber("Camera Turn Speed", 0.01f, 10f, 0.01f,
-                            (f) => GFX.World.CameraTurnSpeed = f, () => GFX.World.CameraTurnSpeed),
+                        new DbgMenuItemNumber("Camera Turn Speed (Gamepad)", 0.01f, 10f, 0.01f,
+                            (f) => GFX.World.CameraTurnSpeedGamepad = f, () => GFX.World.CameraTurnSpeedGamepad),
+                        new DbgMenuItemNumber("Camera Turn Speed (Mouse)", 0.001f, 10f, 0.001f,
+                            (f) => GFX.World.CameraTurnSpeedMouse = f, () => GFX.World.CameraTurnSpeedMouse),
+                        new DbgMenuItemNumber("Camera Move Speed", 0.1f, 100f, 0.1f,
+                            (f) => GFX.World.CameraMoveSpeed = f, () => GFX.World.CameraMoveSpeed),
                         new DbgMenuItemNumber("Near Clip Distance", 0.0001f, 5, 0.0001f,
                             (f) => GFX.World.NearClipDistance = f, () => GFX.World.NearClipDistance),
                         new DbgMenuItemNumber("Far Clip Distance", 100, 1000000, 100,
@@ -137,7 +182,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             Items = new List<DbgMenuItem>
                             {
                                 new DbgMenuItem() { Text = "Tilde (~): Toggle Menu (Active/Visible/Hidden)" },
-                                
+
                                 new DbgMenuItem() { Text = "Move Mouse Cursor: Move Cursor" },
                                 new DbgMenuItem() { Text = "Hold Spacebar + Scroll Mouse Wheel: Change Values" },
                                 new DbgMenuItem() { Text = "Mouse Wheel: Scroll Menu" },
@@ -164,6 +209,24 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 new DbgMenuItem() { Text = "Hold Spacebar: Turn Light With Mouse Instead of Camera" },
                             }
                         },
+                    }
+                },
+                new DbgMenuItem()
+                {
+                    Text = "Exit",
+                    Items = new List<DbgMenuItem>
+                    {
+                        new DbgMenuItem() { Text = "Are you sure you want to exit?" },
+                        new DbgMenuItem()
+                        {
+                            Text = "No",
+                            ClickAction = () => REQUEST_GO_BACK = true
+                        },
+                        new DbgMenuItem()
+                        {
+                            Text = "Yes",
+                            ClickAction = () => MODEL_VIEWER_MAIN.REQUEST_EXIT = true
+                        }
                     }
                 },
 
@@ -202,6 +265,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             if (DbgMenuStack.Count > 0)
                 CurrentMenu = DbgMenuStack.Pop();
         }
+
+        public static bool REQUEST_GO_BACK = false;
 
         public string Text = " ";
         public int SelectedIndex = 0;
@@ -297,6 +362,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
                 if (DbgMenuPad.Cancel.State)
                     GoBack();
+
+                if (REQUEST_GO_BACK)
+                {
+                    REQUEST_GO_BACK = false;
+                    GoBack();
+                }
 
                 if (DbgMenuPad.ResetDefault.State)
                     CurrentMenu.SelectedItem.OnResetDefault();

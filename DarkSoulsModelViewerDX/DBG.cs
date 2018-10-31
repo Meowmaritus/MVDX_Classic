@@ -105,29 +105,16 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-
-
-        private static float GetDistanceFromCam(Vector3 location)
-        {
-            return (location - GFX.World.ScreenPointToWorld(Vector2.One / 2)).Length();
-        }
-
-        private static float GetDistanceTaper(float taper, Vector3 location)
-        {
-            var dist = GetDistanceFromCam(location);
-            return 1 - MathHelper.Clamp(dist / taper, 0, 1);
-        }
-
         public static void DrawTextOn3DLocation(Vector3 location, string text, Color color, float physicalHeight)
         {
             
 
             // Project the 3d position first
             Vector3 screenPos3D_Top = GFX.Device.Viewport.Project(location + new Vector3(0, physicalHeight / 2, 0),
-                GFX.World.MatrixProjection, GFX.World.CameraTransform.ViewMatrix, GFX.World.MatrixWorld);
+                GFX.World.MatrixProjection, GFX.World.CameraTransform.CameraViewMatrix, GFX.World.MatrixWorld);
 
             Vector3 screenPos3D_Bottom = GFX.Device.Viewport.Project(location - new Vector3(0, physicalHeight / 2, 0),
-                GFX.World.MatrixProjection, GFX.World.CameraTransform.ViewMatrix, GFX.World.MatrixWorld);
+                GFX.World.MatrixProjection, GFX.World.CameraTransform.CameraViewMatrix, GFX.World.MatrixWorld);
 
             //Vector3 camNormal = Vector3.Transform(Vector3.Forward, CAMERA_ROTATION);
             //Vector3 directionFromCam = Vector3.Normalize(location - Vector3.Transform(WORLD_VIEW.CameraPosition, CAMERA_WORLD));
