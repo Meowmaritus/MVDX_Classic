@@ -27,12 +27,13 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             SetValue = setValue;
             GetValue = getValue;
             GetValueString = getValueString ?? new Func<float, string>((f) => f.ToString());
+
             DefaultValue = GetValue.Invoke();
 
             UpdateText();
         }
 
-        private void UpdateText()
+        public void UpdateText()
         {
             Text = $"{Name}: <{(GetValueString.Invoke(GetValue.Invoke()))}>";
         }

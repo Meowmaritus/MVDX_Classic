@@ -37,9 +37,7 @@ namespace DarkSoulsModelViewerDX
 
         static InterrootLoader()
         {
-            TexPoolChr.OnLoadError += TexPool_OnLoadError;
-            TexPoolObj.OnLoadError += TexPool_OnLoadError;
-            TexPoolMap.OnLoadError += TexPool_OnLoadError;
+            TexPool.OnLoadError += TexPool_OnLoadError;
         }
 
         private static void TexPool_OnLoadError(string texName, string error)
@@ -47,9 +45,7 @@ namespace DarkSoulsModelViewerDX
             RaiseLoadError($"TexPool: \"{texName}\"", error);
         }
 
-        public static TexturePool TexPoolChr = new TexturePool();
-        public static TexturePool TexPoolObj = new TexturePool();
-        public static TexturePool TexPoolMap = new TexturePool();
+        public static TexturePool TexPool = new TexturePool();
 
         private static string Frankenpath(params string[] pathParts)
         {
@@ -117,9 +113,9 @@ namespace DarkSoulsModelViewerDX
             var chrbnd = LoadChr(id);
             if (chrbnd == null)
                 return null;
-            TexPoolChr.AddChrBnd(id, idx);
-            TexPoolChr.AddChrTexUdsfm(id);
-            return new Model(chrbnd.Models[0].Mesh, TexPoolChr);
+            TexPool.AddChrBnd(id, idx);
+            TexPool.AddChrTexUdsfm(id);
+            return new Model(chrbnd.Models[0].Mesh, TexPool);
         }
 
         public static Model LoadModelChrOptimized(int id, int idx)
@@ -129,10 +125,10 @@ namespace DarkSoulsModelViewerDX
             if (!File.Exists(name))
                 return null;
 
-            TexPoolChr.AddChrBnd(id, idx);
-            TexPoolChr.AddChrTexUdsfm(id);
+            TexPool.AddChrBnd(id, idx);
+            TexPool.AddChrTexUdsfm(id);
 
-            return new Model(FLVEROptimized.ReadFromBnd(name, 0), TexPoolChr);
+            return new Model(FLVEROptimized.ReadFromBnd(name, 0), TexPool);
         }
 
         public static Model LoadModelObjOptimized(int id, int idx)
@@ -142,9 +138,9 @@ namespace DarkSoulsModelViewerDX
             if (!File.Exists(name))
                 return null;
 
-            TexPoolChr.AddObjBnd(id, idx);
+            TexPool.AddObjBnd(id, idx);
 
-            return new Model(FLVEROptimized.ReadFromBnd(name, 0), TexPoolObj);
+            return new Model(FLVEROptimized.ReadFromBnd(name, 0), TexPool);
         }
 
         public static Model LoadModelObj(int id, int idx)
@@ -152,14 +148,13 @@ namespace DarkSoulsModelViewerDX
             var chrbnd = LoadObj(id);
             if (chrbnd == null)
                 return null;
-            TexPoolChr.AddObjBnd(id, idx);
-            return new Model(chrbnd.Models[0].Mesh, TexPoolObj);
+            TexPool.AddObjBnd(id, idx);
+            return new Model(chrbnd.Models[0].Mesh, TexPool);
         }
 
         public static List<ModelInstance> LoadMap(int area, int block, bool excludeScenery)
         {
             var result = new List<ModelInstance>();
-            //TexPoolMap.LoadMapTexUdsfm();
             var modelFileNames = Directory.GetFiles(GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00"), "*.flver");
             var modelDict = new Dictionary<string, FLVER>();
             foreach (var mfn in modelFileNames)
@@ -173,7 +168,7 @@ namespace DarkSoulsModelViewerDX
             {
                 if (excludeScenery && (part.ModelName.StartsWith("m8") || part.ModelName.StartsWith("m9") || !part.IsShadowDest))
                     continue;
-                var model = new Model(modelDict[part.ModelName + $"A{area:D2}"], TexPoolMap);
+                var model = new Model(modelDict[part.ModelName + $"A{area:D2}"], TexPool);
                 result.Add(new ModelInstance(part.Name, model, new Transform(part.PosX, part.PosY, part.PosZ, part.RotX, part.RotY, part.RotZ)));
             }
 

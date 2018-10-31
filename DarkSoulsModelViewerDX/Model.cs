@@ -65,9 +65,10 @@ namespace DarkSoulsModelViewerDX
         {
             if (forceRender ||(IsVisible && GFX.World.IsInFrustum(Bounds, modelLocation)))
             {
+                var lod = GFX.World.GetLOD(modelLocation);
                 foreach (var submesh in Submeshes)
                 {
-                    submesh.Draw();
+                    submesh.Draw(lod);
                 }
             }
         }

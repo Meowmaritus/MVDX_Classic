@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -52,12 +53,18 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     {
                         new DbgMenuItemTextLabel(() => $"Data Root: \"{InterrootLoader.Interroot}\"\n     [Click to Browse...]")
                         {
-                            ClickAction = () => InterrootLoader.Browse()
+                            ClickAction = (m) => InterrootLoader.Browse()
                         },
                         new DbgMenuItem()
                         {
                             Text = "Scan All Map Textures\n     (Needed for most objects)",
-                            ClickAction = () => InterrootLoader.TexPoolObj.AddMapTexUdsfm()
+                            ClickAction = (m) =>
+                            {
+                                Stopwatch sw = Stopwatch.StartNew();
+                                InterrootLoader.TexPool.AddMapTexUdsfm();
+                                sw.Stop();
+                                m.Text = $"Scan All Map Textures (Done. Took {sw.Elapsed.TotalSeconds} seconds)\n     (Needed for most objects)";
+                            }
                         },
                         new DbgMenuItemSpawnChr(),
                         new DbgMenuItemSpawnObj(),
@@ -68,22 +75,52 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             {
                                 new DbgMenuItem()
                                 {
-                                    Text = "Test All CHR Lineup\n     (Takes 1 min or longer to load)...",
-                                    ClickAction = () =>
+                                    Text = "Test All CHR Lineup (Can take 30+ sec to load)",
+                                    ClickAction = (m) =>
                                     {
+                                        Stopwatch sw = Stopwatch.StartNew();
                                         GFX.ModelDrawer.ModelInstanceList.Clear();
                                         GFX.ModelDrawer.TestAddAllChr();
+                                        sw.Stop();
+                                        m.Text = $"Test All CHR Lineup (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)";
                                     }
                                 },
                                 new DbgMenuItem()
                                 {
-                                    Text = "Test All OBJ Lineup\n     (Takes 1 min or longer to load)...",
-                                    ClickAction = () =>
+                                    Text = "Test All OBJ Lineup (Can take 30+ sec to load)",
+                                    ClickAction = (m) =>
                                     {
+                                        Stopwatch sw = Stopwatch.StartNew();
                                         GFX.ModelDrawer.ModelInstanceList.Clear();
                                         GFX.ModelDrawer.TestAddAllObj();
+                                        sw.Stop();
+                                        m.Text = $"Test All OBJ Lineup (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)";
                                     }
                                 },
+                            }
+                        },
+                        new DbgMenuItem()
+                        {
+                            Text = "Load Map",
+                            Items = new List<DbgMenuItem>
+                            {
+                                new DbgMenuItem() {Text = "m10_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(10, 00, false); m.Text = $"m10_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m10_01_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(10, 01, false); m.Text = $"m10_01_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m10_02_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(10, 02, false); m.Text = $"m10_02_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m11_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(11, 00, false); m.Text = $"m11_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m12_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(12, 00, false); m.Text = $"m12_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m12_01_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(12, 01, false); m.Text = $"m12_01_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m13_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(13, 00, false); m.Text = $"m13_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m13_01_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(13, 01, false); m.Text = $"m13_01_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m13_02_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(13, 02, false); m.Text = $"m13_02_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m14_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(14, 00, false); m.Text = $"m14_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m14_01_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(14, 01, false); m.Text = $"m14_01_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m15_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(15, 00, false); m.Text = $"m15_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m15_01_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(15, 01, false); m.Text = $"m15_01_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m16_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(16, 00, false); m.Text = $"m16_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m17_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(17, 00, false); m.Text = $"m17_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m18_00_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(18, 00, false); m.Text = $"m18_00_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
+                                new DbgMenuItem() {Text = "m18_01_00_00", ClickAction = m => { var sw = Stopwatch.StartNew();  GFX.ModelDrawer.AddMap(18, 01, false); m.Text = $"m18_01_00_00 (Loaded. Took {sw.Elapsed.TotalSeconds} seconds.)"; } },
                             }
                         },
                     }
@@ -108,9 +145,29 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 //},
                 new DbgMenuItem()
                 {
-                    Text = "Display Options",
+                    Text = "GFX",
                     Items = new List<DbgMenuItem>
                     {
+                        new DbgMenuItemGfxFlverShaderAdjust(),
+                        //new DbgMenuItemGfxBlendStateAdjust(),
+                        //new DbgMenuItemGfxDepthStencilStateAdjust(),
+                        new DbgMenuItemNumber("Force LOD", -1, 2, 1,
+                            (f) => GFX.ForceLOD = ((int)(Math.Round(f))), () => GFX.ForceLOD,
+                            (f) => $"{((int)(Math.Round(f)))}"),
+                        new DbgMenuItemNumber("LOD1 Distance", 0, 10000, 1,
+                            (f) => 
+                            {
+                                GFX.LOD1Distance = f;
+                                if (GFX.LOD1Distance > GFX.LOD2Distance)
+                                    GFX.LOD2Distance = GFX.LOD1Distance;
+                            }, () => GFX.LOD1Distance),
+                        new DbgMenuItemNumber("LOD2 Distance", 0, 10000, 1,
+                            (f) => 
+                            {
+                                GFX.LOD2Distance = f;
+                                if (GFX.LOD2Distance < GFX.LOD1Distance)
+                                    GFX.LOD1Distance = GFX.LOD2Distance;
+                            }, () => GFX.LOD2Distance),
                         new DbgMenuItemBool("Show Model Names", "YES", "NO",
                             (b) => DBG.ShowModelNames = b, () => DBG.ShowModelNames),
                         new DbgMenuItemBool("Show Model Bounding Boxes", "YES", "NO",
@@ -220,12 +277,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         new DbgMenuItem()
                         {
                             Text = "No",
-                            ClickAction = () => REQUEST_GO_BACK = true
+                            ClickAction = (m) => REQUEST_GO_BACK = true
                         },
                         new DbgMenuItem()
                         {
                             Text = "Yes",
-                            ClickAction = () => MODEL_VIEWER_MAIN.REQUEST_EXIT = true
+                            ClickAction = (m) => MODEL_VIEWER_MAIN.REQUEST_EXIT = true
                         }
                     }
                 },
@@ -274,10 +331,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public float MaxScroll;
         public List<DbgMenuItem> Items = new List<DbgMenuItem>();
         public DbgMenuItem SelectedItem => SelectedIndex == -1 ? null : Items[SelectedIndex];
-        public Action ClickAction = null;
+        public Action<DbgMenuItem> ClickAction = null;
         public virtual void OnClick()
         {
-            ClickAction?.Invoke();
+            ClickAction?.Invoke(this);
         }
 
         public virtual void OnResetDefault()

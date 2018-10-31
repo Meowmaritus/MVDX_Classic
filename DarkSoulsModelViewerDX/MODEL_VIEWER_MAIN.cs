@@ -20,8 +20,6 @@ namespace DarkSoulsModelViewerDX
     {
         public static bool REQUEST_EXIT = false;
 
-        Stopwatch FpsStopwatch = new Stopwatch();
-
         GraphicsDeviceManager graphics;
         //public ContentManager Content;
         //public bool IsActive = true;
@@ -36,7 +34,7 @@ namespace DarkSoulsModelViewerDX
 
         //MCG MCGTEST_MCG;
 
-        public DbgPrimGrid DbgPrim_Grid;
+        
 
         public MODEL_VIEWER_MAIN()
         {
@@ -105,7 +103,7 @@ namespace DarkSoulsModelViewerDX
             
             ///////////////////////////////////////////////////////////////////
 
-            DbgPrim_Grid = new DbgPrimGrid(Color.Green, Color.Lime * 0.5f, 10, 1);
+            
 
             if (GFX.ModelDrawer.ModelInstanceList.Count > 0)
                 GFX.World.CameraTransform.Position = GFX.ModelDrawer.ModelInstanceList[0].Transform.Position + new Vector3(0, -1.5f, -13);
@@ -190,7 +188,7 @@ namespace DarkSoulsModelViewerDX
             GFX.World.CameraOrigin.Position = new Vector3(GFX.World.CameraPositionDefault.Position.X, 
                 GFX.World.CameraOrigin.Position.Y, GFX.World.CameraPositionDefault.Position.Z);
 
-            DbgPrim_Grid.Transform = GFX.World.CameraPositionDefault;
+            GFX.DbgPrim_Grid.Transform = GFX.World.CameraPositionDefault;
 
             if (REQUEST_EXIT)
                 Exit();
@@ -200,20 +198,7 @@ namespace DarkSoulsModelViewerDX
 
         protected override void Draw(GameTime gameTime)
         {
-            // Actual Draw Below
-            GraphicsDevice.Clear(Color.Gray);
-
-            if (DBG.ShowGrid)
-                DbgPrim_Grid.Draw();
-
-            GFX.ModelDrawer.Draw();
-            GFX.ModelDrawer.DebugDrawAll();
-
-            DbgMenuItem.CurrentMenu.Draw((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-            GFX.UpdateFPS((float)FpsStopwatch.Elapsed.TotalSeconds);
-            DBG.DrawOutlinedText($"FPS: {(Math.Round(GFX.AverageFPS))}", new Vector2(0, GFX.Device.Viewport.Height - 24), Color.Yellow);
-            FpsStopwatch.Restart();
+            GFX.DrawScene(gameTime);
         }
     }
 }

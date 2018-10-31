@@ -37,6 +37,27 @@ namespace DarkSoulsModelViewerDX
         public float CameraTurnSpeedMouse = 1.5f;
         public float CameraMoveSpeed = 10;
 
+        public float GetDistanceSquaredFromCamera(Transform t)
+        {
+            return (t.Position - GetCameraPhysicalLocation().Position).LengthSquared();
+        }
+
+        public byte GetLOD(Transform modelTransform)
+        {
+            if (GFX.ForceLOD >= 0)
+                return (byte)GFX.ForceLOD;
+            else
+            {
+                var distSquared = GetDistanceSquaredFromCamera(modelTransform);
+                if (distSquared >= (GFX.LOD2Distance * GFX.LOD2Distance))
+                    return (byte)2;
+                else if (distSquared >= (GFX.LOD1Distance * GFX.LOD1Distance))
+                    return (byte)1;
+                else
+                    return (byte)0;
+            }
+        }
+
         public void ApplyViewToShader(IGFXShader shader)
         {
             shader.ApplyWorldView(MatrixWorld, CameraTransform.CameraViewMatrix, MatrixProjection);

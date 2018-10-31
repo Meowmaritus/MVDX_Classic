@@ -29,10 +29,16 @@ namespace DarkSoulsModelViewerDX
             return WorldBounds.GetCenter();
         }
 
-        public Vector3 GetBottomCenterPoint()
+        public Vector3 GetTopCenterPoint(float verticalOffset = 0)
         {
             var absoluteCenter = GetCenterPoint();
-            return new Vector3(absoluteCenter.X, WorldBounds.Min.Y, absoluteCenter.Z);
+            return new Vector3(absoluteCenter.X, WorldBounds.Max.Y + verticalOffset, absoluteCenter.Z);
+        }
+
+        public Vector3 GetBottomCenterPoint(float verticalOffset = 0)
+        {
+            var absoluteCenter = GetCenterPoint();
+            return new Vector3(absoluteCenter.X, WorldBounds.Min.Y + verticalOffset, absoluteCenter.Z);
         }
 
         public float GetRoughBoundsDiameter()
@@ -61,7 +67,7 @@ namespace DarkSoulsModelViewerDX
             }
             
             if (DBG.ShowModelNames)
-                DBG.DrawTextOn3DLocation(GetCenterPoint(), Name, Color.Yellow, 0.5f);
+                DBG.DrawTextOn3DLocation(GetTopCenterPoint(verticalOffset: 0.25f), Name, Color.Yellow, 0.5f);
         }
     }
 }

@@ -76,12 +76,6 @@ namespace DarkSoulsModelViewerDX.GFXShaders
             set => Parameters["EyePosition"].SetValue(value);
         }
 
-        public Vector4 LightColor
-        {
-            get => Parameters["LightColor"].GetValueVector4();
-            set => Parameters["LightColor"].SetValue(value);
-        }
-
         public float NormalMapCustomZ
         {
             get => Parameters["NormalMapCustomZ"].GetValueSingle();

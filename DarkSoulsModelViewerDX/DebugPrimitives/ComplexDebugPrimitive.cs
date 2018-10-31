@@ -73,9 +73,9 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
 
         public void Draw()
         {
-            foreach (var pass in GFX.DbgPrimShader.CurrentTechnique.Passes)
+            foreach (var pass in GFX.CurrentDbgPrimRenderEffect.CurrentTechnique.Passes)
             {
-                GFX.World.ApplyViewToShader(GFX.DbgPrimShader, Transform);
+                GFX.World.ApplyViewToShader(GFX.CurrentDbgPrimGFXShader, Transform);
                 pass.Apply();
                 GFX.Device.SetVertexBuffer(VertBuffer);
                 GFX.Device.DrawUserIndexedPrimitives(PrimitiveType.LineList,

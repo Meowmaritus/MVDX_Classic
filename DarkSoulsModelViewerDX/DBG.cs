@@ -13,7 +13,7 @@ namespace DarkSoulsModelViewerDX
     public class DBG
     {
         public static bool ShowModelNames = true;
-        public static bool ShowModelBoundingBoxes = true;
+        public static bool ShowModelBoundingBoxes = false;
         public static bool ShowModelSubmeshBoundingBoxes = false;
         public static bool ShowGrid = true;
 
@@ -83,9 +83,9 @@ namespace DarkSoulsModelViewerDX
             if (DebugLineVertexBuffer == null)
                 DebugLineVertexBuffer = new VertexBuffer(GFX.Device, typeof(VertexPositionColor), 2, BufferUsage.None);
 
-            GFX.World.ApplyViewToShader(GFX.DbgPrimShader);
+            GFX.World.ApplyViewToShader(GFX.CurrentDbgPrimGFXShader);
 
-            foreach (var pass in GFX.DbgPrimShader.CurrentTechnique.Passes)
+            foreach (var pass in GFX.CurrentDbgPrimRenderEffect.CurrentTechnique.Passes)
             {
                 pass.Apply();
 
@@ -171,9 +171,9 @@ namespace DarkSoulsModelViewerDX
                 DebugBoundingBoxVertexBuffer = new VertexBuffer(GFX.Device,
                     typeof(VertexPositionColor), 8, BufferUsage.None);
 
-            GFX.World.ApplyViewToShader(GFX.DbgPrimShader, transform);
+            GFX.World.ApplyViewToShader(GFX.CurrentDbgPrimGFXShader, transform);
 
-            foreach (var pass in GFX.DbgPrimShader.CurrentTechnique.Passes)
+            foreach (var pass in GFX.CurrentDbgPrimRenderEffect.CurrentTechnique.Passes)
             {
                 pass.Apply();
 

@@ -1,4 +1,5 @@
 ﻿using DarkSoulsModelViewerDX.GFXShaders;
+using MeowDSIO;
 using MeowDSIO.DataTypes.FLVER;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,20 +23,36 @@ namespace DarkSoulsModelViewerDX
             public IndexBuffer IndexBuffer;
             public bool BackfaceCulling;
             public bool IsTriangleStrip;
+            public byte LOD;
         }
 
         public bool IsVisible = true;
         List<FlverSubmeshRendererFaceSet> MeshFacesets = new List<FlverSubmeshRendererFaceSet>();
+
+        private bool HasNoLODs = true;
+
         VertexBuffer VertBuffer;
 
         public Texture2D TexDiffuse = null;
         public Texture2D TexSpecular = null;
         public Texture2D TexNormal = null;
 
+        public GFXDrawStep DrawStep { get; private set; }
+
         public int VertexCount { get; private set; }
 
         public FlverSubmeshRenderer(FlverSubmesh f, TexturePool texPool)
         {
+            var shortMaterialName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(f.Material.MTDName);
+            if (shortMaterialName.EndsWith("_Alp") || shortMaterialName.EndsWith("_Edge"))
+            {
+                DrawStep = GFXDrawStep._3_AlphaEdge;
+            }
+            else
+            {
+                DrawStep = GFXDrawStep._1_Opaque;
+            }
+
             foreach (var matParam in f.Material.Parameters)
             {
                 if (matParam.Name.ToUpper() == "G_DIFFUSE")
@@ -88,6 +105,18 @@ namespace DarkSoulsModelViewerDX
                                 BufferUsage.None),
                     IndexCount = faceset.VertexIndices.Count,
                 };
+
+                if (faceset.FlagsLOD1)
+                {
+                    newFaceSet.LOD = (byte)1;
+                    HasNoLODs = false;
+                }
+                else if (faceset.FlagsLOD2)
+                {
+                    newFaceSet.LOD = (byte)2;
+                    HasNoLODs = false;
+                }
+
                 newFaceSet.IndexBuffer.SetData(faceset.VertexIndices
                     .Select(x =>
                     {
@@ -107,9 +136,9 @@ namespace DarkSoulsModelViewerDX
             VertBuffer.SetData(MeshVertices);
         }
 
-        public void Draw()
+        public void Draw(int lod)
         {
-            if (IsVisible)
+            if (IsVisible && GFX.CurrentStep == DrawStep)
             {
                 if (GFX.EnableTextures)
                 {
@@ -119,10 +148,10 @@ namespace DarkSoulsModelViewerDX
                 }
                 
 
-                foreach (var technique in GFX.FlverShader.Techniques)
+                foreach (var technique in GFX.CurrentFlverRenderEffect.Techniques)
                 {
-                    GFX.FlverShader.CurrentTechnique = technique;
-                    foreach (EffectPass pass in GFX.FlverShader.CurrentTechnique.Passes)
+                    GFX.CurrentFlverRenderEffect.CurrentTechnique = technique;
+                    foreach (EffectPass pass in GFX.CurrentFlverRenderEffect.CurrentTechnique.Passes)
                     {
                         pass.Apply();
 
@@ -130,6 +159,9 @@ namespace DarkSoulsModelViewerDX
 
                         foreach (var faceSet in MeshFacesets)
                         {
+                            if (!HasNoLODs && faceSet.LOD != lod)
+                                continue;
+
                             GFX.Device.Indices = faceSet.IndexBuffer;
 
                             GFX.BackfaceCulling = faceSet.BackfaceCulling;

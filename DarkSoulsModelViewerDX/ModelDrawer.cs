@@ -17,8 +17,6 @@ namespace DarkSoulsModelViewerDX
         public long Debug_VertexCount = 0;
         public long Debug_SubmeshCount = 0;
 
-        
-
         public void AddModelInstance(ModelInstance ins)
         {
             ModelInstanceList.Add(ins);
@@ -34,7 +32,7 @@ namespace DarkSoulsModelViewerDX
         {
             float currentX = 0;
 
-            InterrootLoader.TexPoolChr.AddChrBndsThatEndIn9();
+            InterrootLoader.TexPool.AddChrBndsThatEndIn9();
 
             for (int i = 0; i <= 9999; i++)
             {
@@ -53,8 +51,8 @@ namespace DarkSoulsModelViewerDX
         {
             float currentX = 0;
 
-            InterrootLoader.TexPoolObj.AddMapTexUdsfm();
-            InterrootLoader.TexPoolChr.AddObjBndsThatEndIn9();
+            InterrootLoader.TexPool.AddMapTexUdsfm();
+            InterrootLoader.TexPool.AddObjBndsThatEndIn9();
 
             for (int i = 0; i <= 9999; i++)
             {
@@ -97,6 +95,8 @@ namespace DarkSoulsModelViewerDX
 
         public List<ModelInstance> AddMap(int area, int block, bool excludeScenery)
         {
+            InterrootLoader.TexPool.AddMapTexUdsfm();
+
             var mapModelInstances = InterrootLoader.LoadMap(area, block, excludeScenery);
 
             foreach (var ins in mapModelInstances)
@@ -107,55 +107,22 @@ namespace DarkSoulsModelViewerDX
             return mapModelInstances;
         }
 
-        private void StartDraw()
-        {
-            var ds = new DepthStencilState();
-            ds.DepthBufferEnable = true;
-            ds.DepthBufferWriteEnable = true;
-            ds.StencilEnable = true;
-            GFX.Device.DepthStencilState = ds;
-
-            GFX.Device.SamplerStates[0] = SamplerState.LinearWrap;
-
-            GFX.World.ApplyViewToShader(GFX.FlverShader);
-
-            GFX.FlverShader.AmbientColor = Vector4.One;
-
-            GFX.FlverShader.AmbientIntensity = 0.75f;
-
-            GFX.FlverShader.DiffuseColor = Vector4.One;
-            GFX.FlverShader.DiffuseIntensity = 1f;
-
-            GFX.FlverShader.SpecularColor = Vector4.One;
-            GFX.FlverShader.SpecularPower = 15f;
-
-            GFX.FlverShader.LightDirection = GFX.World.LightDirectionVector;
-
-            GFX.FlverShader.EyePosition = GFX.World.CameraTransform.Position;
-
-            GFX.FlverShader.NormalMapCustomZ = 1.0f;
-
-            GFX.FlverShader.ColorMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
-            GFX.FlverShader.NormalMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
-            GFX.FlverShader.SpecularMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
-        }
-
         private void DrawFlverAt(Model flver, Transform transform, bool forceRender)
         {
-            GFX.World.ApplyViewToShader(GFX.FlverShader, transform);
+            GFX.World.ApplyViewToShader(GFX.CurrentFlverGFXShader, transform);
             flver.Draw(transform, forceRender);
         }
 
         public void DrawSpecific(int index)
         {
-            StartDraw();
             DrawFlverAt(ModelInstanceList[index].Model, ModelInstanceList[index].Transform, forceRender: true);
         }
 
         public void Draw()
         {
-            StartDraw();
-            foreach (var ins in ModelInstanceList)
+            var drawOrderSortedModelInstances = ModelInstanceList.OrderByDescending(m => GFX.World.GetDistanceSquaredFromCamera(m.Transform));
+
+            foreach (var ins in drawOrderSortedModelInstances)
             {
                 DrawFlverAt(ins.Model, ins.Transform, forceRender: false);
             }
