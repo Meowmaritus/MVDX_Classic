@@ -23,6 +23,18 @@ namespace DarkSoulsModelViewerDX
 
     public static class GFX
     {
+        public static class Display
+        {
+            public static DisplayMode Mode;
+            public static bool Vsync = true;
+            public static bool Fullscreen = false;
+            public static bool SimpleMSAA = true;
+            public static void Apply()
+            {
+                MODEL_VIEWER_MAIN.ApplyPresentationParameters(Mode, Vsync, Fullscreen, SimpleMSAA);
+            }
+        }
+
         public static GFXDrawStep CurrentStep = GFXDrawStep._1_Opaque;
 
         public static readonly GFXDrawStep[] DRAW_STEP_LIST;

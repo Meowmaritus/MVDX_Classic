@@ -19,17 +19,40 @@ namespace DarkSoulsModelViewerDX
     /// </summary>
     public class MODEL_VIEWER_MAIN : Game
     {
+        public static bool FIXED_TIME_STEP = true;
+
         public static bool REQUEST_EXIT = false;
 
         public static bool Active { get; private set; }
 
         public static bool DISABLE_DRAW_ERROR_HANDLE = true;
 
-        GraphicsDeviceManager graphics;
+        private static GraphicsDeviceManager graphics;
         //public ContentManager Content;
         //public bool IsActive = true;
 
-        
+        public static List<DisplayMode> GetAllResolutions()
+        {
+            List<DisplayMode> result = new List<DisplayMode>();
+            foreach (var mode in GraphicsAdapter.DefaultAdapter.SupportedDisplayModes)
+            {
+                result.Add(mode);
+            }
+            return result;
+        }
+
+        public static void ApplyPresentationParameters(
+            DisplayMode displayMode, bool vsync, bool fullscreen, bool simpleMsaa)
+        {
+            graphics.PreferMultiSampling = simpleMsaa;
+            graphics.PreferredBackBufferWidth = displayMode.Width;
+            graphics.PreferredBackBufferHeight = displayMode.Height;
+            graphics.PreferredBackBufferFormat = displayMode.Format;
+            graphics.IsFullScreen = fullscreen;
+            FIXED_TIME_STEP = graphics.SynchronizeWithVerticalRetrace = vsync;
+            
+            graphics.ApplyChanges();
+        }
 
         public static Texture2D DEFAULT_TEXTURE_DIFFUSE;
         public static Texture2D DEFAULT_TEXTURE_SPECULAR;
@@ -61,6 +84,10 @@ namespace DarkSoulsModelViewerDX
             graphics.ApplyChanges();
 
             Window.AllowUserResizing = true;
+
+            GFX.Display.Mode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+
+            //GFX.Device.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
         }
 
         private void Graphics_DeviceCreated(object sender, System.EventArgs e)
@@ -147,6 +174,8 @@ namespace DarkSoulsModelViewerDX
 
         protected override void Update(GameTime gameTime)
         {
+            IsFixedTimeStep = FIXED_TIME_STEP;
+
             Active = IsActive;
 
             DbgMenuItem.UpdateInput((float)gameTime.ElapsedGameTime.TotalSeconds);

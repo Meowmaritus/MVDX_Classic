@@ -145,7 +145,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 //},
                 new DbgMenuItem()
                 {
-                    Text = "GFX",
+                    Text = "View Options",
                     Items = new List<DbgMenuItem>
                     {
                         new DbgMenuItemGfxFlverShaderAdjust(),
@@ -184,6 +184,22 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         new DbgMenuItemNumber("Far Clip Distance", 100, 1000000, 100,
                             (f) => GFX.World.FarClipDistance = f, () => GFX.World.FarClipDistance),
 
+                    }
+                },
+                new DbgMenuItem()
+                {
+                    Text = "Graphics Options",
+                    Items = new List<DbgMenuItem>
+                    {
+                        new DbgMenuItemResolutionChange(),
+                        new DbgMenuItemBool("Fullscreen", "YES", "NO", v => GFX.Display.Fullscreen = v, () => GFX.Display.Fullscreen),
+                        new DbgMenuItemBool("Vsync", "ON", "OFF", v => GFX.Display.Vsync = v, () => GFX.Display.Vsync),
+                        new DbgMenuItemBool("Simple MSAA", "ON", "OFF", v => GFX.Display.SimpleMSAA = v, () => GFX.Display.SimpleMSAA),
+                        new DbgMenuItem()
+                        {
+                            Text = "Apply Changes",
+                            ClickAction = (m) => GFX.Display.Apply(),
+                        }
                     }
                 },
                 new DbgMenuItem()
