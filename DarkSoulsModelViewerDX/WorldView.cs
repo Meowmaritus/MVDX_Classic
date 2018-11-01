@@ -94,20 +94,18 @@ namespace DarkSoulsModelViewerDX
             return result;
         }
 
-        public Transform GetSpawnPointInFrontOfCamera(float distance, bool faceBackwards, bool lockPitch, bool alignToFloor)
+        public Transform GetSpawnPointFromScreenPos(Vector2 screenPos, float distance, bool faceBackwards, bool lockPitch, bool alignToFloor)
         {
             var result = new Transform();
             var point1 = GFX.Device.Viewport.Unproject(
-                new Vector3(GFX.Device.Viewport.Width * 0.5f,
-                GFX.Device.Viewport.Height * 0.5f, 0),
+                new Vector3(screenPos, 0),
                 MatrixProjection, CameraTransform.CameraViewMatrix, MatrixWorld);
 
             var point2 = GFX.Device.Viewport.Unproject(
-                new Vector3(GFX.Device.Viewport.Width * 0.5f,
-                GFX.Device.Viewport.Height * 0.5f, 0.5f),
+                new Vector3(screenPos, 0.5f),
                 MatrixProjection, CameraTransform.CameraViewMatrix, MatrixWorld);
 
-            
+
 
             var directionVector = Vector3.Normalize(point2 - point1);
 
@@ -129,6 +127,19 @@ namespace DarkSoulsModelViewerDX
             result.EulerRotation.Z = 0;
 
             return result;
+        }
+
+        public Transform GetSpawnPointInFrontOfCamera(float distance, bool faceBackwards, bool lockPitch, bool alignToFloor)
+        {
+            return GetSpawnPointFromScreenPos(new Vector2(GFX.Device.Viewport.Width * 0.5f, GFX.Device.Viewport.Height * 0.5f),
+                distance, faceBackwards, lockPitch, alignToFloor);
+        }
+
+        public Transform GetSpawnPointFromMouseCursor(float distance, bool faceBackwards, bool lockPitch, bool alignToFloor)
+        {
+            var mouse = Mouse.GetState();
+            return GetSpawnPointFromScreenPos(mouse.Position.ToVector2() - GFX.Device.Viewport.Bounds.Location.ToVector2(),
+                distance, faceBackwards, lockPitch, alignToFloor);
         }
 
         public Transform GetCameraPhysicalLocation()

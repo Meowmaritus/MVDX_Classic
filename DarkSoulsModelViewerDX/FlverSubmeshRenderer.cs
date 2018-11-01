@@ -33,15 +33,19 @@ namespace DarkSoulsModelViewerDX
 
         VertexBuffer VertBuffer;
 
-        public Texture2D TexDiffuse = null;
-        public Texture2D TexSpecular = null;
-        public Texture2D TexNormal = null;
+        public string TexNameDiffuse { get; private set; } = null;
+        public string TexNameSpecular { get; private set; } = null;
+        public string TexNameNormal { get; private set; } = null;
+
+        public Texture2D TexDataDiffuse { get; private set; } = null;
+        public Texture2D TexDataSpecular { get; private set; } = null;
+        public Texture2D TexDataNormal { get; private set; } = null;
 
         public GFXDrawStep DrawStep { get; private set; }
 
         public int VertexCount { get; private set; }
 
-        public FlverSubmeshRenderer(FlverSubmesh f, TexturePool texPool)
+        public FlverSubmeshRenderer(FlverSubmesh f)
         {
             var shortMaterialName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(f.Material.MTDName);
             if (shortMaterialName.EndsWith("_Alp") || shortMaterialName.EndsWith("_Edge"))
@@ -56,11 +60,11 @@ namespace DarkSoulsModelViewerDX
             foreach (var matParam in f.Material.Parameters)
             {
                 if (matParam.Name.ToUpper() == "G_DIFFUSE")
-                    TexDiffuse = texPool.FetchTexture(matParam.Value);
+                    TexNameDiffuse = matParam.Value;
                 else if (matParam.Name.ToUpper() == "G_SPECULAR")
-                    TexSpecular = texPool.FetchTexture(matParam.Value);
+                    TexNameSpecular = matParam.Value;
                 else if (matParam.Name.ToUpper() == "G_BUMPMAP")
-                    TexNormal = texPool.FetchTexture(matParam.Value);
+                    TexNameNormal = matParam.Value;
             }
 
             var MeshVertices = new VertexPositionColorNormalTangentTexture[f.Vertices.Count];
@@ -142,9 +146,18 @@ namespace DarkSoulsModelViewerDX
             {
                 if (GFX.EnableTextures)
                 {
-                    GFX.FlverShader.ColorMap = TexDiffuse ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
-                    GFX.FlverShader.SpecularMap = TexSpecular ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
-                    GFX.FlverShader.NormalMap = TexNormal ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
+                    if (TexDataDiffuse == null && TexNameDiffuse != null)
+                        TexDataDiffuse = TexturePool.FetchTexture(TexNameDiffuse);
+
+                    if (TexDataSpecular == null && TexNameSpecular != null)
+                        TexDataSpecular = TexturePool.FetchTexture(TexNameSpecular);
+
+                    if (TexDataNormal == null && TexNameNormal != null)
+                        TexDataNormal = TexturePool.FetchTexture(TexNameNormal);
+
+                    GFX.FlverShader.ColorMap = TexDataDiffuse ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
+                    GFX.FlverShader.SpecularMap = TexDataSpecular ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
+                    GFX.FlverShader.NormalMap = TexDataNormal ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
                 }
                 
 

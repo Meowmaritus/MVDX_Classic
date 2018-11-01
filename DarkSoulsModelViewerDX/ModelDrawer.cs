@@ -12,10 +12,17 @@ namespace DarkSoulsModelViewerDX
 {
     public class ModelDrawer
     {
-        public List<ModelInstance> ModelInstanceList = new List<ModelInstance>();
+        public List<ModelInstance> ModelInstanceList { get; private set; } = new List<ModelInstance>();
 
         public long Debug_VertexCount = 0;
         public long Debug_SubmeshCount = 0;
+
+        public void ClearScene()
+        {
+            TexturePool.Flush();
+            ModelInstanceList.Clear();
+            GC.Collect();
+        }
 
         public void AddModelInstance(ModelInstance ins)
         {
@@ -32,7 +39,7 @@ namespace DarkSoulsModelViewerDX
         {
             float currentX = 0;
 
-            InterrootLoader.TexPool.AddChrBndsThatEndIn9();
+            TexturePool.AddChrBndsThatEndIn9();
 
             for (int i = 0; i <= 9999; i++)
             {
@@ -51,8 +58,8 @@ namespace DarkSoulsModelViewerDX
         {
             float currentX = 0;
 
-            InterrootLoader.TexPool.AddMapTexUdsfm();
-            InterrootLoader.TexPool.AddObjBndsThatEndIn9();
+            TexturePool.AddMapTexUdsfm();
+            TexturePool.AddObjBndsThatEndIn9();
 
             for (int i = 0; i <= 9999; i++)
             {
@@ -95,7 +102,7 @@ namespace DarkSoulsModelViewerDX
 
         public List<ModelInstance> AddMap(int area, int block, bool excludeScenery)
         {
-            InterrootLoader.TexPool.AddMapTexUdsfm();
+            TexturePool.AddMapTexUdsfm();
 
             var mapModelInstances = InterrootLoader.LoadMap(area, block, excludeScenery);
 
@@ -107,24 +114,26 @@ namespace DarkSoulsModelViewerDX
             return mapModelInstances;
         }
 
-        private void DrawFlverAt(Model flver, Transform transform, bool forceRender)
+        private void DrawFlverAt(Model flver, Transform transform)
         {
             GFX.World.ApplyViewToShader(GFX.CurrentFlverGFXShader, transform);
-            flver.Draw(transform, forceRender);
+            flver.Draw(transform);
         }
 
         public void DrawSpecific(int index)
         {
-            DrawFlverAt(ModelInstanceList[index].Model, ModelInstanceList[index].Transform, forceRender: true);
+            DrawFlverAt(ModelInstanceList[index].Model, ModelInstanceList[index].Transform);
         }
 
         public void Draw()
         {
-            var drawOrderSortedModelInstances = ModelInstanceList.OrderByDescending(m => GFX.World.GetDistanceSquaredFromCamera(m.Transform));
+            var drawOrderSortedModelInstances = ModelInstanceList
+                .Where(x => x.Model.IsVisible && GFX.World.IsInFrustum(x.Model.Bounds, x.Transform))
+                .OrderByDescending(m => GFX.World.GetDistanceSquaredFromCamera(m.Transform));
 
             foreach (var ins in drawOrderSortedModelInstances)
             {
-                DrawFlverAt(ins.Model, ins.Transform, forceRender: false);
+                DrawFlverAt(ins.Model, ins.Transform);
             }
         }
 

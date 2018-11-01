@@ -23,6 +23,12 @@ namespace DarkSoulsModelViewerDX
         public string TexName;
         private Texture2D CachedTexture;
 
+        public void Flush()
+        {
+            CachedTexture?.Dispose();
+            CachedTexture = null;
+        }
+
         public TextureFetchRequest(TextureFetchRequestType type, string uri, string texName)
         {
             FetchType = type;
@@ -66,6 +72,15 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
+        private static int GetNextMultipleOf4(int x)
+        {
+            if (x % 4 != 0)
+                x += 4 - (x % 4);
+            else if (x == 0)
+                return 4;
+            return x;
+        }
+
         public Texture2D Fetch()
         {
             if (CachedTexture != null)
@@ -103,7 +118,7 @@ namespace DarkSoulsModelViewerDX
 
                     for (int i = 0; i < mipmapCount; i++)
                     {
-                        int numTexels = Math.Max(4, width >> (i)) * Math.Max(4, height >> (i));
+                        int numTexels = GetNextMultipleOf4(width >> i) * GetNextMultipleOf4(height >> i);
                         if (surfaceFormat == SurfaceFormat.Dxt1)
                             numTexels /= 2;
                         byte[] thisMipMap = bin.ReadBytes(numTexels);

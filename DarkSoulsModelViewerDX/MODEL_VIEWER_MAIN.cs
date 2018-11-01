@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -19,6 +20,10 @@ namespace DarkSoulsModelViewerDX
     public class MODEL_VIEWER_MAIN : Game
     {
         public static bool REQUEST_EXIT = false;
+
+        public static bool Active { get; private set; }
+
+        public static bool DISABLE_DRAW_ERROR_HANDLE = true;
 
         GraphicsDeviceManager graphics;
         //public ContentManager Content;
@@ -70,6 +75,11 @@ namespace DarkSoulsModelViewerDX
 
         protected override void Initialize()
         {
+            Form gameWindowForm = (Form)Control.FromHandle(Window.Handle);
+            gameWindowForm.AllowDrop = true;
+            gameWindowForm.DragEnter += GameWindowForm_DragEnter;
+            gameWindowForm.DragDrop += GameWindowForm_DragDrop;
+
             IsMouseVisible = true;
 
             DEFAULT_TEXTURE_DIFFUSE = new Texture2D(GraphicsDevice, 1, 1);
@@ -84,6 +94,25 @@ namespace DarkSoulsModelViewerDX
             GFX.Device = GraphicsDevice;
 
             base.Initialize();
+        }
+
+        private void GameWindowForm_DragDrop(object sender, DragEventArgs e)
+        {
+            string[] modelFiles = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+
+            InterrootLoader.LoadDragDroppedFiles(modelFiles);
+        }
+
+        private void GameWindowForm_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.All;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
         }
 
         private void TestLoadAllMaps()
@@ -105,11 +134,7 @@ namespace DarkSoulsModelViewerDX
 
             
 
-            if (GFX.ModelDrawer.ModelInstanceList.Count > 0)
-                GFX.World.CameraTransform.Position = GFX.ModelDrawer.ModelInstanceList[0].Transform.Position + new Vector3(0, -1.5f, -13);
-            else
-                GFX.World.CameraTransform.Position = new Vector3(0, -1.5f, -13);
-
+            GFX.World.CameraTransform.Position = new Vector3(0, -1.5f, -13);
             GFX.World.CameraTransform.EulerRotation.X = MathHelper.PiOver4 / 8;
 
             DbgMenuItem.Init();
@@ -126,27 +151,27 @@ namespace DarkSoulsModelViewerDX
         //}
 
         // Unused
-        private void DebugDraw()
-        {
-            var dbgList = new List<string>();
-            dbgList.Add($"Dark Souls Model Viewer DX ({(IntPtr.Size * 8)}-Bit Version)");
-            dbgList.Add(" ");
-            dbgList.Add($"FPS: {(Math.Round(GFX.FPS))}");
-            dbgList.Add($"FPS: {(Math.Round(GFX.AverageFPS))}");
-            dbgList.Add(" ");
-            dbgList.Add($"Total Model Count: {GFX.ModelDrawer.ModelInstanceList.Count}");
-            dbgList.Add($"Total Submesh Count: {GFX.ModelDrawer.Debug_SubmeshCount}");
-            dbgList.Add($"Total Vertex Count: {GFX.ModelDrawer.Debug_VertexCount}");
+        //private void DebugDraw()
+        //{
+        //    var dbgList = new List<string>();
+        //    dbgList.Add($"Dark Souls Model Viewer DX ({(IntPtr.Size * 8)}-Bit Version)");
+        //    dbgList.Add(" ");
+        //    dbgList.Add($"FPS: {(Math.Round(GFX.FPS))}");
+        //    dbgList.Add($"FPS: {(Math.Round(GFX.AverageFPS))}");
+        //    dbgList.Add(" ");
+        //    dbgList.Add($"Total Model Count: {GFX.ModelDrawer.ModelInstanceList.Count}");
+        //    dbgList.Add($"Total Submesh Count: {GFX.ModelDrawer.Debug_SubmeshCount}");
+        //    dbgList.Add($"Total Vertex Count: {GFX.ModelDrawer.Debug_VertexCount}");
 
-            for (int i = 0; i < dbgList.Count; i++)
-                DBG.DrawOutlinedText(dbgList[i], new Vector2(8, 8 + (16 * i)), Color.Yellow);
+        //    for (int i = 0; i < dbgList.Count; i++)
+        //        DBG.DrawOutlinedText(dbgList[i], new Vector2(8, 8 + (16 * i)), Color.Yellow);
 
 
-            //FatcatDebug.DrawTextOn3DLocation(World, World.CameraOrigin.Position, "World.CameraOrigin", Color.Fuchsia);
-            //FatcatDebug.DrawTextOn3DLocation(World, World.CameraPositionDefault.Position, "World.CameraPositionDefault", Color.Fuchsia);
+        //    //FatcatDebug.DrawTextOn3DLocation(World, World.CameraOrigin.Position, "World.CameraOrigin", Color.Fuchsia);
+        //    //FatcatDebug.DrawTextOn3DLocation(World, World.CameraPositionDefault.Position, "World.CameraPositionDefault", Color.Fuchsia);
 
-            //DBG.DrawTextOn3DLocation(Vector3.Transform(GFX.World.CameraTransform.Position, Matrix.Invert(GFX.World.MatrixProjection)), "[CAMERA PHYSICAL LOCATION]", Color.PaleVioletRed);
-        }
+        //    //DBG.DrawTextOn3DLocation(Vector3.Transform(GFX.World.CameraTransform.Position, Matrix.Invert(GFX.World.MatrixProjection)), "[CAMERA PHYSICAL LOCATION]", Color.PaleVioletRed);
+        //}
 
         //private void DrawMcgBranch(int i)
         //{
@@ -172,6 +197,8 @@ namespace DarkSoulsModelViewerDX
 
         protected override void Update(GameTime gameTime)
         {
+            Active = IsActive;
+
             DbgMenuItem.UpdateInput((float)gameTime.ElapsedGameTime.TotalSeconds);
             DbgMenuItem.UICursorBlinkUpdate((float)gameTime.ElapsedGameTime.TotalSeconds);
 

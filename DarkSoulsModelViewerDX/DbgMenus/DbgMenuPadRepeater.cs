@@ -39,7 +39,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public bool Update(GamePadState gamepad, float elapsedSeconds, bool alternateKeyboardInput)
         {
-            bool curHeldState = gamepad.IsButtonDown(Button) || alternateKeyboardInput;
+            bool curHeldState = gamepad.IsButtonDown(Button) || (MODEL_VIEWER_MAIN.Active && alternateKeyboardInput);
             
             if (!curHeldState)
             {

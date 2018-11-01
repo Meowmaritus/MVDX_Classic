@@ -13,6 +13,19 @@ namespace DarkSoulsModelViewerDX
 {
     public class InterrootLoader
     {
+        static InterrootLoader()
+        {
+            if (File.Exists("DSMVDX_InterrootPath.txt"))
+                Interroot = File.ReadAllText("DSMVDX_InterrootPath.txt").Trim('\n');
+
+            TexturePool.OnLoadError += TexPool_OnLoadError;
+        }
+
+        public static void SaveInterrootPath()
+        {
+            File.WriteAllText("DSMVDX_InterrootPath.txt", Interroot);
+        }
+
         public static void Browse()
         {
             OpenFileDialog dlg = new OpenFileDialog()
@@ -24,6 +37,7 @@ namespace DarkSoulsModelViewerDX
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 Interroot = new FileInfo(dlg.FileName).DirectoryName;
+                SaveInterrootPath();
             }
         }
 
@@ -35,17 +49,10 @@ namespace DarkSoulsModelViewerDX
             OnLoadError?.Invoke(contentName, error);
         }
 
-        static InterrootLoader()
-        {
-            TexPool.OnLoadError += TexPool_OnLoadError;
-        }
-
         private static void TexPool_OnLoadError(string texName, string error)
         {
             RaiseLoadError($"TexPool: \"{texName}\"", error);
         }
-
-        public static TexturePool TexPool = new TexturePool();
 
         private static string Frankenpath(params string[] pathParts)
         {
@@ -68,9 +75,9 @@ namespace DarkSoulsModelViewerDX
 
         public static string Interroot = @"G:\SteamLibrary\steamapps\common\Dark Souls Prepare to Die Edition\DATA";
 
-        public static EntityBND DirectLoadEntityBnd(string relPath)
+        public static EntityBND DirectLoadEntityBnd(string path)
         {
-            var fileName = GetInterrootPath(relPath);
+            var fileName = path;
             if (!File.Exists(fileName))
                 return null;
             return DataFile.LoadFromFile<EntityBND>(fileName);
@@ -78,12 +85,12 @@ namespace DarkSoulsModelViewerDX
 
         public static EntityBND LoadChr(int id)
         {
-            return DirectLoadEntityBnd($@"chr\c{id:D4}.chrbnd");
+            return DirectLoadEntityBnd(GetInterrootPath($@"chr\c{id:D4}.chrbnd"));
         }
 
         public static EntityBND LoadObj(int id)
         {
-            return DirectLoadEntityBnd($@"obj\o{id:D4}.objbnd");
+            return DirectLoadEntityBnd(GetInterrootPath($@"obj\o{id:D4}.objbnd"));
         }
 
         public static List<TPF> DirectLoadAllTpfInDir(string relPath)
@@ -113,9 +120,9 @@ namespace DarkSoulsModelViewerDX
             var chrbnd = LoadChr(id);
             if (chrbnd == null)
                 return null;
-            TexPool.AddChrBnd(id, idx);
-            TexPool.AddChrTexUdsfm(id);
-            return new Model(chrbnd.Models[0].Mesh, TexPool);
+            TexturePool.AddChrBnd(id, idx);
+            TexturePool.AddChrTexUdsfm(id);
+            return new Model(chrbnd.Models[0].Mesh);
         }
 
         public static Model LoadModelChrOptimized(int id, int idx)
@@ -125,10 +132,10 @@ namespace DarkSoulsModelViewerDX
             if (!File.Exists(name))
                 return null;
 
-            TexPool.AddChrBnd(id, idx);
-            TexPool.AddChrTexUdsfm(id);
+            TexturePool.AddChrBnd(id, idx);
+            TexturePool.AddChrTexUdsfm(id);
 
-            return new Model(FLVEROptimized.ReadFromBnd(name, 0), TexPool);
+            return new Model(FLVEROptimized.ReadFromBnd(name, 0));
         }
 
         public static Model LoadModelObjOptimized(int id, int idx)
@@ -138,9 +145,9 @@ namespace DarkSoulsModelViewerDX
             if (!File.Exists(name))
                 return null;
 
-            TexPool.AddObjBnd(id, idx);
+            TexturePool.AddObjBnd(id, idx);
 
-            return new Model(FLVEROptimized.ReadFromBnd(name, 0), TexPool);
+            return new Model(FLVEROptimized.ReadFromBnd(name, 0));
         }
 
         public static Model LoadModelObj(int id, int idx)
@@ -148,8 +155,8 @@ namespace DarkSoulsModelViewerDX
             var chrbnd = LoadObj(id);
             if (chrbnd == null)
                 return null;
-            TexPool.AddObjBnd(id, idx);
-            return new Model(chrbnd.Models[0].Mesh, TexPool);
+            TexturePool.AddObjBnd(id, idx);
+            return new Model(chrbnd.Models[0].Mesh);
         }
 
         public static List<ModelInstance> LoadMap(int area, int block, bool excludeScenery)
@@ -168,13 +175,40 @@ namespace DarkSoulsModelViewerDX
             {
                 if (excludeScenery && (part.ModelName.StartsWith("m8") || part.ModelName.StartsWith("m9") || !part.IsShadowDest))
                     continue;
-                var model = new Model(modelDict[part.ModelName + $"A{area:D2}"], TexPool);
+                var model = new Model(modelDict[part.ModelName + $"A{area:D2}"]);
                 result.Add(new ModelInstance(part.Name, model, new Transform(part.PosX, part.PosY, part.PosZ, part.RotX, part.RotY, part.RotZ)));
             }
 
             modelDict = null;
 
             return result;
+        }
+
+        public static void LoadDragDroppedFiles(string[] fileNames)
+        {
+            foreach (var fn in fileNames)
+            {
+                var upper = fn.ToUpper();
+                if (upper.EndsWith(".CHRBND") || upper.EndsWith(".OBJBND") || upper.EndsWith(".PARTSBND"))
+                {
+                    var entityBnd = InterrootLoader.DirectLoadEntityBnd(fn);
+                    var modelShortName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(fn);
+                    for (int i = 0; i < entityBnd.Models.Count; i++)
+                    {
+                        string instanceName = modelShortName + (i > 0 ? $"_{i}" : "");
+                        GFX.ModelDrawer.AddModelInstance(
+                            new ModelInstance(
+                                instanceName, 
+                                new Model(entityBnd.Models[i].Mesh), 
+                                GFX.World.GetSpawnPointFromMouseCursor(10.0f, false, true, true)
+                                ));
+                        foreach (var tex in entityBnd.Models[i].Textures)
+                        {
+                            TexturePool.AddFetch(TextureFetchRequestType.EntityBnd, fn, tex.Key);
+                        }
+                    }
+                }
+            }
         }
     }
 }

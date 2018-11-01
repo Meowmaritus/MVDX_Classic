@@ -33,8 +33,8 @@ namespace DarkSoulsModelViewerDX
 
         public const int LOD_MAX = 2;
         public static int ForceLOD = -1;
-        public static float LOD1Distance = 100;
-        public static float LOD2Distance = 200;
+        public static float LOD1Distance = 200;
+        public static float LOD2Distance = 400;
 
         // These are leftovers from when they would actually SWITCH during an expirement.
         // Too lazy to refactor lol. I'll keep them in case I decide that I need to swap
@@ -186,34 +186,46 @@ namespace DarkSoulsModelViewerDX
 
         }
 
+        private static void DoDrawStep(GameTime gameTime)
+        {
+            switch (CurrentStep)
+            {
+                case GFXDrawStep._1_Opaque:
+                case GFXDrawStep._3_AlphaEdge:
+                    ModelDrawer.Draw();
+                    ModelDrawer.DebugDrawAll();
+                    break;
+                case GFXDrawStep._2_DbgPrim:
+                    if (DBG.ShowGrid)
+                        DbgPrim_Grid.Draw();
+                    break;
+                case GFXDrawStep._4_GUI:
+                    DbgMenuItem.CurrentMenu.Draw((float)gameTime.ElapsedGameTime.TotalSeconds);
+                    break;
+            }
+        }
+
         private static void DoDraw(GameTime gameTime)
         {
-            try
+            if (MODEL_VIEWER_MAIN.DISABLE_DRAW_ERROR_HANDLE)
             {
-                switch (CurrentStep)
+                DoDrawStep(gameTime);
+            }
+            else
+            {
+                try
                 {
-                    case GFXDrawStep._1_Opaque:
-                    case GFXDrawStep._3_AlphaEdge:
-                        ModelDrawer.Draw();
-                        ModelDrawer.DebugDrawAll();
-                        break;
-                    case GFXDrawStep._2_DbgPrim:
-                        if (DBG.ShowGrid)
-                            DbgPrim_Grid.Draw();
-                        break;
-                    case GFXDrawStep._4_GUI:
-                        DbgMenuItem.CurrentMenu.Draw((float)gameTime.ElapsedGameTime.TotalSeconds);
-                        break;
+                    DoDrawStep(gameTime);
                 }
+                catch
+                {
+                    var errText = $"Draw Call Failed ({CurrentStep.ToString()})";
+                    var errTextSize = DBG.DEBUG_FONT_HQ.MeasureString(errText);
+                    DBG.DrawOutlinedText(errText, new Vector2(Device.Viewport.Width / 2, Device.Viewport.Height / 2), Color.Red, DBG.DEBUG_FONT_HQ, 0, 0.25f, errTextSize / 2);
+                }
+            }
 
-               
-            }
-            catch
-            {
-                var errText = $"Draw Call Failed ({CurrentStep.ToString()})";
-                var errTextSize = DBG.DEBUG_FONT_HQ.MeasureString(errText);
-                DBG.DrawOutlinedText(errText, new Vector2(Device.Viewport.Width / 2, Device.Viewport.Height / 2), Color.Red, DBG.DEBUG_FONT_HQ, 0, 0.25f, errTextSize / 2);
-            }
+            
             
         }
 

@@ -81,15 +81,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 Cancel.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.Back) || mouse.RightButton == ButtonState.Pressed);
                 ResetDefault.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.Home));
 
-                MoveFastHeld = gamepad.IsButtonDown(Buttons.LeftShoulder) || keyboard.IsKeyDown(Keys.LeftShift) || keyboard.IsKeyDown(Keys.RightShift);
-                MoveFasterHeld = gamepad.IsButtonDown(Buttons.X) || keyboard.IsKeyDown(Keys.LeftControl) || keyboard.IsKeyDown(Keys.RightControl);
-
-                ClickMouse.Update(gamepad, elapsedSeconds, mouse.LeftButton == ButtonState.Pressed);
-                MiddleClickMouse.Update(gamepad, elapsedSeconds, mouse.MiddleButton == ButtonState.Pressed);
-
-                MousePos = new Point(mouse.X, mouse.Y);
-
-                IsMouseMovedThisFrame = (MousePos != prevMousePos);
+                MoveFastHeld = gamepad.IsButtonDown(Buttons.LeftShoulder) ||
+                    (MODEL_VIEWER_MAIN.Active && (keyboard.IsKeyDown(Keys.LeftShift) || keyboard.IsKeyDown(Keys.RightShift)));
+                MoveFasterHeld = gamepad.IsButtonDown(Buttons.X) ||
+                    (MODEL_VIEWER_MAIN.Active && (keyboard.IsKeyDown(Keys.LeftControl) || keyboard.IsKeyDown(Keys.RightControl)));
 
                 if (gamepad.IsButtonDown(Buttons.RightShoulder))
                 {
@@ -103,11 +98,26 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     MenuRectResize = Vector2.Zero;
                 }
 
-                IsSpacebarHeld = keyboard.IsKeyDown(Keys.Space);
 
-                float mouseWheel = mouse.ScrollWheelValue;
-                MouseWheelDelta = (mouseWheel - prevMouseWheel);
-                prevMouseWheel = mouseWheel;
+                if (MODEL_VIEWER_MAIN.Active)
+                {
+                    ClickMouse.Update(gamepad, elapsedSeconds, mouse.LeftButton == ButtonState.Pressed);
+                    MiddleClickMouse.Update(gamepad, elapsedSeconds, mouse.MiddleButton == ButtonState.Pressed);
+
+                    MousePos = new Point(mouse.X, mouse.Y);
+
+                    IsMouseMovedThisFrame = (MousePos != prevMousePos);
+
+
+
+                    IsSpacebarHeld = keyboard.IsKeyDown(Keys.Space);
+
+                    float mouseWheel = mouse.ScrollWheelValue;
+                    MouseWheelDelta = (mouseWheel - prevMouseWheel);
+                    prevMouseWheel = mouseWheel;
+                }
+
+                
             }
             else
             {

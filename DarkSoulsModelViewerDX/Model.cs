@@ -15,13 +15,13 @@ namespace DarkSoulsModelViewerDX
         public BoundingBox Bounds { get; private set; }
 
         public List<FlverSubmeshRenderer> Submeshes { get; private set; }  = new List<FlverSubmeshRenderer>();
-        public Model(FLVER flver, TexturePool texPool)
+        public Model(FLVER flver)
         {
             Submeshes = new List<FlverSubmeshRenderer>();
             var subBoundsPoints = new List<Vector3>();
             foreach (var submesh in flver.Submeshes)
             {
-                var smm = new FlverSubmeshRenderer(submesh, texPool);
+                var smm = new FlverSubmeshRenderer(submesh);
                 Submeshes.Add(smm);
                 subBoundsPoints.Add(smm.Bounds.Min);
                 subBoundsPoints.Add(smm.Bounds.Max);
@@ -38,13 +38,13 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public Model(FLVEROptimized flver, TexturePool texPool)
+        public Model(FLVEROptimized flver)
         {
             Submeshes = new List<FlverSubmeshRenderer>();
             var subBoundsPoints = new List<Vector3>();
             foreach (var submesh in flver.Submeshes)
             {
-                var smm = new FlverSubmeshRenderer(submesh, texPool);
+                var smm = new FlverSubmeshRenderer(submesh);
                 Submeshes.Add(smm);
                 subBoundsPoints.Add(smm.Bounds.Min);
                 subBoundsPoints.Add(smm.Bounds.Max);
@@ -63,13 +63,10 @@ namespace DarkSoulsModelViewerDX
 
         public void Draw(Transform modelLocation, bool forceRender = false)
         {
-            if (forceRender ||(IsVisible && GFX.World.IsInFrustum(Bounds, modelLocation)))
+            var lod = GFX.World.GetLOD(modelLocation);
+            foreach (var submesh in Submeshes)
             {
-                var lod = GFX.World.GetLOD(modelLocation);
-                foreach (var submesh in Submeshes)
-                {
-                    submesh.Draw(lod);
-                }
+                submesh.Draw(lod);
             }
         }
     }

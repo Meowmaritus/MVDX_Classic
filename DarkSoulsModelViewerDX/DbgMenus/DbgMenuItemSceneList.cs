@@ -18,7 +18,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             new DbgMenuItem()
             {
                 Text = "[Click to Clear Scene]",
-                ClickAction = (m) => GFX.ModelDrawer.ModelInstanceList.Clear()
+                ClickAction = (m) => GFX.ModelDrawer.ClearScene()
             }
         };
 
