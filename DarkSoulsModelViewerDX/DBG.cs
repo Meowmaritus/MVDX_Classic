@@ -5,9 +5,11 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -27,6 +29,29 @@ namespace DarkSoulsModelViewerDX
 
             // Put stuff below for testing:
 
+
+            //---- Sphere benchmark:
+                //var sw = Stopwatch.StartNew();
+
+                //long totalVerts = 0;
+
+                //var sphere = new DbgPrimWireSphere(
+                //    location: Transform.Zero,
+                //    radius: 1,
+                //    numVerticalSegments: 8,
+                //    numSidesPerSegment: 8,
+                //    color: Color.Cyan);
+
+                //for (int i = 0; i < 10000; i++)
+                //{
+                //    var newPrim = sphere.Instantiate(Transform.RandomUnit() * 50);
+                //    AddPrimitive(newPrim);
+                //    totalVerts += ((DbgPrimWire)newPrim).VertexCount;
+                //}
+
+                //sw.Stop();
+
+                //MessageBox.Show($"{sw.Elapsed.TotalSeconds} seconds. {totalVerts} vertices.");
         }
 
         private static List<IDbgPrim> Primitives = new List<IDbgPrim>();

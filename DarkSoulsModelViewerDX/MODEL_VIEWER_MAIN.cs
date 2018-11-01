@@ -52,7 +52,7 @@ namespace DarkSoulsModelViewerDX
             MaxElapsedTime = TimeSpan.FromTicks(166667);
 
             //IsFixedTimeStep = false;
-            graphics.SynchronizeWithVerticalRetrace = true;
+            graphics.SynchronizeWithVerticalRetrace = false;
 
             graphics.PreferMultiSampling = true;
 

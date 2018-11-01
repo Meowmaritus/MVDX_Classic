@@ -39,6 +39,8 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
 
         public abstract IGFXShader<T> Shader { get; }
 
+        public abstract DbgPrim<T> Instantiate(Transform newLocation);
+
         /// <summary>
         /// Set this to choose specific technique(s).
         /// Null to just use the current technique.

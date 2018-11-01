@@ -39,9 +39,44 @@ namespace DarkSoulsModelViewerDX
         public Matrix CameraViewMatrix => TranslationMatrix * RotationMatrix;
         public Matrix WorldMatrix => RotationMatrix * TranslationMatrix;
 
+        private static Random rand = new Random();
+        public static Transform RandomUnit(bool randomRot = false)
+        {
+            float randFloat() => (float)((rand.NextDouble() * 2) - 1);
+            return new Transform(randFloat(), randFloat(), randFloat(),
+                randomRot ? (randFloat() * MathHelper.PiOver2) : 0,
+                randomRot ? (randFloat() * MathHelper.PiOver2) : 0,
+                randomRot ? (randFloat() * MathHelper.PiOver2) : 0);
+        }
+
         public override string ToString()
         {
             return $"Pos: {Position.ToString()} Rot (deg): {EulerRotation.Rad2Deg().ToString()}";
+        }
+
+        public static Transform operator *(Transform a, float b)
+        {
+            return new Transform(a.Position * b, a.EulerRotation);
+        }
+
+        public static Transform operator /(Transform a, float b)
+        {
+            return new Transform(a.Position / b, a.EulerRotation);
+        }
+
+        public static Transform operator +(Transform a, Vector3 b)
+        {
+            return new Transform(a.Position + b, a.EulerRotation);
+        }
+
+        public static Transform operator -(Transform a, Vector3 b)
+        {
+            return new Transform(a.Position - b, a.EulerRotation);
+        }
+
+        public static implicit operator Transform(Vector3 v)
+        {
+            return new Transform(v, Vector3.Zero);
         }
     }
 }

@@ -86,6 +86,7 @@
     <Compile Include="DebugPrimitives\DbgPrimWire.cs" />
     <Compile Include="DebugPrimitives\DbgPrim.cs" />
     <Compile Include="DebugPrimitives\DbgPrimWireBox.cs" />
+    <Compile Include="DebugPrimitives\DbgPrimWireSphere.cs" />
     <Compile Include="DebugPrimitives\IDbgPrim.cs" />
     <Compile Include="TextureFetchRequest.cs" />
     <Compile Include="WorldView.cs" />
