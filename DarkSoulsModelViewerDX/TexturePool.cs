@@ -80,7 +80,7 @@ namespace DarkSoulsModelViewerDX
         public static void AddMapTexUdsfm()
         {
             var dir = InterrootLoader.GetInterrootPath(@"map\tx");
-            if (Directory.Exists(dir))
+            if (!Directory.Exists(dir))
                 return;
             var mapTpfFileNames = Directory.GetFiles(dir);
             foreach (var t in mapTpfFileNames)
