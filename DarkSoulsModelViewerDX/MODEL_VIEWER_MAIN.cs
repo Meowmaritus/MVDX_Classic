@@ -127,12 +127,12 @@ namespace DarkSoulsModelViewerDX
             InterrootLoader.OnLoadError += InterrootLoader_OnLoadError;
 
             //////// Here is where you should load things for testing. ////////
-            
-            
-            
+
+
+
             ///////////////////////////////////////////////////////////////////
 
-            
+            DBG.CreateDebugPrimitives();
 
             GFX.World.CameraTransform.Position = new Vector3(0, -1.5f, -13);
             GFX.World.CameraTransform.EulerRotation.X = MathHelper.PiOver4 / 8;
@@ -144,56 +144,6 @@ namespace DarkSoulsModelViewerDX
         {
             Console.WriteLine($"CONTENT LOAD ERROR\nCONTENT NAME:{contentName}\nERROR:{error}");
         }
-
-        //public void Update(GameTime gameTime)
-        //{
-
-        //}
-
-        // Unused
-        //private void DebugDraw()
-        //{
-        //    var dbgList = new List<string>();
-        //    dbgList.Add($"Dark Souls Model Viewer DX ({(IntPtr.Size * 8)}-Bit Version)");
-        //    dbgList.Add(" ");
-        //    dbgList.Add($"FPS: {(Math.Round(GFX.FPS))}");
-        //    dbgList.Add($"FPS: {(Math.Round(GFX.AverageFPS))}");
-        //    dbgList.Add(" ");
-        //    dbgList.Add($"Total Model Count: {GFX.ModelDrawer.ModelInstanceList.Count}");
-        //    dbgList.Add($"Total Submesh Count: {GFX.ModelDrawer.Debug_SubmeshCount}");
-        //    dbgList.Add($"Total Vertex Count: {GFX.ModelDrawer.Debug_VertexCount}");
-
-        //    for (int i = 0; i < dbgList.Count; i++)
-        //        DBG.DrawOutlinedText(dbgList[i], new Vector2(8, 8 + (16 * i)), Color.Yellow);
-
-
-        //    //FatcatDebug.DrawTextOn3DLocation(World, World.CameraOrigin.Position, "World.CameraOrigin", Color.Fuchsia);
-        //    //FatcatDebug.DrawTextOn3DLocation(World, World.CameraPositionDefault.Position, "World.CameraPositionDefault", Color.Fuchsia);
-
-        //    //DBG.DrawTextOn3DLocation(Vector3.Transform(GFX.World.CameraTransform.Position, Matrix.Invert(GFX.World.MatrixProjection)), "[CAMERA PHYSICAL LOCATION]", Color.PaleVioletRed);
-        //}
-
-        //private void DrawMcgBranch(int i)
-        //{
-        //    if (i < 0 || i > MCGTEST_MCG.McgUnkStructA_List.Count)
-        //        return;
-
-        //    Vector3 thisPos = MCGTEST_MCG.McgUnkStructA_List[i].Position;
-        //    foreach (var otherPosIndex in MCGTEST_MCG.McgUnkStructA_List[i].IndicesA)
-        //    {
-        //        var otherPos = MCGTEST_MCG.McgUnkStructA_List[otherPosIndex].Position;
-        //        FatcatDebug.DrawLine(thisPos, otherPos, Color.Yellow, Color.Yellow, "" + i);
-        //    }
-        //}
-
-        //private void DrawMcgTest()
-        //{
-        //    for (int i = 0; i < MCGTEST_MCG.McgUnkStructA_List.Count; i++)
-        //    {
-        //        DrawMcgBranch(i);
-        //    }
-        //    //DrawMcgBranch(MCGTEST_INDEX);
-        //}
 
         protected override void Update(GameTime gameTime)
         {
@@ -215,7 +165,7 @@ namespace DarkSoulsModelViewerDX
             GFX.World.CameraOrigin.Position = new Vector3(GFX.World.CameraPositionDefault.Position.X, 
                 GFX.World.CameraOrigin.Position.Y, GFX.World.CameraPositionDefault.Position.Z);
 
-            GFX.DbgPrim_Grid.Transform = GFX.World.CameraPositionDefault;
+            DBG.DbgPrim_Grid.Transform = GFX.World.CameraPositionDefault;
 
             if (REQUEST_EXIT)
                 Exit();

@@ -108,7 +108,9 @@ namespace DarkSoulsModelViewerDX
             var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"chr"), "*9.chrbnd");
             foreach (var ctew9 in chrbndsThatEndWith9)
             {
-                var entityBnd = InterrootLoader.DirectLoadEntityBnd($@"chr\{MiscUtil.GetFileNameWithoutDirectoryOrExtension(ctew9)}.chrbnd");
+                var entityBnd = InterrootLoader.DirectLoadEntityBnd(
+                    InterrootLoader.GetInterrootPath(
+                        $@"chr\{MiscUtil.GetFileNameWithoutDirectoryOrExtension(ctew9)}.chrbnd"));
                 foreach (var m in entityBnd.Models)
                 {
                     foreach (var t in m.Textures)

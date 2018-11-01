@@ -58,12 +58,14 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public void ApplyViewToShader(IGFXShader shader)
+        public void ApplyViewToShader<T>(IGFXShader<T> shader)
+            where T : Effect
         {
             shader.ApplyWorldView(MatrixWorld, CameraTransform.CameraViewMatrix, MatrixProjection);
         }
 
-        public void ApplyViewToShader(IGFXShader shader, Transform modelTransform)
+        public void ApplyViewToShader<T>(IGFXShader<T> shader, Transform modelTransform)
+            where T : Effect
         {
             shader.ApplyWorldView(modelTransform.WorldMatrix * MatrixWorld, CameraTransform.CameraViewMatrix, MatrixProjection);
         }

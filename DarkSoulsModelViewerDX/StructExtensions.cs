@@ -43,5 +43,15 @@ namespace DarkSoulsModelViewerDX
                 Math.Max(r.Height - shrinkAmount * 2, 0));
         }
 
+        public static Vector3 Rad2Deg(this Vector3 v)
+        {
+            return new Vector3(MathHelper.ToDegrees(v.X), MathHelper.ToDegrees(v.Y), MathHelper.ToDegrees(v.Z));
+        }
+
+        public static Vector3 Deg2Rad(this Vector3 v)
+        {
+            return new Vector3(MathHelper.ToRadians(v.X), MathHelper.ToRadians(v.Y), MathHelper.ToRadians(v.Z));
+        }
+
     }
 }

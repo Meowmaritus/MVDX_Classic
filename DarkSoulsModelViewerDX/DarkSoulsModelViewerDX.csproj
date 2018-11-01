@@ -83,12 +83,14 @@
     <Compile Include="DbgMenus\DbgMenuItem.cs" />
     <Compile Include="DbgMenus\DbgMenuItemSpawnChr.cs" />
     <Compile Include="DbgMenus\DbgMenuPadRepeater.cs" />
-    <Compile Include="DebugPrimitives\ComplexDebugPrimitive.cs" />
-    <Compile Include="GFXShaders\AlphaPassShader.cs" />
+    <Compile Include="DebugPrimitives\DbgPrimWire.cs" />
+    <Compile Include="DebugPrimitives\DbgPrim.cs" />
+    <Compile Include="DebugPrimitives\DbgPrimWireBox.cs" />
+    <Compile Include="DebugPrimitives\IDbgPrim.cs" />
     <Compile Include="TextureFetchRequest.cs" />
     <Compile Include="WorldView.cs" />
     <Compile Include="DBG.cs" />
-    <Compile Include="DebugPrimitives\DbgPrimGrid.cs" />
+    <Compile Include="DebugPrimitives\DbgPrimWireGrid.cs" />
     <Compile Include="InterrootLoader.cs" />
     <Compile Include="ModelDrawer.cs" />
     <Compile Include="ModelInstance.cs" />

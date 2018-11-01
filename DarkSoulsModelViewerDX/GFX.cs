@@ -36,13 +36,8 @@ namespace DarkSoulsModelViewerDX
         public static float LOD1Distance = 200;
         public static float LOD2Distance = 400;
 
-        // These are leftovers from when they would actually SWITCH during an expirement.
-        // Too lazy to refactor lol. I'll keep them in case I decide that I need to swap
-        // out shaders in the future.
-        public static Effect CurrentFlverRenderEffect => FlverShader;
-        public static Effect CurrentDbgPrimRenderEffect => DbgPrimShader;
-        public static IGFXShader CurrentFlverGFXShader => FlverShader;
-        public static IGFXShader CurrentDbgPrimGFXShader => DbgPrimShader;
+        public static IGFXShader<FlverShader> FlverShader;
+        public static IGFXShader<DbgPrimShader> DbgPrimShader;
 
         public static Stopwatch FpsStopwatch = new Stopwatch();
         private static FrameCounter FpsCounter = new FrameCounter();
@@ -64,12 +59,10 @@ namespace DarkSoulsModelViewerDX
         public static ModelDrawer ModelDrawer = new ModelDrawer();
 
         public static GraphicsDevice Device;
-        public static FlverShader FlverShader;
-        public static DbgPrimShader DbgPrimShader;
+        //public static FlverShader FlverShader;
+        //public static DbgPrimShader DbgPrimShader;
         public static SpriteBatch SpriteBatch;
         const string FlverShader__Name = @"Content\NormalMapShader";
-
-        public static DbgPrimGrid DbgPrim_Grid;
 
         public static bool BackfaceCulling
         {
@@ -145,13 +138,13 @@ namespace DarkSoulsModelViewerDX
 
             FlverShader = new FlverShader(c.Load<Effect>(FlverShader__Name));
 
-            FlverShader.AmbientColor = Vector4.One;
-            FlverShader.AmbientIntensity = 0.5f;
-            FlverShader.DiffuseColor = Vector4.One;
-            FlverShader.DiffuseIntensity = 0.75f;
-            FlverShader.SpecularColor = Vector4.One;
-            FlverShader.SpecularPower = 10f;
-            FlverShader.NormalMapCustomZ = 1.0f;
+            FlverShader.Effect.AmbientColor = Vector4.One;
+            FlverShader.Effect.AmbientIntensity = 0.5f;
+            FlverShader.Effect.DiffuseColor = Vector4.One;
+            FlverShader.Effect.DiffuseIntensity = 0.75f;
+            FlverShader.Effect.SpecularColor = Vector4.One;
+            FlverShader.Effect.SpecularPower = 10f;
+            FlverShader.Effect.NormalMapCustomZ = 1.0f;
 
             DbgPrimShader = new DbgPrimShader(Device);
 
@@ -164,8 +157,6 @@ namespace DarkSoulsModelViewerDX
             HotSwapRasterizerState_BackfaceCullingOn = Device.RasterizerState.GetCopyOfState();
             HotSwapRasterizerState_BackfaceCullingOn.MultiSampleAntiAlias = true;
             HotSwapRasterizerState_BackfaceCullingOn.CullMode = CullMode.CullClockwiseFace;
-
-            DbgPrim_Grid = new DbgPrimGrid(Color.Green, Color.Lime * 0.5f, 10, 1);
         }
 
         public static void BeginDraw()
@@ -173,16 +164,16 @@ namespace DarkSoulsModelViewerDX
             InitDepthStencil();
             //InitBlendState();
 
-            World.ApplyViewToShader(CurrentDbgPrimGFXShader);
-            World.ApplyViewToShader(CurrentFlverGFXShader);
+            World.ApplyViewToShader(DbgPrimShader);
+            World.ApplyViewToShader(FlverShader);
 
-            GFX.Device.SamplerStates[0] = SamplerState.LinearWrap;
+            Device.SamplerStates[0] = SamplerState.LinearWrap;
 
-            GFX.FlverShader.EyePosition = GFX.World.CameraTransform.Position;
-            GFX.FlverShader.LightDirection = GFX.World.LightDirectionVector;
-            GFX.FlverShader.ColorMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
-            GFX.FlverShader.NormalMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
-            GFX.FlverShader.SpecularMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
+            FlverShader.Effect.EyePosition = World.CameraTransform.Position;
+            FlverShader.Effect.LightDirection = World.LightDirectionVector;
+            FlverShader.Effect.ColorMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
+            FlverShader.Effect.NormalMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
+            FlverShader.Effect.SpecularMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
 
         }
 
@@ -196,8 +187,7 @@ namespace DarkSoulsModelViewerDX
                     ModelDrawer.DebugDrawAll();
                     break;
                 case GFXDrawStep._2_DbgPrim:
-                    if (DBG.ShowGrid)
-                        DbgPrim_Grid.Draw();
+                    DBG.DrawPrimitives();
                     break;
                 case GFXDrawStep._4_GUI:
                     DbgMenuItem.CurrentMenu.Draw((float)gameTime.ElapsedGameTime.TotalSeconds);

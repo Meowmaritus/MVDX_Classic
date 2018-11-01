@@ -155,16 +155,16 @@ namespace DarkSoulsModelViewerDX
                     if (TexDataNormal == null && TexNameNormal != null)
                         TexDataNormal = TexturePool.FetchTexture(TexNameNormal);
 
-                    GFX.FlverShader.ColorMap = TexDataDiffuse ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
-                    GFX.FlverShader.SpecularMap = TexDataSpecular ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
-                    GFX.FlverShader.NormalMap = TexDataNormal ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
+                    GFX.FlverShader.Effect.ColorMap = TexDataDiffuse ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
+                    GFX.FlverShader.Effect.SpecularMap = TexDataSpecular ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
+                    GFX.FlverShader.Effect.NormalMap = TexDataNormal ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
                 }
                 
 
-                foreach (var technique in GFX.CurrentFlverRenderEffect.Techniques)
+                foreach (var technique in GFX.FlverShader.Effect.Techniques)
                 {
-                    GFX.CurrentFlverRenderEffect.CurrentTechnique = technique;
-                    foreach (EffectPass pass in GFX.CurrentFlverRenderEffect.CurrentTechnique.Passes)
+                    GFX.FlverShader.Effect.CurrentTechnique = technique;
+                    foreach (EffectPass pass in GFX.FlverShader.Effect.CurrentTechnique.Passes)
                     {
                         pass.Apply();
 

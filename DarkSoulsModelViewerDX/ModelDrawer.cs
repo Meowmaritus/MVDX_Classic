@@ -116,7 +116,7 @@ namespace DarkSoulsModelViewerDX
 
         private void DrawFlverAt(Model flver, Transform transform)
         {
-            GFX.World.ApplyViewToShader(GFX.CurrentFlverGFXShader, transform);
+            GFX.World.ApplyViewToShader(GFX.FlverShader, transform);
             flver.Draw(transform);
         }
 

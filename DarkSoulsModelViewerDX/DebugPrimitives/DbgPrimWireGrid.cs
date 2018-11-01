@@ -7,12 +7,17 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.DebugPrimitives
 {
-    public class DbgPrimGrid : ComplexDebugPrimitive
+    public class DbgPrimWireGrid : DbgPrimWire
     {
-        public DbgPrimGrid(Color originColor, Color color, int unitRange, float unitSize)
+        public DbgPrimWireGrid(Color originColor, Color color, int unitRange, float unitSize)
         {
             for (int h = -unitRange; h <= unitRange; h++)
             {
+                if (h == 0)
+                {
+
+                }
+
                 AddLine(new Vector3(h, 0, unitRange) * unitSize,
                     new Vector3(h, 0, -unitRange) * unitSize, h == 0 ? originColor : color);
             }

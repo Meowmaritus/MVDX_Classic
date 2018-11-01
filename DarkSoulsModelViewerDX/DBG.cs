@@ -1,4 +1,5 @@
-﻿using DarkSoulsModelViewerDX.GFXShaders;
+﻿using DarkSoulsModelViewerDX.DebugPrimitives;
+using DarkSoulsModelViewerDX.GFXShaders;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,6 +13,60 @@ namespace DarkSoulsModelViewerDX
 {
     public class DBG
     {
+        public static void CreateDebugPrimitives()
+        {
+            // This is the green grid, which is just hardcoded lel
+            DbgPrim_Grid = new DbgPrimWireGrid(Color.Green, Color.Lime * 0.5f, 10, 1);
+
+            // If you want to disable the grid on launch uncomment the next line.
+            //ShowGrid = false;
+
+            // If you want the menu to be CLOSED on launch uncomment the next line.
+            //DbgMenus.DbgMenuItem.MenuOpenState = DbgMenus.DbgMenuOpenState.Closed;
+
+
+            // Put stuff below for testing:
+
+        }
+
+        private static List<IDbgPrim> Primitives = new List<IDbgPrim>();
+
+        public static DbgPrimWireGrid DbgPrim_Grid;
+
+        public static void ClearPrimitives()
+        {
+            foreach (var p in Primitives)
+            {
+                p.Dispose();
+            }
+            Primitives.Clear();
+        }
+
+        public static void AddPrimitive(IDbgPrim primitive)
+        {
+            Primitives.Add(primitive);
+        }
+
+        public static void DrawPrimitives()
+        {
+            if (ShowGrid)
+                DbgPrim_Grid.Draw();
+
+            foreach (var p in Primitives)
+            {
+                p.Draw();
+            }
+
+            GFX.SpriteBatch.Begin();
+            if (ShowGrid)
+                DbgPrim_Grid.LabelDraw();
+            foreach (var p in Primitives)
+            {
+                p.LabelDraw();
+            }
+            GFX.SpriteBatch.End();
+        }
+
         public static bool ShowModelNames = true;
         public static bool ShowModelBoundingBoxes = false;
         public static bool ShowModelSubmeshBoundingBoxes = false;
@@ -31,6 +86,8 @@ namespace DarkSoulsModelViewerDX
 
         public static SpriteFont DEBUG_FONT_HQ { get; private set; }
         const string DEBUG_FONT_HQ_NAME = "Content\\DbgLabelFontHQ";
+
+
 
         private static VertexPositionColor[] DebugLinePositionBuffer = new VertexPositionColor[2];
         private static VertexBuffer DebugLineVertexBuffer;
@@ -83,9 +140,9 @@ namespace DarkSoulsModelViewerDX
             if (DebugLineVertexBuffer == null)
                 DebugLineVertexBuffer = new VertexBuffer(GFX.Device, typeof(VertexPositionColor), 2, BufferUsage.None);
 
-            GFX.World.ApplyViewToShader(GFX.CurrentDbgPrimGFXShader);
+            GFX.World.ApplyViewToShader(GFX.DbgPrimShader);
 
-            foreach (var pass in GFX.CurrentDbgPrimRenderEffect.CurrentTechnique.Passes)
+            foreach (var pass in GFX.DbgPrimShader.Effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
 
@@ -105,7 +162,7 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public static void DrawTextOn3DLocation(Vector3 location, string text, Color color, float physicalHeight)
+        public static void DrawTextOn3DLocation(Vector3 location, string text, Color color, float physicalHeight, bool startAndEndSpriteBatchForMe = true)
         {
             
 
@@ -148,7 +205,8 @@ namespace DarkSoulsModelViewerDX
             DrawOutlinedText(text, 
                 (screenPos2D_Center) - new Vector2(GFX.Device.Viewport.X, GFX.Device.Viewport.Y),
                 color, DEBUG_FONT_HQ,
-                ((screenPos3D_Top.Z + screenPos3D_Bottom.Z) / 2), scale, labelSpritefontSize / 2);
+                ((screenPos3D_Top.Z + screenPos3D_Bottom.Z) / 2), scale, labelSpritefontSize / 2, 
+                startAndEndSpriteBatchForMe);
         }
 
         public static void DrawBoundingBox(BoundingBox bb, Color color, Transform transform)
@@ -171,9 +229,9 @@ namespace DarkSoulsModelViewerDX
                 DebugBoundingBoxVertexBuffer = new VertexBuffer(GFX.Device,
                     typeof(VertexPositionColor), 8, BufferUsage.None);
 
-            GFX.World.ApplyViewToShader(GFX.CurrentDbgPrimGFXShader, transform);
+            GFX.World.ApplyViewToShader(GFX.DbgPrimShader, transform);
 
-            foreach (var pass in GFX.CurrentDbgPrimRenderEffect.CurrentTechnique.Passes)
+            foreach (var pass in GFX.DbgPrimShader.Effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
 

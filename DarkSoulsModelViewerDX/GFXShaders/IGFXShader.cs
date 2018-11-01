@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.GFXShaders
 {
-    public interface IGFXShader
+    public interface IGFXShader<T>
+        where T : Effect
     {
+        T Effect { get; }
         void ApplyWorldView(Matrix world, Matrix view, Matrix projection);
     }
 }

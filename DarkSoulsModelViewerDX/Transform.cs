@@ -38,5 +38,10 @@ namespace DarkSoulsModelViewerDX
 
         public Matrix CameraViewMatrix => TranslationMatrix * RotationMatrix;
         public Matrix WorldMatrix => RotationMatrix * TranslationMatrix;
+
+        public override string ToString()
+        {
+            return $"Pos: {Position.ToString()} Rot (deg): {EulerRotation.Rad2Deg().ToString()}";
+        }
     }
 }

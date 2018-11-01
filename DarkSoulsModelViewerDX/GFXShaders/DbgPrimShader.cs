@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.GFXShaders
 {
-    public class DbgPrimShader : BasicEffect, IGFXShader
+    public class DbgPrimShader : BasicEffect, IGFXShader<DbgPrimShader>
     {
+        public DbgPrimShader Effect => this;
+
         public DbgPrimShader(GraphicsDevice device) : base(device)
         {
             LightingEnabled = false;

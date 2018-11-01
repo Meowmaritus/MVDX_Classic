@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using DarkSoulsModelViewerDX.GFXShaders;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.DebugPrimitives
 {
-    public class ComplexDebugPrimitive
+    public class DbgPrimWire : DbgPrim<DbgPrimShader>
     {
-        public Transform Transform;
+        public override IGFXShader<DbgPrimShader> Shader => GFX.DbgPrimShader;
+
         private int[] Indices = new int[0];
         private VertexPositionColor[] Vertices = new VertexPositionColor[0];
         private VertexBuffer VertBuffer;
@@ -41,8 +43,13 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
 
         public void AddLine(Vector3 start, Vector3 end, Color color)
         {
-            var startVert = new VertexPositionColor(start, color);
-            var endVert = new VertexPositionColor(end, color);
+            AddLine(start, end, color, color);
+        }
+
+        public void AddLine(Vector3 start, Vector3 end, Color startColor, Color endColor)
+        {
+            var startVert = new VertexPositionColor(start, startColor);
+            var endVert = new VertexPositionColor(end, endColor);
             int startIndex = Array.IndexOf(Vertices, startVert);
             int endIndex = Array.IndexOf(Vertices, endVert);
 
@@ -71,17 +78,17 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
             } 
         }
 
-        public void Draw()
+        protected override void DrawPrimitive()
         {
-            foreach (var pass in GFX.CurrentDbgPrimRenderEffect.CurrentTechnique.Passes)
-            {
-                GFX.World.ApplyViewToShader(GFX.CurrentDbgPrimGFXShader, Transform);
-                pass.Apply();
-                GFX.Device.SetVertexBuffer(VertBuffer);
-                GFX.Device.DrawUserIndexedPrimitives(PrimitiveType.LineList,
-                    Vertices, 0, Vertices.Length, Indices, 0,
-                    primitiveCount: Indices.Length / 2 /* 2 indices for each line */);
-            }
+            GFX.Device.SetVertexBuffer(VertBuffer);
+            GFX.Device.DrawUserIndexedPrimitives(PrimitiveType.LineList,
+                Vertices, 0, Vertices.Length, Indices, 0,
+                primitiveCount: Indices.Length / 2 /* 2 indices for each line */);
+        }
+
+        protected override void DisposeBuffers()
+        {
+            VertBuffer.Dispose();
         }
     }
 }

@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.GFXShaders
 {
-    public class FlverShader : Effect, IGFXShader
+    public class FlverShader : Effect, IGFXShader<FlverShader>
     {
+        public FlverShader Effect => this;
+
         public Matrix World
         {
             get => Parameters["World"].GetValueMatrix();

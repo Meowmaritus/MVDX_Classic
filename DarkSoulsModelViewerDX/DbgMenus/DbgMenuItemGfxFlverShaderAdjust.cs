@@ -13,12 +13,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         {
             Vector4 GetVector4()
             {
-                return GFX.FlverShader.Parameters[name].GetValueVector4();
+                return GFX.FlverShader.Effect.Parameters[name].GetValueVector4();
             }
 
             void SetVector4(float x, float y, float z, float w)
             {
-                GFX.FlverShader.Parameters[name].SetValue(new Vector4(x, y, z, w));
+                GFX.FlverShader.Effect.Parameters[name].SetValue(new Vector4(x, y, z, w));
             }
 
             Items.Add(new DbgMenuItemNumber($"{name}.X", 0, 1, 0.01f,
@@ -54,8 +54,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         private void AddFloat(string name)
         {
             Items.Add(new DbgMenuItemNumber(name, 0, 10, 0.01f,
-                (f) => GFX.FlverShader.Parameters[name].SetValue(f), 
-                () => GFX.FlverShader.Parameters[name].GetValueSingle()));
+                (f) => GFX.FlverShader.Effect.Parameters[name].SetValue(f), 
+                () => GFX.FlverShader.Effect.Parameters[name].GetValueSingle()));
         }
 
         public DbgMenuItemGfxFlverShaderAdjust()
