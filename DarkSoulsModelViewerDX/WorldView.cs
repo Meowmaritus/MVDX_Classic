@@ -98,7 +98,7 @@ namespace DarkSoulsModelViewerDX
 
         public Transform GetSpawnPointFromScreenPos(Vector2 screenPos, float distance, bool faceBackwards, bool lockPitch, bool alignToFloor)
         {
-            var result = new Transform();
+            var result = Transform.Default;
             var point1 = GFX.Device.Viewport.Unproject(
                 new Vector3(screenPos, 0),
                 MatrixProjection, CameraTransform.CameraViewMatrix, MatrixWorld);
