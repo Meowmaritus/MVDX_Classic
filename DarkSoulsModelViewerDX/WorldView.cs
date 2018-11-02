@@ -146,7 +146,7 @@ namespace DarkSoulsModelViewerDX
 
         public Transform GetCameraPhysicalLocation()
         {
-            var result = new Transform();
+            var result = Transform.Default;
             var point1 = GFX.Device.Viewport.Unproject(
                 new Vector3(GFX.Device.Viewport.Width * 0.5f,
                 GFX.Device.Viewport.Height * 0.5f, 0),
