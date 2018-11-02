@@ -28,7 +28,7 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
     public abstract class DbgPrim<T> : IDbgPrim
         where T : Effect
     {
-        public Transform Transform { get; set; }
+        public Transform Transform { get; set; } = Transform.Default;
         public string Name { get; set; }
         public Color NameColor { get; set; } = Color.Yellow;
 

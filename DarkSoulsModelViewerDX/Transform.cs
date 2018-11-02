@@ -10,7 +10,7 @@ namespace DarkSoulsModelViewerDX
     public struct Transform
     {
         public static readonly Transform Default
-            = new Transform(Vector3.Zero, Vector3.Zero);
+            = new Transform(Vector3.Zero, Vector3.Zero, Vector3.One);
 
         public Transform(Vector3 pos, Vector3 rot)
         {

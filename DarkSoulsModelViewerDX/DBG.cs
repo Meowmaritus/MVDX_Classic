@@ -21,6 +21,8 @@ namespace DarkSoulsModelViewerDX
         {
             // This is the green grid, which is just hardcoded lel
             DbgPrim_Grid = new DbgPrimWireGrid(Color.Green, Color.Lime * 0.5f, 10, 1);
+            DbgPrim_Grid.Transform = Transform.Default;
+
 
             // If you want to disable the grid on launch uncomment the next line.
             //ShowGrid = false;

@@ -13,17 +13,24 @@ namespace DarkSoulsModelViewerDX
 {
     public class InterrootLoader
     {
+        private static object _lock_IO = new object();
+
         static InterrootLoader()
         {
-            if (File.Exists("DSMVDX_InterrootPath.txt"))
-                Interroot = File.ReadAllText("DSMVDX_InterrootPath.txt").Trim('\n');
+            lock (_lock_IO)
+            {
+                if (File.Exists("DSMVDX_InterrootPath.txt"))
+                    Interroot = File.ReadAllText("DSMVDX_InterrootPath.txt").Trim('\n');
+            }
+            
 
             TexturePool.OnLoadError += TexPool_OnLoadError;
         }
 
         public static void SaveInterrootPath()
         {
-            File.WriteAllText("DSMVDX_InterrootPath.txt", Interroot);
+            lock (_lock_IO)
+                File.WriteAllText("DSMVDX_InterrootPath.txt", Interroot);
         }
 
         public static void Browse()
@@ -80,7 +87,8 @@ namespace DarkSoulsModelViewerDX
             var fileName = path;
             if (!File.Exists(fileName))
                 return null;
-            return DataFile.LoadFromFile<EntityBND>(fileName);
+            lock (_lock_IO)
+                return DataFile.LoadFromFile<EntityBND>(fileName);
         }
 
         public static EntityBND LoadChr(int id)
@@ -95,14 +103,18 @@ namespace DarkSoulsModelViewerDX
 
         public static List<TPF> DirectLoadAllTpfInDir(string relPath)
         {
-            var path = GetInterrootPath(relPath);
-            if (!Directory.Exists(path))
-                return new List<TPF>();
+            lock (_lock_IO)
+            {
+                var path = GetInterrootPath(relPath);
+                if (!Directory.Exists(path))
+                    return new List<TPF>();
 
-            var tpfNames = Directory.GetFiles(path, "*.tpf");
-            return tpfNames
-                .Select(x => DataFile.LoadFromFile<TPF>(x))
-                .ToList();
+                var tpfNames = Directory.GetFiles(path, "*.tpf");
+                return tpfNames
+                    .Select(x => DataFile.LoadFromFile<TPF>(x))
+                    .ToList();
+            }
+               
         }
 
         public static List<TPF> LoadChrTexUdsfm(int id)
@@ -112,7 +124,8 @@ namespace DarkSoulsModelViewerDX
 
         public static TPF DirectLoadTpf(string path)
         {
-            return DataFile.LoadFromFile<TPF>(path);
+            lock (_lock_IO)
+                return DataFile.LoadFromFile<TPF>(path);
         }
 
         public static Model LoadModelChr(int id, int idx)
@@ -135,7 +148,8 @@ namespace DarkSoulsModelViewerDX
             TexturePool.AddChrBnd(id, idx);
             TexturePool.AddChrTexUdsfm(id);
 
-            return new Model(FLVEROptimized.ReadFromBnd(name, 0));
+            lock (_lock_IO)
+                return new Model(FLVEROptimized.ReadFromBnd(name, 0));
         }
 
         public static Model LoadModelObjOptimized(int id, int idx)
@@ -146,8 +160,8 @@ namespace DarkSoulsModelViewerDX
                 return null;
 
             TexturePool.AddObjBnd(id, idx);
-
-            return new Model(FLVEROptimized.ReadFromBnd(name, 0));
+            lock (_lock_IO)
+                return new Model(FLVEROptimized.ReadFromBnd(name, 0));
         }
 
         public static Model LoadModelObj(int id, int idx)
@@ -172,8 +186,9 @@ namespace DarkSoulsModelViewerDX
 
             FLVER loadModel(string modelName)
             {
-                if (!modelDict.ContainsKey(modelName + $"A{area:D2}"))
-                    modelDict.Add(modelName + $"A{area:D2}", DataFile.LoadFromFile<FLVER>(Path.Combine(modelDir, modelName + $"A{area:D2}" + ".flver")));
+                lock (_lock_IO)
+                    if (!modelDict.ContainsKey(modelName + $"A{area:D2}"))
+                        modelDict.Add(modelName + $"A{area:D2}", DataFile.LoadFromFile<FLVER>(Path.Combine(modelDir, modelName + $"A{area:D2}" + ".flver")));
 
                 return modelDict[modelName + $"A{area:D2}"];
             }

@@ -18,6 +18,8 @@ namespace DarkSoulsModelViewerDX
     }
     public class TextureFetchRequest
     {
+        private static object _lock_Texture_IO = new object();
+
         public TextureFetchRequestType FetchType;
         public string FetchUri;
         public string TexName;
@@ -38,23 +40,26 @@ namespace DarkSoulsModelViewerDX
 
         private byte[] FetchBytes()
         {
-            switch (FetchType)
+            lock (_lock_Texture_IO)
             {
-                case TextureFetchRequestType.EntityBnd:
-                    var texData = FLVEROptimized.ReadTextureDataFromBnd(FetchUri, 0);
-                    return texData[TexName];
-                case TextureFetchRequestType.Tpf:
-                    var tpf = DataFile.LoadFromFile<TPF>(FetchUri);
-                    foreach (var t in tpf)
-                    {
-                        if (t.Name == TexName)
+                switch (FetchType)
+                {
+                    case TextureFetchRequestType.EntityBnd:
+                        var texData = FLVEROptimized.ReadTextureDataFromBnd(FetchUri, 0);
+                        return texData[TexName];
+                    case TextureFetchRequestType.Tpf:
+                        var tpf = DataFile.LoadFromFile<TPF>(FetchUri);
+                        foreach (var t in tpf)
                         {
-                            return t.DDSBytes;
+                            if (t.Name == TexName)
+                            {
+                                return t.DDSBytes;
+                            }
                         }
-                    }
-                    return null;
+                        return null;
+                }
+                return null;
             }
-            return null;
         }
 
         private static SurfaceFormat GetSurfaceFormatFromString(string str)

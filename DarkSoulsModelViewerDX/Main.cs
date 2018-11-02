@@ -19,7 +19,7 @@ namespace DarkSoulsModelViewerDX
     /// </summary>
     public class Main : Game
     {
-        public static Form WinForm;
+        //public static Form WinForm;
 
         public static bool FIXED_TIME_STEP = true;
 
@@ -72,12 +72,12 @@ namespace DarkSoulsModelViewerDX
             graphics.DeviceCreated += Graphics_DeviceCreated;
             graphics.DeviceReset += Graphics_DeviceReset;
 
-            IsFixedTimeStep = false;
+            IsFixedTimeStep = true;
             TargetElapsedTime = TimeSpan.FromTicks(166667);
             MaxElapsedTime = TimeSpan.FromTicks(166667);
 
             //IsFixedTimeStep = false;
-            graphics.SynchronizeWithVerticalRetrace = false;
+            graphics.SynchronizeWithVerticalRetrace = true;
 
             graphics.PreferMultiSampling = true;
 
@@ -104,10 +104,10 @@ namespace DarkSoulsModelViewerDX
 
         protected override void Initialize()
         {
-            WinForm = (Form)Control.FromHandle(Window.Handle);
-            WinForm.AllowDrop = true;
-            WinForm.DragEnter += GameWindowForm_DragEnter;
-            WinForm.DragDrop += GameWindowForm_DragDrop;
+            var winForm = (Form)Control.FromHandle(Window.Handle);
+            winForm.AllowDrop = true;
+            winForm.DragEnter += GameWindowForm_DragEnter;
+            winForm.DragDrop += GameWindowForm_DragDrop;
 
             IsMouseVisible = true;
 
@@ -142,11 +142,6 @@ namespace DarkSoulsModelViewerDX
             {
                 e.Effect = DragDropEffects.None;
             }
-        }
-
-        private void TestLoadAllMaps()
-        {
-
         }
 
         protected override void LoadContent()

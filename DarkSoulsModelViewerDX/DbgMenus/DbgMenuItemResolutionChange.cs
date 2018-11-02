@@ -74,8 +74,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         {
             switch(f)
             {
+                case SurfaceFormat.Color:
+                    return "32-Bit";
                 default:
-                    return f.ToString();
+                    return $"<{nameof(SurfaceFormat)}.{f.ToString()}>";
             }
         }
     }

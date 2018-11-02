@@ -12,9 +12,9 @@ namespace DarkSoulsModelViewerDX
 {
     public class WorldView
     {
-        public Transform CameraTransform;
-        public Transform CameraOrigin;
-        public Transform CameraPositionDefault;
+        public Transform CameraTransform = Transform.Default;
+        public Transform CameraOrigin = Transform.Default;
+        public Transform CameraPositionDefault = Transform.Default;
 
         public float OrbitCamDistance = 0;
         public bool IsOrbitCam = false;

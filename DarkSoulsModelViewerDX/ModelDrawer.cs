@@ -147,20 +147,19 @@ namespace DarkSoulsModelViewerDX
 
         public void Draw()
         {
-            List<ModelInstance> thisDrawModelInstances;
             lock (_lock_ModelLoad_Draw)
             {
-                thisDrawModelInstances = ModelInstanceList;
-            }
-
-            var drawOrderSortedModelInstances = thisDrawModelInstances
+                var drawOrderSortedModelInstances = ModelInstanceList
                 .Where(x => x.Model.IsVisible && GFX.World.IsInFrustum(x.Model.Bounds, x.Transform))
                 .OrderByDescending(m => GFX.World.GetDistanceSquaredFromCamera(m.Transform));
 
-            foreach (var ins in drawOrderSortedModelInstances)
-            {
-                DrawFlverAt(ins.Model, ins.Transform);
+                foreach (var ins in drawOrderSortedModelInstances)
+                {
+                    DrawFlverAt(ins.Model, ins.Transform);
+                }
             }
+
+            
         }
 
         public void DebugDrawAll()

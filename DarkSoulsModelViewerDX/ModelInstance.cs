@@ -12,7 +12,7 @@ namespace DarkSoulsModelViewerDX
     {
         public string Name;
         public Model Model;
-        public Transform Transform;
+        public Transform Transform = Transform.Default;
         bool IsVisible
         {
             get => Model.IsVisible;

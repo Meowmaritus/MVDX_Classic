@@ -13,6 +13,7 @@ namespace DarkSoulsModelViewerDX
 {
     public static class TexturePool
     {
+        private static object _lock_IO = new object();
         //This might be weird because it doesn't follow convention :fatcat:
         public delegate void TextureLoadErrorDelegate(string texName, string error);
         public static event TextureLoadErrorDelegate OnLoadError;
@@ -43,11 +44,14 @@ namespace DarkSoulsModelViewerDX
         {
             var path = InterrootLoader.GetInterrootPath($@"chr\c{id:D4}.chrbnd");
 
-            var texNames = FLVEROptimized.ReadTextureNamesFromBnd(path, idx);
-
-            foreach (var tn in texNames)
+            lock (_lock_IO)
             {
-                AddFetch(TextureFetchRequestType.EntityBnd, path, tn);
+                var texNames = FLVEROptimized.ReadTextureNamesFromBnd(path, idx);
+
+                foreach (var tn in texNames)
+                {
+                    AddFetch(TextureFetchRequestType.EntityBnd, path, tn);
+                }
             }
         }
 
@@ -105,17 +109,20 @@ namespace DarkSoulsModelViewerDX
 
         public static void AddChrBndsThatEndIn9()
         {
-            var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"chr"), "*9.chrbnd");
-            foreach (var ctew9 in chrbndsThatEndWith9)
+            lock (_lock_IO)
             {
-                var entityBnd = InterrootLoader.DirectLoadEntityBnd(
-                    InterrootLoader.GetInterrootPath(
-                        $@"chr\{MiscUtil.GetFileNameWithoutDirectoryOrExtension(ctew9)}.chrbnd"));
-                foreach (var m in entityBnd.Models)
+                var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"chr"), "*9.chrbnd");
+                foreach (var ctew9 in chrbndsThatEndWith9)
                 {
-                    foreach (var t in m.Textures)
+                    var entityBnd = InterrootLoader.DirectLoadEntityBnd(
+                        InterrootLoader.GetInterrootPath(
+                            $@"chr\{MiscUtil.GetFileNameWithoutDirectoryOrExtension(ctew9)}.chrbnd"));
+                    foreach (var m in entityBnd.Models)
                     {
-                        AddFetch(TextureFetchRequestType.EntityBnd, entityBnd.FilePath, t.Key);
+                        foreach (var t in m.Textures)
+                        {
+                            AddFetch(TextureFetchRequestType.EntityBnd, entityBnd.FilePath, t.Key);
+                        }
                     }
                 }
             }
@@ -140,17 +147,21 @@ namespace DarkSoulsModelViewerDX
 
         public static Texture2D FetchTexture(string name)
         {
-            if (name == null)
-                return null;
-            var shortName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(name);
-            if (Fetches.ContainsKey(shortName))
+            lock (_lock_IO)
             {
-                return Fetches[shortName].Fetch();
+                if (name == null)
+                    return null;
+                var shortName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(name);
+                if (Fetches.ContainsKey(shortName))
+                {
+                    return Fetches[shortName].Fetch();
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
-            {
-                return null;
-            }
+                
         }
     }
 }
