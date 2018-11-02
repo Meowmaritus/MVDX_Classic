@@ -82,9 +82,9 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 ResetDefault.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.Home));
 
                 MoveFastHeld = gamepad.IsButtonDown(Buttons.LeftShoulder) ||
-                    (MODEL_VIEWER_MAIN.Active && (keyboard.IsKeyDown(Keys.LeftShift) || keyboard.IsKeyDown(Keys.RightShift)));
+                    (Main.Active && (keyboard.IsKeyDown(Keys.LeftShift) || keyboard.IsKeyDown(Keys.RightShift)));
                 MoveFasterHeld = gamepad.IsButtonDown(Buttons.X) ||
-                    (MODEL_VIEWER_MAIN.Active && (keyboard.IsKeyDown(Keys.LeftControl) || keyboard.IsKeyDown(Keys.RightControl)));
+                    (Main.Active && (keyboard.IsKeyDown(Keys.LeftControl) || keyboard.IsKeyDown(Keys.RightControl)));
 
                 if (gamepad.IsButtonDown(Buttons.RightShoulder))
                 {
@@ -99,7 +99,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 }
 
 
-                if (MODEL_VIEWER_MAIN.Active)
+                if (Main.Active)
                 {
                     ClickMouse.Update(gamepad, elapsedSeconds, mouse.LeftButton == ButtonState.Pressed);
                     MiddleClickMouse.Update(gamepad, elapsedSeconds, mouse.MiddleButton == ButtonState.Pressed);

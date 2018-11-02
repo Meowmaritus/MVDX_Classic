@@ -29,6 +29,8 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
         where T : Effect
     {
         public Transform Transform { get; set; }
+        public string Name { get; set; }
+        public Color NameColor { get; set; } = Color.Yellow;
 
         private List<DbgLabel> DbgLabels = new List<DbgLabel>();
 
@@ -39,7 +41,7 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
 
         public abstract IGFXShader<T> Shader { get; }
 
-        public abstract DbgPrim<T> Instantiate(Transform newLocation);
+        public abstract DbgPrim<T> Instantiate(string newName, Transform newLocation, Color? newNameColor = null);
 
         /// <summary>
         /// Set this to choose specific technique(s).

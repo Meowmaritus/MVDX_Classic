@@ -50,11 +50,11 @@ namespace DarkSoulsModelViewerDX
             var shortMaterialName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(f.Material.MTDName);
             if (shortMaterialName.EndsWith("_Alp") || shortMaterialName.EndsWith("_Edge"))
             {
-                DrawStep = GFXDrawStep._3_AlphaEdge;
+                DrawStep = GFXDrawStep.AlphaEdge;
             }
             else
             {
-                DrawStep = GFXDrawStep._1_Opaque;
+                DrawStep = GFXDrawStep.Opaque;
             }
 
             foreach (var matParam in f.Material.Parameters)
@@ -155,9 +155,9 @@ namespace DarkSoulsModelViewerDX
                     if (TexDataNormal == null && TexNameNormal != null)
                         TexDataNormal = TexturePool.FetchTexture(TexNameNormal);
 
-                    GFX.FlverShader.Effect.ColorMap = TexDataDiffuse ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
-                    GFX.FlverShader.Effect.SpecularMap = TexDataSpecular ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
-                    GFX.FlverShader.Effect.NormalMap = TexDataNormal ?? MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
+                    GFX.FlverShader.Effect.ColorMap = TexDataDiffuse ?? Main.DEFAULT_TEXTURE_DIFFUSE;
+                    GFX.FlverShader.Effect.SpecularMap = TexDataSpecular ?? Main.DEFAULT_TEXTURE_SPECULAR;
+                    GFX.FlverShader.Effect.NormalMap = TexDataNormal ?? Main.DEFAULT_TEXTURE_NORMAL;
                 }
                 
 

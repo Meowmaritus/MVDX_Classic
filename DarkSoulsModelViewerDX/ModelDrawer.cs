@@ -6,12 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX
 {
     public class ModelDrawer
     {
+        private static object _lock_ModelLoad_Draw = new object();
         public List<ModelInstance> ModelInstanceList { get; private set; } = new List<ModelInstance>();
 
         public long Debug_VertexCount = 0;
@@ -26,52 +28,71 @@ namespace DarkSoulsModelViewerDX
 
         public void AddModelInstance(ModelInstance ins)
         {
-            ModelInstanceList.Add(ins);
-
-            foreach (var submesh in ins.Model.Submeshes)
+            lock (_lock_ModelLoad_Draw)
             {
-                Debug_VertexCount += submesh.VertexCount;
-                Debug_SubmeshCount++;
+                ModelInstanceList.Add(ins);
+
+                foreach (var submesh in ins.Model.Submeshes)
+                {
+                    Debug_VertexCount += submesh.VertexCount;
+                    Debug_SubmeshCount++;
+                }
             }
+            
         }
 
         public void TestAddAllChr()
         {
-            float currentX = 0;
-
-            TexturePool.AddChrBndsThatEndIn9();
-
-            for (int i = 0; i <= 9999; i++)
+            var thread = new Thread(() =>
             {
-                var newChr = AddChr(i, 0, new Transform(currentX, 0, 0, 0, 0, 0));
-                if (newChr != null)
+                float currentX = 0;
+
+                TexturePool.AddChrBndsThatEndIn9();
+
+                for (int i = 0; i <= 9999; i++)
                 {
-                    float thisChrWidth = new Vector3(newChr.Model.Bounds.Max.X, 0, newChr.Model.Bounds.Max.Z).Length()
-                        + new Vector3(newChr.Model.Bounds.Min.X, 0, newChr.Model.Bounds.Min.Z).Length();
-                    newChr.Transform.Position.X += thisChrWidth / 2;
-                    currentX += thisChrWidth;
+                    var newChr = AddChr(i, 0, new Transform(currentX, 0, 0, 0, 0, 0));
+                    if (newChr != null)
+                    {
+                        float thisChrWidth = new Vector3(newChr.Model.Bounds.Max.X, 0, newChr.Model.Bounds.Max.Z).Length()
+                            + new Vector3(newChr.Model.Bounds.Min.X, 0, newChr.Model.Bounds.Min.Z).Length();
+                        newChr.Transform.Position.X += thisChrWidth / 2;
+                        currentX += thisChrWidth;
+                    }
                 }
-            }
+            });
+
+            thread.IsBackground = true;
+
+            thread.Start();
         }
 
         public void TestAddAllObj()
         {
-            float currentX = 0;
-
-            TexturePool.AddMapTexUdsfm();
-            TexturePool.AddObjBndsThatEndIn9();
-
-            for (int i = 0; i <= 9999; i++)
+            var thread = new Thread(() =>
             {
-                var newChr = AddObj(i, 0, new Transform(currentX, 0, 0, 0, 0, 0));
-                if (newChr != null)
+                float currentX = 0;
+
+                TexturePool.AddMapTexUdsfm();
+                TexturePool.AddObjBndsThatEndIn9();
+
+                for (int i = 0; i <= 9999; i++)
                 {
-                    float thisChrWidth = new Vector3(newChr.Model.Bounds.Max.X, 0, newChr.Model.Bounds.Max.Z).Length()
-                        + new Vector3(newChr.Model.Bounds.Min.X, 0, newChr.Model.Bounds.Min.Z).Length();
-                    newChr.Transform.Position.X += thisChrWidth / 2;
-                    currentX += thisChrWidth;
+                    var newChr = AddObj(i, 0, new Transform(currentX, 0, 0, 0, 0, 0));
+                    if (newChr != null)
+                    {
+                        float thisChrWidth = new Vector3(newChr.Model.Bounds.Max.X, 0, newChr.Model.Bounds.Max.Z).Length()
+                            + new Vector3(newChr.Model.Bounds.Min.X, 0, newChr.Model.Bounds.Min.Z).Length();
+                        newChr.Transform.Position.X += thisChrWidth / 2;
+                        currentX += thisChrWidth;
+                    }
                 }
-            }
+            });
+
+            thread.IsBackground = true;
+
+            thread.Start();
+            
         }
 
         public ModelInstance AddChr(int id, int idx, Transform location)
@@ -100,18 +121,17 @@ namespace DarkSoulsModelViewerDX
             return modelInstance;
         }
 
-        public List<ModelInstance> AddMap(int area, int block, bool excludeScenery)
+        public void AddMap(int area, int block, bool excludeScenery)
         {
-            TexturePool.AddMapTexUdsfm();
-
-            var mapModelInstances = InterrootLoader.LoadMap(area, block, excludeScenery);
-
-            foreach (var ins in mapModelInstances)
+            var thread = new Thread(() =>
             {
-                AddModelInstance(ins);
-            }
+                TexturePool.AddMapTexUdsfm();
+                InterrootLoader.LoadMapInBackground(area, block, excludeScenery, AddModelInstance);
+            });
 
-            return mapModelInstances;
+            thread.IsBackground = true;
+
+            thread.Start();
         }
 
         private void DrawFlverAt(Model flver, Transform transform)
@@ -127,7 +147,13 @@ namespace DarkSoulsModelViewerDX
 
         public void Draw()
         {
-            var drawOrderSortedModelInstances = ModelInstanceList
+            List<ModelInstance> thisDrawModelInstances;
+            lock (_lock_ModelLoad_Draw)
+            {
+                thisDrawModelInstances = ModelInstanceList;
+            }
+
+            var drawOrderSortedModelInstances = thisDrawModelInstances
                 .Where(x => x.Model.IsVisible && GFX.World.IsInFrustum(x.Model.Bounds, x.Transform))
                 .OrderByDescending(m => GFX.World.GetDistanceSquaredFromCamera(m.Transform));
 
@@ -139,9 +165,12 @@ namespace DarkSoulsModelViewerDX
 
         public void DebugDrawAll()
         {
-            foreach (var ins in ModelInstanceList)
+            lock (_lock_ModelLoad_Draw)
             {
-                ins.DrawDebugInfo();
+                foreach (var ins in ModelInstanceList)
+                {
+                    ins.DrawDebugInfo();
+                }
             }
         }
 

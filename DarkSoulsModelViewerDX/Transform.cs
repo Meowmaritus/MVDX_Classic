@@ -9,13 +9,21 @@ namespace DarkSoulsModelViewerDX
 {
     public struct Transform
     {
-        public static readonly Transform Zero
+        public static readonly Transform Default
             = new Transform(Vector3.Zero, Vector3.Zero);
 
         public Transform(Vector3 pos, Vector3 rot)
         {
             Position = pos;
             EulerRotation = rot;
+            Scale = Vector3.One;
+        }
+
+        public Transform(Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            Position = pos;
+            EulerRotation = rot;
+            Scale = scale;
         }
 
         public Transform(float x, float y, float z, float rx, float ry, float rz)
@@ -24,8 +32,17 @@ namespace DarkSoulsModelViewerDX
 
         }
 
+        public Transform(float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz)
+            : this(new Vector3(x, y, z), new Vector3(rx, ry, rz), new Vector3(sx, sy, sz))
+        {
+
+        }
+
         public Vector3 Position;
         public Vector3 EulerRotation;
+        public Vector3 Scale;
+
+        public Matrix ScaleMatrix => Matrix.CreateScale(Scale);
 
         public Matrix TranslationMatrix => Matrix.CreateTranslation(Position.X, Position.Y, Position.Z);
         public Matrix RotationMatrix => Matrix.CreateRotationY(EulerRotation.Y)
@@ -37,7 +54,7 @@ namespace DarkSoulsModelViewerDX
             * Matrix.CreateRotationZ(EulerRotation.Z);
 
         public Matrix CameraViewMatrix => TranslationMatrix * RotationMatrix;
-        public Matrix WorldMatrix => RotationMatrix * TranslationMatrix;
+        public Matrix WorldMatrix => ScaleMatrix * RotationMatrix * TranslationMatrix;
 
         private static Random rand = new Random();
         public static Transform RandomUnit(bool randomRot = false)

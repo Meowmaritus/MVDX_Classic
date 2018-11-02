@@ -105,7 +105,7 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
             VertBuffer.Dispose();
         }
 
-        public override DbgPrim<DbgPrimShader> Instantiate(Transform newLocation)
+        public override DbgPrim<DbgPrimShader> Instantiate(string newName, Transform newLocation, Color? newNameColor = null)
         {
             var newPrim = new DbgPrimWire();
             newPrim.Indices = Indices;
@@ -116,6 +116,10 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
             newPrim.NeedToRecreateIndexBuffer = NeedToRecreateIndexBuffer;
 
             newPrim.Transform = newLocation;
+
+            newPrim.Name = newName;
+
+            newPrim.NameColor = newNameColor ?? NameColor;
 
             return newPrim;
         }

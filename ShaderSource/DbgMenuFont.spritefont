@@ -1,7 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
-☆ ★ ○ ● ◎ ◇ 81 9e | ◆ □ ■ △ ▲ ▽ ▼ ※ 〒 → ← ↑ ↓ 〓 
-
 This file contains an xml description of a font, and will be read by the XNA
 Framework Content Pipeline. Follow the comments to customize the appearance
 of the font in your game, and to change the characters which are available to draw
@@ -66,6 +64,36 @@ with.
       <CharacterRegion>
         <Start>&#x25A0;</Start>
         <End>&#x25FF;</End>
+      </CharacterRegion>
+      <!-- Fat Chars -->
+      <CharacterRegion>
+        <Start>&#xFF00;</Start>
+        <End>&#xFFEF;</End>
+      </CharacterRegion>
+      <!-- Everything Else -->
+      <CharacterRegion>
+        <Start>&#x4E00;</Start>
+        <End>&#x4FFF;</End>
+      </CharacterRegion>
+      <CharacterRegion>
+        <Start>&#x5000;</Start>
+        <End>&#x5FFF;</End>
+      </CharacterRegion>
+      <CharacterRegion>
+        <Start>&#x6000;</Start>
+        <End>&#x6FFF;</End>
+      </CharacterRegion>
+      <CharacterRegion>
+        <Start>&#x7000;</Start>
+        <End>&#x7FFF;</End>
+      </CharacterRegion>
+      <CharacterRegion>
+        <Start>&#x8000;</Start>
+        <End>&#x8FFF;</End>
+      </CharacterRegion>
+      <CharacterRegion>
+        <Start>&#x9000;</Start>
+        <End>&#x9FAF;</End>
       </CharacterRegion>
     </CharacterRegions>
   </Asset>

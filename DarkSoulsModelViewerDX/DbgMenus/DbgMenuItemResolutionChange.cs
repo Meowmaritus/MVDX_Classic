@@ -14,7 +14,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public DbgMenuItemResolutionChange()
         {
-            supportedModes = MODEL_VIEWER_MAIN.GetAllResolutions();
+            supportedModes = Main.GetAllResolutions();
             modeIndex = supportedModes.IndexOf(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode);
             UpdateText();
         }

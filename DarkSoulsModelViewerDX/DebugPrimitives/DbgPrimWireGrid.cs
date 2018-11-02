@@ -11,13 +11,9 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
     {
         public DbgPrimWireGrid(Color originColor, Color color, int unitRange, float unitSize)
         {
+            NameColor = color;
             for (int h = -unitRange; h <= unitRange; h++)
             {
-                if (h == 0)
-                {
-
-                }
-
                 AddLine(new Vector3(h, 0, unitRange) * unitSize,
                     new Vector3(h, 0, -unitRange) * unitSize, h == 0 ? originColor : color);
             }

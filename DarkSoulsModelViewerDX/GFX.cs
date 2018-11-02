@@ -15,10 +15,10 @@ namespace DarkSoulsModelViewerDX
 {
     public enum GFXDrawStep : byte
     {
-        _1_Opaque = 1,
-        _2_DbgPrim = 2,
-        _3_AlphaEdge = 3,
-        _4_GUI  = 4,
+        Opaque = 1,
+        AlphaEdge = 2,
+        DbgPrim = 3,
+        GUI  = 4,
     }
 
     public static class GFX
@@ -31,11 +31,11 @@ namespace DarkSoulsModelViewerDX
             public static bool SimpleMSAA = true;
             public static void Apply()
             {
-                MODEL_VIEWER_MAIN.ApplyPresentationParameters(Mode, Vsync, Fullscreen, SimpleMSAA);
+                Main.ApplyPresentationParameters(Mode, Vsync, Fullscreen, SimpleMSAA);
             }
         }
 
-        public static GFXDrawStep CurrentStep = GFXDrawStep._1_Opaque;
+        public static GFXDrawStep CurrentStep = GFXDrawStep.Opaque;
 
         public static readonly GFXDrawStep[] DRAW_STEP_LIST;
         static GFX()
@@ -94,12 +94,12 @@ namespace DarkSoulsModelViewerDX
         {
             switch (CurrentStep)
             {
-                case GFXDrawStep._1_Opaque:
+                case GFXDrawStep.Opaque:
                     Device.DepthStencilState = DepthStencilState_Normal;
                     break;
-                case GFXDrawStep._3_AlphaEdge:
-                case GFXDrawStep._2_DbgPrim:
-                case GFXDrawStep._4_GUI:
+                case GFXDrawStep.AlphaEdge:
+                case GFXDrawStep.DbgPrim:
+                case GFXDrawStep.GUI:
                     Device.DepthStencilState = DepthStencilState_DontWriteDepth;
                     break;
             }
@@ -183,9 +183,9 @@ namespace DarkSoulsModelViewerDX
 
             FlverShader.Effect.EyePosition = World.CameraTransform.Position;
             FlverShader.Effect.LightDirection = World.LightDirectionVector;
-            FlverShader.Effect.ColorMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE;
-            FlverShader.Effect.NormalMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_NORMAL;
-            FlverShader.Effect.SpecularMap = MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_SPECULAR;
+            FlverShader.Effect.ColorMap = Main.DEFAULT_TEXTURE_DIFFUSE;
+            FlverShader.Effect.NormalMap = Main.DEFAULT_TEXTURE_NORMAL;
+            FlverShader.Effect.SpecularMap = Main.DEFAULT_TEXTURE_SPECULAR;
 
         }
 
@@ -193,15 +193,15 @@ namespace DarkSoulsModelViewerDX
         {
             switch (CurrentStep)
             {
-                case GFXDrawStep._1_Opaque:
-                case GFXDrawStep._3_AlphaEdge:
+                case GFXDrawStep.Opaque:
+                case GFXDrawStep.AlphaEdge:
                     ModelDrawer.Draw();
                     ModelDrawer.DebugDrawAll();
                     break;
-                case GFXDrawStep._2_DbgPrim:
+                case GFXDrawStep.DbgPrim:
                     DBG.DrawPrimitives();
                     break;
-                case GFXDrawStep._4_GUI:
+                case GFXDrawStep.GUI:
                     DbgMenuItem.CurrentMenu.Draw((float)gameTime.ElapsedGameTime.TotalSeconds);
                     break;
             }
@@ -209,7 +209,7 @@ namespace DarkSoulsModelViewerDX
 
         private static void DoDraw(GameTime gameTime)
         {
-            if (MODEL_VIEWER_MAIN.DISABLE_DRAW_ERROR_HANDLE)
+            if (Main.DISABLE_DRAW_ERROR_HANDLE)
             {
                 DoDrawStep(gameTime);
             }

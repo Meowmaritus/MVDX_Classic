@@ -252,7 +252,7 @@ namespace DarkSoulsModelViewerDX
             return (t - d) * (1.0f / (1.0f - d));
         }
 
-        public void UpdateInput(MODEL_VIEWER_MAIN game, GameTime gameTime)
+        public void UpdateInput(Main game, GameTime gameTime)
         {
             var gamepad = GamePad.GetState(PlayerIndex.One);
 

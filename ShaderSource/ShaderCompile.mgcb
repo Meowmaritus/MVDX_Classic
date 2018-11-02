@@ -13,18 +13,11 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin DbgLabelFontHQ.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:DbgLabelFontHQ.spritefont
-
 #begin DbgMenuFont.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
+/processorParam:TextureFormat=Color
 /build:DbgMenuFont.spritefont
 
 #begin NormalMapShader.fx

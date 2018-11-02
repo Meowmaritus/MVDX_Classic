@@ -17,6 +17,9 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
 
         public DbgPrimWireBox(Transform location, Vector3 size, Color topColor, Color bottomColor)
         {
+            Transform = location;
+            NameColor = new Color((topColor.ToVector4() + bottomColor.ToVector4()) / 2);
+
             Vector3 max = size / 2;
             Vector3 min = -max;
 
@@ -48,8 +51,6 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
             AddLine(bfr, tfr, bottomColor, topColor);
             AddLine(bbl, tbl, bottomColor, topColor);
             AddLine(bbr, tbr, bottomColor, topColor);
-
-            Transform = location;
         }
     }
 }

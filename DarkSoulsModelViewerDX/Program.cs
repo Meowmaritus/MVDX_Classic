@@ -14,7 +14,7 @@ namespace DarkSoulsModelViewerDX
         [STAThread]
         static void Main()
         {
-            using (var game = new MODEL_VIEWER_MAIN())
+            using (var game = new Main())
                 game.Run(Microsoft.Xna.Framework.GameRunBehavior.Synchronous);
         }
     }

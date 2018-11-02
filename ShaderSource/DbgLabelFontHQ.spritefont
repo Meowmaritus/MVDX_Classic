@@ -67,6 +67,16 @@ with.
         <Start>&#x25A0;</Start>
         <End>&#x25FF;</End>
       </CharacterRegion>
+      <!-- Fat Chars -->
+      <CharacterRegion>
+        <Start>&#xFF00;</Start>
+        <End>&#xFFEF;</End>
+      </CharacterRegion>
+      <!-- Everything Else -->
+      <CharacterRegion>
+        <Start>&#x4E00;</Start>
+        <End>&#x9FAF;</End>
+      </CharacterRegion>
     </CharacterRegions>
   </Asset>
 </XnaContent>

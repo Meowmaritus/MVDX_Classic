@@ -1,5 +1,7 @@
 ﻿using DarkSoulsModelViewerDX.DebugPrimitives;
 using DarkSoulsModelViewerDX.GFXShaders;
+using MeowDSIO;
+using MeowDSIO.DataFiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,37 +26,60 @@ namespace DarkSoulsModelViewerDX
             //ShowGrid = false;
 
             // If you want the menu to be CLOSED on launch uncomment the next line.
-            //DbgMenus.DbgMenuItem.MenuOpenState = DbgMenus.DbgMenuOpenState.Closed;
+            DbgMenus.DbgMenuItem.MenuOpenState = DbgMenus.DbgMenuOpenState.Closed;
 
 
             // Put stuff below for testing:
 
+           
 
-            //---- Sphere benchmark:
-                //var sw = Stopwatch.StartNew();
+        }
 
-                //long totalVerts = 0;
+        public static void LoadMsbRegions(int area, int block)
+        {
+            var cylinder = new DbgPrimWireCylinder(
+               location: Transform.Default,
+               range: 1.0f,
+               height: 1,
+               numSegments: 12,
+               color: Color.Cyan);
 
-                //var sphere = new DbgPrimWireSphere(
-                //    location: Transform.Zero,
-                //    radius: 1,
-                //    numVerticalSegments: 8,
-                //    numSidesPerSegment: 8,
-                //    color: Color.Cyan);
+            var sphere = new DbgPrimWireSphere(Transform.Default, 1f, 12, 12, Color.Red);
 
-                //for (int i = 0; i < 10000; i++)
-                //{
-                //    var newPrim = sphere.Instantiate(Transform.RandomUnit() * 50);
-                //    AddPrimitive(newPrim);
-                //    totalVerts += ((DbgPrimWire)newPrim).VertexCount;
-                //}
+            var point = new DbgPrimWireSphere(Transform.Default, 0.25f, 4, 4, Color.Lime);
 
-                //sw.Stop();
+            var box = new DbgPrimWireBox(Transform.Default, Vector3.One, Color.Yellow);
 
-                //MessageBox.Show($"{sw.Elapsed.TotalSeconds} seconds. {totalVerts} vertices.");
+            var msb = DataFile.LoadFromFile<MSB>(InterrootLoader.GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb"));
+
+            foreach (var msbBox in msb.Regions.Boxes)
+            {
+                var newBox = box.Instantiate(msbBox.Name, new Transform(msbBox.PosX, msbBox.PosY, msbBox.PosZ, msbBox.RotX, msbBox.RotY, msbBox.RotZ, msbBox.WidthX, msbBox.HeightY, msbBox.DepthZ));
+                AddPrimitive(newBox);
+            }
+
+            foreach (var msbSphere in msb.Regions.Spheres)
+            {
+                var newSphere = sphere.Instantiate(msbSphere.Name, new Transform(msbSphere.PosX, msbSphere.PosY, msbSphere.PosZ, msbSphere.RotX, msbSphere.RotY, msbSphere.RotZ, msbSphere.Radius, msbSphere.Radius, msbSphere.Radius));
+                AddPrimitive(newSphere);
+            }
+
+            foreach (var msbCylinder in msb.Regions.Cylinders)
+            {
+                var newCylinder = cylinder.Instantiate(msbCylinder.Name, new Transform(msbCylinder.PosX, msbCylinder.PosY, msbCylinder.PosZ, msbCylinder.RotX, msbCylinder.RotY, msbCylinder.RotZ, msbCylinder.Radius, msbCylinder.Height, msbCylinder.Radius));
+                AddPrimitive(newCylinder);
+            }
+
+            foreach (var msbPoint in msb.Regions.Points)
+            {
+                var newPoint = point.Instantiate(msbPoint.Name, new Transform(msbPoint.PosX, msbPoint.PosY, msbPoint.PosZ, msbPoint.RotX, msbPoint.RotY, msbPoint.RotZ));
+            }
         }
 
         private static List<IDbgPrim> Primitives = new List<IDbgPrim>();
+
+        public static bool ShowPrimitiveNametags = true;
+        public static float PrimitiveNametagSize = 0.5f;
 
         public static DbgPrimWireGrid DbgPrim_Grid;
 
@@ -87,6 +112,9 @@ namespace DarkSoulsModelViewerDX
                 DbgPrim_Grid.LabelDraw();
             foreach (var p in Primitives)
             {
+                if (ShowPrimitiveNametags)
+                    DrawTextOn3DLocation(p.Transform.Position, p.Name, p.NameColor, PrimitiveNametagSize, startAndEndSpriteBatchForMe: false);
+
                 p.LabelDraw();
             }
             GFX.SpriteBatch.End();
@@ -110,7 +138,7 @@ namespace DarkSoulsModelViewerDX
         const string DEBUG_FONT_UI_NAME = "Content\\DbgMenuFont";
 
         public static SpriteFont DEBUG_FONT_HQ { get; private set; }
-        const string DEBUG_FONT_HQ_NAME = "Content\\DbgLabelFontHQ";
+        const string DEBUG_FONT_HQ_NAME = "Content\\CJKFont16x16"; //"Content\\DbgMenuFont"
 
 
 

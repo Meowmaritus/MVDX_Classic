@@ -11,6 +11,9 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
     {
         public DbgPrimWireSphere(Transform location, float radius, int numVerticalSegments, int numSidesPerSegment, Color color)
         {
+            NameColor = color;
+            Transform = location;
+
             if (!(numVerticalSegments >= 2))
                 throw new ArgumentException($"Number of vertical segments must be >= 2", nameof(numVerticalSegments));
             if (!(numSidesPerSegment >= 3))

@@ -159,29 +159,35 @@ namespace DarkSoulsModelViewerDX
             return new Model(chrbnd.Models[0].Mesh);
         }
 
-        public static List<ModelInstance> LoadMap(int area, int block, bool excludeScenery)
+        public static void LoadMapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
         {
-            var result = new List<ModelInstance>();
-            var modelFileNames = Directory.GetFiles(GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00"), "*.flver");
+            var modelDir = GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00");
             var modelDict = new Dictionary<string, FLVER>();
-            foreach (var mfn in modelFileNames)
+            //foreach (var mfn in modelFileNames)
+            //{
+            //    if (excludeScenery && (mfn.StartsWith("m8") || mfn.StartsWith("m9")))
+            //        continue;
+            //    modelDict.Add(MiscUtil.GetFileNameWithoutDirectoryOrExtension(mfn), DataFile.LoadFromFile<FLVER>(mfn));
+            //}
+
+            FLVER loadModel(string modelName)
             {
-                if (excludeScenery && (mfn.StartsWith("m8") || mfn.StartsWith("m9")))
-                    continue;
-                modelDict.Add(MiscUtil.GetFileNameWithoutDirectoryOrExtension(mfn), DataFile.LoadFromFile<FLVER>(mfn));
+                if (!modelDict.ContainsKey(modelName + $"A{area:D2}"))
+                    modelDict.Add(modelName + $"A{area:D2}", DataFile.LoadFromFile<FLVER>(Path.Combine(modelDir, modelName + $"A{area:D2}" + ".flver")));
+
+                return modelDict[modelName + $"A{area:D2}"];
             }
+
             var msb = DataFile.LoadFromFile<MSB>(GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb"));
             foreach (var part in msb.Parts.MapPieces)
             {
                 if (excludeScenery && (part.ModelName.StartsWith("m8") || part.ModelName.StartsWith("m9") || !part.IsShadowDest))
                     continue;
-                var model = new Model(modelDict[part.ModelName + $"A{area:D2}"]);
-                result.Add(new ModelInstance(part.Name, model, new Transform(part.PosX, part.PosY, part.PosZ, part.RotX, part.RotY, part.RotZ)));
+                var model = new Model(loadModel(part.ModelName));
+                addMapModel.Invoke(new ModelInstance(part.Name, model, new Transform(part.PosX, part.PosY, part.PosZ, part.RotX, part.RotY, part.RotZ)));
             }
 
             modelDict = null;
-
-            return result;
         }
 
         public static void LoadDragDroppedFiles(string[] fileNames)
