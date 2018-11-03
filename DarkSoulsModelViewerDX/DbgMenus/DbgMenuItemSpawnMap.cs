@@ -7,54 +7,52 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.DbgMenus
 {
-    public class DbgMenuItemSpawnObj : DbgMenuItem
+    public class DbgMenuItemSpawnMap : DbgMenuItem
     {
-        public static List<int> IDList = new List<int>();
-        public static bool IsSixDigit { get; private set; } = false;
+        public static List<string > IDList = new List<string>();
         private static bool NeedsTextUpdate = false;
+        public bool IsRegionSpawner { get; private set; } = false;
 
         public int IDIndex = 0;
 
         public static void UpdateSpawnIDs()
         {
-            var objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd")
+            var msbFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\map\MapStudio\"), @"*.msb")
                 .Select(Path.GetFileNameWithoutExtension);
-            IDList = new List<int>();
-            IsSixDigit = false;
-            foreach (var cf in objFiles)
+            IDList = new List<string>();
+            foreach (var cf in msbFiles)
             {
-                if (int.TryParse(cf.Substring(1, 4), out int id))
-                {
-                    IDList.Add(id);
-                    if (id > 9999)
-                        IsSixDigit = true;
-                }
+                var dotIndex = cf.IndexOf('.');
+                if (dotIndex >= 0)
+                    IDList.Add(cf.Substring(0, dotIndex));
+                else
+                    IDList.Add(cf);
             }
             NeedsTextUpdate = true;
         }
 
-        public DbgMenuItemSpawnObj()
+        public DbgMenuItemSpawnMap(bool isRegionSpawner)
         {
+            IsRegionSpawner = isRegionSpawner;
             UpdateSpawnIDs();
             UpdateText();
         }
 
         private void UpdateText()
         {
+            string actionText = IsRegionSpawner ? "Click to Spawn MAP - Event Regions" : "Click to Spawn MAP - Models";
+
             if (IDList.Count == 0)
             {
                 IDIndex = 0;
-                Text = $"Click to Spawn OBJ [Invalid Data Root Selected]";
+                Text = $"{actionText} [Invalid Data Root Selected]";
             }
             else
             {
                 if (IDIndex >= IDList.Count)
                     IDIndex = IDList.Count - 1;
 
-                if (IsSixDigit)
-                    Text = $"Click to Spawn OBJ [ID: <o{IDList[IDIndex]:D6}>]";
-                else
-                    Text = $"Click to Spawn OBJ [ID: <o{IDList[IDIndex]:D4}>]";
+                Text = $"{actionText} [ID: <{IDList[IDIndex]}>]";
             }
         }
 
@@ -102,9 +100,14 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public override void OnClick()
         {
-            GFX.ModelDrawer.AddObj(IDList[IDIndex],
-                GFX.World.GetSpawnPointInFrontOfCamera(distance: 5,
-                faceBackwards: false, lockPitch: true, alignToFloor: true));
+            // THIS IS ACTUALLY HOW FROMSOFT DOES IT I SHIT YOU NOT
+            var area = int.Parse(IDList[IDIndex].Substring(1, 2));
+            var block = int.Parse(IDList[IDIndex].Substring(4, 2));
+
+            if (IsRegionSpawner)
+                DBG.LoadMsbRegions(area, block);
+            else
+               GFX.ModelDrawer.AddMap(area, block, false);
         }
 
         public override void UpdateUI()

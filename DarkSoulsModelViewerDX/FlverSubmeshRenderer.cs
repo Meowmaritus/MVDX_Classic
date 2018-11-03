@@ -11,9 +11,7 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX
 {
-
-
-    public class FlverSubmeshRenderer
+    public class FlverSubmeshRenderer : IDisposable
     {
         public BoundingBox Bounds;
 
@@ -26,7 +24,6 @@ namespace DarkSoulsModelViewerDX
             public byte LOD;
         }
 
-        public bool IsVisible = true;
         List<FlverSubmeshRendererFaceSet> MeshFacesets = new List<FlverSubmeshRendererFaceSet>();
 
         private bool HasNoLODs = true;
@@ -90,6 +87,12 @@ namespace DarkSoulsModelViewerDX
                 {
                     MeshVertices[i].TextureCoordinate = Vector2.Zero;
                 }
+
+                // We set the mesh's vertex color to that of a selected mesh.
+                // The shader with lighting ignores this so it will only show
+                // up on the primitive shader, which is what is used to draw
+                // the currently highlighted map piece
+                MeshVertices[i].Color = Main.SELECTED_MESH_COLOR.ToVector4();
             }
 
             VertexCount = MeshVertices.Length;
@@ -140,56 +143,79 @@ namespace DarkSoulsModelViewerDX
             VertBuffer.SetData(MeshVertices);
         }
 
-        public void Draw(int lod)
+        public void Draw<T>(int lod, IGFXShader<T> shader, bool forceNoBackfaceCulling = false)
+            where T : Effect
         {
-            if (IsVisible && GFX.CurrentStep == DrawStep)
+
+            if (GFX.EnableTextures && shader == GFX.FlverShader)
             {
-                if (GFX.EnableTextures)
-                {
-                    if (TexDataDiffuse == null && TexNameDiffuse != null)
-                        TexDataDiffuse = TexturePool.FetchTexture(TexNameDiffuse);
+                if (TexDataDiffuse == null && TexNameDiffuse != null)
+                    TexDataDiffuse = TexturePool.FetchTexture(TexNameDiffuse);
 
-                    if (TexDataSpecular == null && TexNameSpecular != null)
-                        TexDataSpecular = TexturePool.FetchTexture(TexNameSpecular);
+                if (TexDataSpecular == null && TexNameSpecular != null)
+                    TexDataSpecular = TexturePool.FetchTexture(TexNameSpecular);
 
-                    if (TexDataNormal == null && TexNameNormal != null)
-                        TexDataNormal = TexturePool.FetchTexture(TexNameNormal);
+                if (TexDataNormal == null && TexNameNormal != null)
+                    TexDataNormal = TexturePool.FetchTexture(TexNameNormal);
 
-                    GFX.FlverShader.Effect.ColorMap = TexDataDiffuse ?? Main.DEFAULT_TEXTURE_DIFFUSE;
-                    GFX.FlverShader.Effect.SpecularMap = TexDataSpecular ?? Main.DEFAULT_TEXTURE_SPECULAR;
-                    GFX.FlverShader.Effect.NormalMap = TexDataNormal ?? Main.DEFAULT_TEXTURE_NORMAL;
-                }
+                GFX.FlverShader.Effect.ColorMap = TexDataDiffuse ?? Main.DEFAULT_TEXTURE_DIFFUSE;
+                GFX.FlverShader.Effect.SpecularMap = TexDataSpecular ?? Main.DEFAULT_TEXTURE_SPECULAR;
+                GFX.FlverShader.Effect.NormalMap = TexDataNormal ?? Main.DEFAULT_TEXTURE_NORMAL;
+            }
                 
 
-                foreach (var technique in GFX.FlverShader.Effect.Techniques)
+            //foreach (var technique in shader.Effect.Techniques)
+            //{
+            //    shader.Effect.CurrentTechnique = technique;
+                foreach (EffectPass pass in shader.Effect.CurrentTechnique.Passes)
                 {
-                    GFX.FlverShader.Effect.CurrentTechnique = technique;
-                    foreach (EffectPass pass in GFX.FlverShader.Effect.CurrentTechnique.Passes)
+                    pass.Apply();
+
+                    GFX.Device.SetVertexBuffer(VertBuffer);
+
+                    foreach (var faceSet in MeshFacesets)
                     {
-                        pass.Apply();
+                        if (!HasNoLODs && faceSet.LOD != lod)
+                            continue;
 
-                        GFX.Device.SetVertexBuffer(VertBuffer);
+                        GFX.Device.Indices = faceSet.IndexBuffer;
 
-                        foreach (var faceSet in MeshFacesets)
-                        {
-                            if (!HasNoLODs && faceSet.LOD != lod)
-                                continue;
+                        GFX.BackfaceCulling = forceNoBackfaceCulling ? false : faceSet.BackfaceCulling;
 
-                            GFX.Device.Indices = faceSet.IndexBuffer;
+                        GFX.Device.DrawIndexedPrimitives(faceSet.IsTriangleStrip ? PrimitiveType.TriangleStrip : PrimitiveType.TriangleList, 0, 0,
+                            faceSet.IsTriangleStrip ? (faceSet.IndexCount - 2) : (faceSet.IndexCount / 3));
 
-                            GFX.BackfaceCulling = faceSet.BackfaceCulling;
-
-                            GFX.Device.DrawIndexedPrimitives(faceSet.IsTriangleStrip ? PrimitiveType.TriangleStrip : PrimitiveType.TriangleList, 0, 0,
-                                faceSet.IsTriangleStrip ? (faceSet.IndexCount - 2) : (faceSet.IndexCount / 3));
-
-                        }
                     }
                 }
+            //}
+        }
 
-                
-
-                
+        public void Dispose()
+        {
+            for (int i = 0; i < MeshFacesets.Count; i++)
+            {
+                MeshFacesets[i].IndexBuffer.Dispose();
             }
+
+            MeshFacesets = null;
+
+            VertBuffer.Dispose();
+
+            // Just leave the texture data as-is, since 
+            // TexturePool handles memory cleanup
+
+
+            //TexDataDiffuse?.Dispose();
+            TexDataDiffuse = null;
+            TexNameDiffuse = null;
+
+            //TexDataNormal?.Dispose();
+            TexDataNormal = null;
+            TexNameNormal = null;
+
+            //TexDataSpecular?.Dispose();
+            TexDataSpecular = null;
+            TexNameSpecular = null;
         }
     }
 }

@@ -29,6 +29,9 @@ namespace DarkSoulsModelViewerDX
 
         public static bool DISABLE_DRAW_ERROR_HANDLE = true;
 
+        public static readonly Color SELECTED_MESH_COLOR = Color.Yellow * 0.05f;
+        public static readonly Color SELECTED_MESH_WIREFRAME_COLOR = Color.Yellow;
+
         private static GraphicsDeviceManager graphics;
         //public ContentManager Content;
         //public bool IsActive = true;

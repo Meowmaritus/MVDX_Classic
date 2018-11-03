@@ -56,25 +56,32 @@ namespace DarkSoulsModelViewerDX
 
             foreach (var msbBox in msb.Regions.Boxes)
             {
-                var newBox = box.Instantiate(msbBox.Name, new Transform(msbBox.PosX, msbBox.PosY, msbBox.PosZ, msbBox.RotX, msbBox.RotY, msbBox.RotZ, msbBox.WidthX, msbBox.HeightY, msbBox.DepthZ));
+                var newBox = box.Instantiate(msbBox.Name, new Transform(msbBox.PosX, msbBox.PosY, msbBox.PosZ, 
+                    MathHelper.ToRadians(msbBox.RotX), MathHelper.ToRadians(msbBox.RotY), MathHelper.ToRadians(msbBox.RotZ),
+                    msbBox.WidthX, msbBox.HeightY, msbBox.DepthZ));
                 AddPrimitive(newBox);
             }
 
             foreach (var msbSphere in msb.Regions.Spheres)
             {
-                var newSphere = sphere.Instantiate(msbSphere.Name, new Transform(msbSphere.PosX, msbSphere.PosY, msbSphere.PosZ, msbSphere.RotX, msbSphere.RotY, msbSphere.RotZ, msbSphere.Radius, msbSphere.Radius, msbSphere.Radius));
+                var newSphere = sphere.Instantiate(msbSphere.Name, new Transform(msbSphere.PosX, msbSphere.PosY, msbSphere.PosZ,
+                    MathHelper.ToRadians(msbSphere.RotX), MathHelper.ToRadians(msbSphere.RotY), MathHelper.ToRadians(msbSphere.RotZ), 
+                    msbSphere.Radius, msbSphere.Radius, msbSphere.Radius));
                 AddPrimitive(newSphere);
             }
 
             foreach (var msbCylinder in msb.Regions.Cylinders)
             {
-                var newCylinder = cylinder.Instantiate(msbCylinder.Name, new Transform(msbCylinder.PosX, msbCylinder.PosY, msbCylinder.PosZ, msbCylinder.RotX, msbCylinder.RotY, msbCylinder.RotZ, msbCylinder.Radius, msbCylinder.Height, msbCylinder.Radius));
+                var newCylinder = cylinder.Instantiate(msbCylinder.Name, new Transform(msbCylinder.PosX, msbCylinder.PosY, msbCylinder.PosZ,
+                    MathHelper.ToRadians(msbCylinder.RotX), MathHelper.ToRadians(msbCylinder.RotY), MathHelper.ToRadians(msbCylinder.RotZ), 
+                    msbCylinder.Radius, msbCylinder.Height, msbCylinder.Radius));
                 AddPrimitive(newCylinder);
             }
 
             foreach (var msbPoint in msb.Regions.Points)
             {
-                var newPoint = point.Instantiate(msbPoint.Name, new Transform(msbPoint.PosX, msbPoint.PosY, msbPoint.PosZ, msbPoint.RotX, msbPoint.RotY, msbPoint.RotZ));
+                var newPoint = point.Instantiate(msbPoint.Name, new Transform(msbPoint.PosX, msbPoint.PosY, msbPoint.PosZ, 
+                    MathHelper.ToRadians(msbPoint.RotX), MathHelper.ToRadians(msbPoint.RotY), MathHelper.ToRadians(msbPoint.RotZ)));
             }
         }
 

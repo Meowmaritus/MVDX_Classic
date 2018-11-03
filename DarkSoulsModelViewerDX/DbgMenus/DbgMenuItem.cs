@@ -42,9 +42,13 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 //        }
                 //    }
                 //},
-                new DbgMenuItemSceneList()
+                new DbgMenuItemSceneList(isModelGroupingKind: false)
                 {
-                    Text = "SCENE"
+                    Text = "Scene Parts"
+                },
+                new DbgMenuItemSceneList(isModelGroupingKind: true)
+                {
+                    Text = "Scene Models"
                 },
                 new DbgMenuItem()
                 {
@@ -62,81 +66,49 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         },
                         new DbgMenuItem()
                         {
-                            Text = "Scan All Map Textures\n     (Needed for most objects)",
+                            Text = "Scan All Map Textures",
                             ClickAction = (m) =>
                             {
-                                Stopwatch sw = Stopwatch.StartNew();
                                 TexturePool.AddMapTexUdsfm();
-                                sw.Stop();
-                                m.Text = $"Scan All Map Textures (Done. Took {sw.Elapsed.TotalSeconds} seconds)\n     (Needed for most objects)";
+                            }
+                        },
+                        new DbgMenuItem()
+                        {
+                            Text = "Scan cXXX9 Character Texture Packs",
+                            ClickAction = (m) =>
+                            {
+                                TexturePool.AddChrBndsThatEndIn9();
+                            }
+                        },
+                        new DbgMenuItem()
+                        {
+                            Text = "Scan oXXX9 Object Texture Packs",
+                            ClickAction = (m) =>
+                            {
+                                TexturePool.AddChrBndsThatEndIn9();
+                            }
+                        },
+                        new DbgMenuItem()
+                        {
+                            Text = "Scan Loose Folder UDSFM Character Textures",
+                            ClickAction = (m) =>
+                            {
+                                TexturePool.AddChrTexUdsfm();
                             }
                         },
                         new DbgMenuItemSpawnChr(),
                         new DbgMenuItemSpawnObj(),
+                        new DbgMenuItemSpawnMap(isRegionSpawner: false),
+                        new DbgMenuItemSpawnMap(isRegionSpawner: true),
                         new DbgMenuItem()
                         {
-                            Text = "Premade Test Scenes",
-                            Items = new List<DbgMenuItem>
-                            {
-                                new DbgMenuItem()
-                                {
-                                    Text = "Test All CHR Lineup (Can take 30+ sec to load)",
-                                    ClickAction = (m) => GFX.ModelDrawer.TestAddAllChr(),
-                                },
-                                new DbgMenuItem()
-                                {
-                                    Text = "Test All OBJ Lineup (Can take 30+ sec to load)",
-                                    ClickAction = (m) => GFX.ModelDrawer.TestAddAllObj(),
-                                },
-                            }
+                            Text = "Load CHR Lineup (clears current scene)",
+                            ClickAction = (m) => GFX.ModelDrawer.TestAddAllChr(),
                         },
                         new DbgMenuItem()
                         {
-                            Text = "Load Map Piece Models",
-                            Items = new List<DbgMenuItem>
-                            {
-                                new DbgMenuItem() {Text = "m10_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(10, 00, false)},
-                                new DbgMenuItem() {Text = "m10_01_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(10, 01, false)},
-                                new DbgMenuItem() {Text = "m10_02_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(10, 02, false)},
-                                new DbgMenuItem() {Text = "m11_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(11, 00, false)},
-                                new DbgMenuItem() {Text = "m12_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(12, 00, false)},
-                                new DbgMenuItem() {Text = "m12_01_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(12, 01, false)},
-                                new DbgMenuItem() {Text = "m13_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(13, 00, false)},
-                                new DbgMenuItem() {Text = "m13_01_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(13, 01, false)},
-                                new DbgMenuItem() {Text = "m13_02_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(13, 02, false)},
-                                new DbgMenuItem() {Text = "m14_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(14, 00, false)},
-                                new DbgMenuItem() {Text = "m14_01_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(14, 01, false)},
-                                new DbgMenuItem() {Text = "m15_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(15, 00, false)},
-                                new DbgMenuItem() {Text = "m15_01_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(15, 01, false)},
-                                new DbgMenuItem() {Text = "m16_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(16, 00, false)},
-                                new DbgMenuItem() {Text = "m17_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(17, 00, false)},
-                                new DbgMenuItem() {Text = "m18_00_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(18, 00, false)},
-                                new DbgMenuItem() {Text = "m18_01_00_00", ClickAction = m => GFX.ModelDrawer.AddMap(18, 01, false)},
-                            }
-                        },
-                        new DbgMenuItem()
-                        {
-                            Text = "Load Map Region Primitives",
-                            Items = new List<DbgMenuItem>
-                            {
-                                new DbgMenuItem() {Text = "m10_00_00_00", ClickAction = m => DBG.LoadMsbRegions(10, 00)},
-                                new DbgMenuItem() {Text = "m10_01_00_00", ClickAction = m => DBG.LoadMsbRegions(10, 01)},
-                                new DbgMenuItem() {Text = "m10_02_00_00", ClickAction = m => DBG.LoadMsbRegions(10, 02)},
-                                new DbgMenuItem() {Text = "m11_00_00_00", ClickAction = m => DBG.LoadMsbRegions(11, 00)},
-                                new DbgMenuItem() {Text = "m12_00_00_00", ClickAction = m => DBG.LoadMsbRegions(12, 00)},
-                                new DbgMenuItem() {Text = "m12_01_00_00", ClickAction = m => DBG.LoadMsbRegions(12, 01)},
-                                new DbgMenuItem() {Text = "m13_00_00_00", ClickAction = m => DBG.LoadMsbRegions(13, 00)},
-                                new DbgMenuItem() {Text = "m13_01_00_00", ClickAction = m => DBG.LoadMsbRegions(13, 01)},
-                                new DbgMenuItem() {Text = "m13_02_00_00", ClickAction = m => DBG.LoadMsbRegions(13, 02)},
-                                new DbgMenuItem() {Text = "m14_00_00_00", ClickAction = m => DBG.LoadMsbRegions(14, 00)},
-                                new DbgMenuItem() {Text = "m14_01_00_00", ClickAction = m => DBG.LoadMsbRegions(14, 01)},
-                                new DbgMenuItem() {Text = "m15_00_00_00", ClickAction = m => DBG.LoadMsbRegions(15, 00)},
-                                new DbgMenuItem() {Text = "m15_01_00_00", ClickAction = m => DBG.LoadMsbRegions(15, 01)},
-                                new DbgMenuItem() {Text = "m16_00_00_00", ClickAction = m => DBG.LoadMsbRegions(16, 00)},
-                                new DbgMenuItem() {Text = "m17_00_00_00", ClickAction = m => DBG.LoadMsbRegions(17, 00)},
-                                new DbgMenuItem() {Text = "m18_00_00_00", ClickAction = m => DBG.LoadMsbRegions(18, 00)},
-                                new DbgMenuItem() {Text = "m18_01_00_00", ClickAction = m => DBG.LoadMsbRegions(18, 01)},
-                            }
+                            Text = "Load OBJ Lineup (clears current scene)",
+                            ClickAction = (m) => GFX.ModelDrawer.TestAddAllObj(),
                         },
                     }
                 },
@@ -351,6 +323,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public float Scroll;
         public float MaxScroll;
         public List<DbgMenuItem> Items = new List<DbgMenuItem>();
+        private int prevFrameItemCount = 0;
+        private float menuHeight = 0;
         public DbgMenuItem SelectedItem => SelectedIndex == -1 ? null : Items[SelectedIndex];
         public Action<DbgMenuItem> ClickAction = null;
         public virtual void OnClick()
@@ -619,7 +593,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
                 var selectedItemRect = GetItemDisplayRect(SelectedIndex, SubMenuRect);
 
-                float menuHeight = GetEntireMenuHeight();
+                if (Items.Count != prevFrameItemCount)
+                    menuHeight = GetEntireMenuHeight();
 
                 // Only need to calculate scroll stuff if there's text that reaches past the bottom.
                 if (menuHeight > SubMenuRect.Height)
@@ -660,6 +635,22 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 //    GFX.SpriteBatch.End();
                 //}
 
+
+                // ONLY draw the menu items that are in-frame
+
+                int roughStartDrawIndex = (int)((Scroll / menuHeight) * (Items.Count - 1)) - 1;
+                int roughEndDrawIndex = (int)(((Scroll + MenuRect.Height) / menuHeight) * (Items.Count - 1)) + 1;
+
+                if (roughStartDrawIndex < 0)
+                    roughStartDrawIndex = 0;
+                else if (roughStartDrawIndex >= Items.Count)
+                    roughStartDrawIndex = Items.Count - 1;
+
+                if (roughEndDrawIndex < 0)
+                    roughEndDrawIndex = 0;
+                else if (roughEndDrawIndex >= Items.Count)
+                    roughEndDrawIndex = Items.Count - 1;
+
                 // Store current viewport, then switch viewport to JUST the menu rect
                 var oldViewport = GFX.Device.Viewport;
                 GFX.Device.Viewport = new Viewport(
@@ -672,7 +663,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 {
                     // Draw Items
 
-                    for (int i = 0; i < Items.Count; i++)
+                    for (int i = roughStartDrawIndex; i <= roughEndDrawIndex; i++)
                     {
                         Items[i].UpdateUI();
                         var entryText = GetActualItemDisplayText(i);
@@ -718,6 +709,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
                 //---- Return to old viewport
                 GFX.Device.Viewport = oldViewport;
+
+                prevFrameItemCount = Items.Count;
             }
             
         }

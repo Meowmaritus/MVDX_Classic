@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX
 {
-    public class Model
+    public class Model : IDisposable
     {
         public bool IsVisible { get; set; } = true;
         public BoundingBox Bounds { get; private set; }
@@ -66,8 +66,17 @@ namespace DarkSoulsModelViewerDX
             var lod = GFX.World.GetLOD(modelLocation);
             foreach (var submesh in Submeshes)
             {
-                submesh.Draw(lod);
+                submesh.Draw(lod, GFX.FlverShader);
             }
+        }
+
+        public void Dispose()
+        {
+            for (int i = 0; i < Submeshes.Count; i++)
+            {
+                Submeshes[i].Dispose();
+            }
+            Submeshes = null;
         }
     }
 }

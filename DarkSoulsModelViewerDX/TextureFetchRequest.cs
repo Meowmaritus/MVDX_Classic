@@ -16,50 +16,21 @@ namespace DarkSoulsModelViewerDX
         EntityBnd,
         Tpf,
     }
-    public class TextureFetchRequest
+    public class TextureFetchRequest : IDisposable
     {
-        private static object _lock_Texture_IO = new object();
-
-        public TextureFetchRequestType FetchType;
-        public string FetchUri;
+        public TPF TPFReference { get; private set; }
         public string TexName;
         private Texture2D CachedTexture;
 
-        public void Flush()
+        public TextureFetchRequest(TPF tpf, string texName)
         {
-            CachedTexture?.Dispose();
-            CachedTexture = null;
-        }
-
-        public TextureFetchRequest(TextureFetchRequestType type, string uri, string texName)
-        {
-            FetchType = type;
-            FetchUri = uri;
+            TPFReference = tpf;
             TexName = texName;
         }
 
         private byte[] FetchBytes()
         {
-            lock (_lock_Texture_IO)
-            {
-                switch (FetchType)
-                {
-                    case TextureFetchRequestType.EntityBnd:
-                        var texData = FLVEROptimized.ReadTextureDataFromBnd(FetchUri, 0);
-                        return texData[TexName];
-                    case TextureFetchRequestType.Tpf:
-                        var tpf = DataFile.LoadFromFile<TPF>(FetchUri);
-                        foreach (var t in tpf)
-                        {
-                            if (t.Name == TexName)
-                            {
-                                return t.DDSBytes;
-                            }
-                        }
-                        return null;
-                }
-                return null;
-            }
+            return TPFReference.Where(x => x.Name == TexName).First().DDSBytes;
         }
 
         private static SurfaceFormat GetSurfaceFormatFromString(string str)
@@ -138,6 +109,12 @@ namespace DarkSoulsModelViewerDX
 
         }
 
-       
+        public void Dispose()
+        {
+            TPFReference = null;
+
+            CachedTexture?.Dispose();
+            CachedTexture = null;
+        }
     }
 }

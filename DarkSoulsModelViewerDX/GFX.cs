@@ -60,8 +60,10 @@ namespace DarkSoulsModelViewerDX
         public static bool EnableFrustumCulling = false;
         public static bool EnableTextures = true;
 
-        private static RasterizerState HotSwapRasterizerState_BackfaceCullingOff;
-        private static RasterizerState HotSwapRasterizerState_BackfaceCullingOn;
+        private static RasterizerState HotSwapRasterizerState_BackfaceCullingOff_WireframeOff;
+        private static RasterizerState HotSwapRasterizerState_BackfaceCullingOn_WireframeOff;
+        private static RasterizerState HotSwapRasterizerState_BackfaceCullingOff_WireframeOn;
+        private static RasterizerState HotSwapRasterizerState_BackfaceCullingOn_WireframeOn;
 
         private static DepthStencilState DepthStencilState_Normal;
         private static DepthStencilState DepthStencilState_DontWriteDepth;
@@ -76,18 +78,59 @@ namespace DarkSoulsModelViewerDX
         public static SpriteBatch SpriteBatch;
         const string FlverShader__Name = @"Content\NormalMapShader";
 
+        private static bool _wireframe = false;
+        public static bool Wireframe
+        {
+            set
+            {
+                _wireframe = value;
+                UpdateRasterizerState();
+            }
+            get => _wireframe;
+        }
+
+        private static bool _backfaceCulling = false;
         public static bool BackfaceCulling
         {
-            set => Device.RasterizerState = value ? HotSwapRasterizerState_BackfaceCullingOn : HotSwapRasterizerState_BackfaceCullingOff;
+            set
+            {
+                _backfaceCulling = value;
+                UpdateRasterizerState();
+            }
+            get => _backfaceCulling;
+        }
+
+        private static void UpdateRasterizerState()
+        {
+            if (!BackfaceCulling && !Wireframe)
+                Device.RasterizerState = HotSwapRasterizerState_BackfaceCullingOff_WireframeOff;
+            else if (!BackfaceCulling && Wireframe)
+                Device.RasterizerState = HotSwapRasterizerState_BackfaceCullingOff_WireframeOn;
+            else if (BackfaceCulling && !Wireframe)
+                Device.RasterizerState = HotSwapRasterizerState_BackfaceCullingOn_WireframeOff;
+            else if (BackfaceCulling && Wireframe)
+                Device.RasterizerState = HotSwapRasterizerState_BackfaceCullingOn_WireframeOn;
         }
 
         private static void CompletelyChangeRasterizerState(RasterizerState rs)
         {
-            HotSwapRasterizerState_BackfaceCullingOff = rs.GetCopyOfState();
-            HotSwapRasterizerState_BackfaceCullingOff.CullMode = CullMode.None;
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOff = rs.GetCopyOfState();
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOff.CullMode = CullMode.None;
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOff.FillMode = FillMode.Solid;
 
-            HotSwapRasterizerState_BackfaceCullingOn = rs.GetCopyOfState();
-            HotSwapRasterizerState_BackfaceCullingOn.CullMode = CullMode.CullClockwiseFace;
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOff = rs.GetCopyOfState();
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOff.CullMode = CullMode.CullClockwiseFace;
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOff.FillMode = FillMode.Solid;
+
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOn = rs.GetCopyOfState();
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOn.CullMode = CullMode.None;
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOn.FillMode = FillMode.WireFrame;
+
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOn = rs.GetCopyOfState();
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOn.CullMode = CullMode.CullClockwiseFace;
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOn.FillMode = FillMode.WireFrame;
+
+            UpdateRasterizerState();
         }
 
         public static void InitDepthStencil()
@@ -162,13 +205,25 @@ namespace DarkSoulsModelViewerDX
 
             SpriteBatch = new SpriteBatch(Device);
 
-            HotSwapRasterizerState_BackfaceCullingOff = Device.RasterizerState.GetCopyOfState();
-            HotSwapRasterizerState_BackfaceCullingOff.MultiSampleAntiAlias = true;
-            HotSwapRasterizerState_BackfaceCullingOff.CullMode = CullMode.None;
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOff = Device.RasterizerState.GetCopyOfState();
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOff.MultiSampleAntiAlias = true;
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOff.CullMode = CullMode.None;
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOff.FillMode = FillMode.Solid;
 
-            HotSwapRasterizerState_BackfaceCullingOn = Device.RasterizerState.GetCopyOfState();
-            HotSwapRasterizerState_BackfaceCullingOn.MultiSampleAntiAlias = true;
-            HotSwapRasterizerState_BackfaceCullingOn.CullMode = CullMode.CullClockwiseFace;
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOff = Device.RasterizerState.GetCopyOfState();
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOff.MultiSampleAntiAlias = true;
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOff.CullMode = CullMode.CullClockwiseFace;
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOff.FillMode = FillMode.Solid;
+
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOn = Device.RasterizerState.GetCopyOfState();
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOn.MultiSampleAntiAlias = true;
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOn.CullMode = CullMode.None;
+            HotSwapRasterizerState_BackfaceCullingOff_WireframeOn.FillMode = FillMode.WireFrame;
+
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOn = Device.RasterizerState.GetCopyOfState();
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOn.MultiSampleAntiAlias = true;
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOn.CullMode = CullMode.CullClockwiseFace;
+            HotSwapRasterizerState_BackfaceCullingOn_WireframeOn.FillMode = FillMode.WireFrame;
         }
 
         public static void BeginDraw()
@@ -200,6 +255,7 @@ namespace DarkSoulsModelViewerDX
                     break;
                 case GFXDrawStep.DbgPrim:
                     DBG.DrawPrimitives();
+                    ModelDrawer.DrawSelected();
                     break;
                 case GFXDrawStep.GUI:
                     DbgMenuItem.CurrentMenu.Draw((float)gameTime.ElapsedGameTime.TotalSeconds);

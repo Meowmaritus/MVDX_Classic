@@ -78,6 +78,7 @@
     <Compile Include="DbgMenus\DbgMenuItemNumber.cs" />
     <Compile Include="DbgMenus\DbgMenuItemResolutionChange.cs" />
     <Compile Include="DbgMenus\DbgMenuItemSceneList.cs" />
+    <Compile Include="DbgMenus\DbgMenuItemSpawnMap.cs" />
     <Compile Include="DbgMenus\DbgMenuItemSpawnObj.cs" />
     <Compile Include="DbgMenus\DbgMenuItemTextLabel.cs" />
     <Compile Include="DbgMenus\DbgMenuPad.cs" />

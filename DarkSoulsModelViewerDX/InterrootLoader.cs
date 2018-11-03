@@ -1,5 +1,7 @@
 ﻿using MeowDSIO;
 using MeowDSIO.DataFiles;
+using MeowDSIO.DataTypes.MSB;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -82,25 +84,6 @@ namespace DarkSoulsModelViewerDX
 
         public static string Interroot = @"G:\SteamLibrary\steamapps\common\Dark Souls Prepare to Die Edition\DATA";
 
-        public static EntityBND DirectLoadEntityBnd(string path)
-        {
-            var fileName = path;
-            if (!File.Exists(fileName))
-                return null;
-            lock (_lock_IO)
-                return DataFile.LoadFromFile<EntityBND>(fileName);
-        }
-
-        public static EntityBND LoadChr(int id)
-        {
-            return DirectLoadEntityBnd(GetInterrootPath($@"chr\c{id:D4}.chrbnd"));
-        }
-
-        public static EntityBND LoadObj(int id)
-        {
-            return DirectLoadEntityBnd(GetInterrootPath($@"obj\o{id:D4}.objbnd"));
-        }
-
         public static List<TPF> DirectLoadAllTpfInDir(string relPath)
         {
             lock (_lock_IO)
@@ -128,49 +111,52 @@ namespace DarkSoulsModelViewerDX
                 return DataFile.LoadFromFile<TPF>(path);
         }
 
-        public static Model LoadModelChr(int id, int idx)
+        public static List<Model> LoadModelsFromBnd(BND bnd)
         {
-            var chrbnd = LoadChr(id);
-            if (chrbnd == null)
-                return null;
-            TexturePool.AddChrBnd(id, idx);
-            TexturePool.AddChrTexUdsfm(id);
-            return new Model(chrbnd.Models[0].Mesh);
+            var modelEntries = bnd.Where(x => x.Name.ToUpper().EndsWith(".FLVER"));
+            if (modelEntries.Any())
+                return modelEntries.Select(x => new Model(x.ReadDataAs<FLVER>())).ToList();
+            else
+                return new List<Model>();
         }
 
-        public static Model LoadModelChrOptimized(int id, int idx)
+
+        public static List<Model> LoadModelChr(int id)
         {
-            var name = GetInterrootPath($@"chr\c{id:D4}.chrbnd");
+            var bndName = GetInterrootPath($@"chr\c{id:D4}.chrbnd");
 
-            if (!File.Exists(name))
-                return null;
+            if (File.Exists(bndName))
+            {
+                BND bnd = null;
+                lock (_lock_IO)
+                {
+                    bnd = DataFile.LoadFromFile<BND>(bndName);
+                }
+                var models = LoadModelsFromBnd(bnd);
+                TexturePool.AddTextureBnd(bnd);
+                return models;
+            }
 
-            TexturePool.AddChrBnd(id, idx);
-            TexturePool.AddChrTexUdsfm(id);
-
-            lock (_lock_IO)
-                return new Model(FLVEROptimized.ReadFromBnd(name, 0));
+            return new List<Model>();
         }
 
-        public static Model LoadModelObjOptimized(int id, int idx)
+        public static List<Model> LoadModelObj(int id)
         {
-            var name = GetInterrootPath($@"obj\o{id:D4}.objbnd");
+            var bndName = GetInterrootPath($@"obj\o{id:D4}.objbnd");
 
-            if (!File.Exists(name))
-                return null;
+            if (File.Exists(bndName))
+            {
+                BND bnd = null;
+                lock (_lock_IO)
+                {
+                    bnd = DataFile.LoadFromFile<BND>(bndName);
+                }
+                var models = LoadModelsFromBnd(bnd);
+                TexturePool.AddTextureBnd(bnd);
+                return models;
+            }
 
-            TexturePool.AddObjBnd(id, idx);
-            lock (_lock_IO)
-                return new Model(FLVEROptimized.ReadFromBnd(name, 0));
-        }
-
-        public static Model LoadModelObj(int id, int idx)
-        {
-            var chrbnd = LoadObj(id);
-            if (chrbnd == null)
-                return null;
-            TexturePool.AddObjBnd(id, idx);
-            return new Model(chrbnd.Models[0].Mesh);
+            return new List<Model>();
         }
 
         public static void LoadMapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
@@ -184,22 +170,77 @@ namespace DarkSoulsModelViewerDX
             //    modelDict.Add(MiscUtil.GetFileNameWithoutDirectoryOrExtension(mfn), DataFile.LoadFromFile<FLVER>(mfn));
             //}
 
-            FLVER loadModel(string modelName)
+            FLVER loadModel(string modelName, PartsParamSubtype partType)
             {
-                lock (_lock_IO)
-                    if (!modelDict.ContainsKey(modelName + $"A{area:D2}"))
-                        modelDict.Add(modelName + $"A{area:D2}", DataFile.LoadFromFile<FLVER>(Path.Combine(modelDir, modelName + $"A{area:D2}" + ".flver")));
+                if (!modelDict.ContainsKey(modelName))
+                {
+                    FLVER flver = null;
 
-                return modelDict[modelName + $"A{area:D2}"];
+                    lock (_lock_IO)
+                    {
+                        switch (partType)
+                        {
+                            case PartsParamSubtype.MapPieces:
+                                flver = DataFile.LoadFromFile<FLVER>(
+                                    GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\{modelName}A{area:D2}.flver"));
+                                break;
+                            case PartsParamSubtype.NPCs:
+                            case PartsParamSubtype.DummyNPCs:
+                            case PartsParamSubtype.Objects:
+                            case PartsParamSubtype.DummyObjects:
+                                string bndRelPath = (partType == PartsParamSubtype.Objects
+                                    || partType == PartsParamSubtype.DummyObjects)
+                                    ? $@"obj\{modelName}.objbnd" : $@"chr\{modelName}.chrbnd";
+
+
+                                var bnd = DataFile.LoadFromFile<BND>(GetInterrootPath(bndRelPath));
+                                foreach (var entry in bnd)
+                                {
+                                    var compareName = entry.Name.ToUpper();
+                                    if (flver == null && compareName.EndsWith(".FLVER"))
+                                        flver = entry.ReadDataAs<FLVER>();
+                                    else if (compareName.EndsWith(".TPF"))
+                                        TexturePool.AddTpf(entry.ReadDataAs<TPF>());
+                                }
+                                break;
+                        }
+                    }
+
+                    modelDict.Add(modelName, flver);
+                }
+
+                if (modelDict.ContainsKey(modelName))
+                    return modelDict[modelName];
+                else
+                    return null;
             }
 
             var msb = DataFile.LoadFromFile<MSB>(GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb"));
-            foreach (var part in msb.Parts.MapPieces)
+            foreach (var part in msb.Parts.GlobalList)
             {
-                if (excludeScenery && (part.ModelName.StartsWith("m8") || part.ModelName.StartsWith("m9") || !part.IsShadowDest))
-                    continue;
-                var model = new Model(loadModel(part.ModelName));
-                addMapModel.Invoke(new ModelInstance(part.Name, model, new Transform(part.PosX, part.PosY, part.PosZ, part.RotX, part.RotY, part.RotZ)));
+                //if (excludeScenery && (part.ModelName.StartsWith("m8") || part.ModelName.StartsWith("m9") || !part.IsShadowDest))
+                //    continue;
+
+                var partSubtype = part.GetSubtypeValue();
+
+                var flverMesh = loadModel(part.ModelName, partSubtype);
+
+                if (flverMesh != null)
+                {
+                    var model = new Model(flverMesh);
+
+                    var partModelInstance = new ModelInstance(part.Name, model, new Transform(part.PosX, part.PosY, part.PosZ,
+                        MathHelper.ToRadians(part.RotX), MathHelper.ToRadians(part.RotY), MathHelper.ToRadians(part.RotZ),
+                        part.ScaleX, part.ScaleY, part.ScaleZ), part.DrawGroup1, part.DrawGroup2, part.DrawGroup3, part.DrawGroup4);
+
+                    if (partSubtype == PartsParamSubtype.DummyNPCs || partSubtype == PartsParamSubtype.DummyObjects)
+                    {
+                        partModelInstance.IsDummyMapPart = true;
+                    }
+
+                    addMapModel.Invoke(partModelInstance);
+                }
+                
             }
 
             modelDict = null;
@@ -212,21 +253,17 @@ namespace DarkSoulsModelViewerDX
                 var upper = fn.ToUpper();
                 if (upper.EndsWith(".CHRBND") || upper.EndsWith(".OBJBND") || upper.EndsWith(".PARTSBND"))
                 {
-                    var entityBnd = InterrootLoader.DirectLoadEntityBnd(fn);
-                    var modelShortName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(fn);
-                    for (int i = 0; i < entityBnd.Models.Count; i++)
+                    BND bnd = null;
+                    lock (_lock_IO)
                     {
-                        string instanceName = modelShortName + (i > 0 ? $"_{i}" : "");
-                        GFX.ModelDrawer.AddModelInstance(
-                            new ModelInstance(
-                                instanceName, 
-                                new Model(entityBnd.Models[i].Mesh), 
-                                GFX.World.GetSpawnPointFromMouseCursor(10.0f, false, true, true)
-                                ));
-                        foreach (var tex in entityBnd.Models[i].Textures)
-                        {
-                            TexturePool.AddFetch(TextureFetchRequestType.EntityBnd, fn, tex.Key);
-                        }
+                        bnd = DataFile.LoadFromFile<BND>(fn);
+                    }
+                    TexturePool.AddTextureBnd(bnd);
+                    var models = LoadModelsFromBnd(bnd);
+                    foreach (var m in models)
+                    {
+                        GFX.ModelDrawer.AddModelInstance(new ModelInstance(Path.GetFileNameWithoutExtension(fn), m,
+                            GFX.World.GetSpawnPointFromMouseCursor(10.0f, false, true, true), -1, -1, -1, -1));
                     }
                 }
             }
