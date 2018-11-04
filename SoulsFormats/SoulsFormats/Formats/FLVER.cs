@@ -1024,12 +1024,12 @@ namespace SoulsFormats
             /// <summary>
             /// Unknown.
             /// </summary>
-            public int Unk18;
+            public int IndexSize;
 
             /// <summary>
             /// Indexes to vertices in a vertex group.
             /// </summary>
-            public ushort[] Vertices;
+            public int[] Vertices;
 
             internal FaceSet(BinaryReaderEx br, int dataOffset)
             {
@@ -1045,10 +1045,13 @@ namespace SoulsFormats
                 int vertexSize = br.ReadInt32();
 
                 br.AssertInt32(0);
-                Unk18 = br.AssertInt32(0, 0x10, 0x20);
+                IndexSize = br.AssertInt32(0, 0x10, 0x20);
                 br.AssertInt32(0);
 
-                Vertices = br.GetUInt16s(dataOffset + vertexOffset, vertexCount);
+                if (IndexSize == 0x20)
+                    Vertices = br.GetInt32s(dataOffset + vertexOffset, vertexCount);
+                else
+                    Vertices = br.GetUInt16s(dataOffset + vertexOffset, vertexCount).Select(x => (int)x).ToArray();
             }
 
             internal void Write(BinaryWriterEx bw, int index)
@@ -1065,14 +1068,17 @@ namespace SoulsFormats
                 bw.WriteInt32(Vertices.Length * 2);
 
                 bw.WriteInt32(0);
-                bw.WriteInt32(Unk18);
+                bw.WriteInt32(IndexSize);
                 bw.WriteInt32(0);
             }
 
             internal void WriteVertices(BinaryWriterEx bw, int index, int dataStart)
             {
                 bw.FillInt32($"FaceSetVertices{index}", (int)bw.Position - dataStart);
-                bw.WriteUInt16s(Vertices);
+                if (IndexSize == 0x20)
+                    bw.WriteInt32s(Vertices);
+                else
+                    bw.WriteUInt16s(Vertices.Select(x => (ushort)x).ToList());
             }
         }
 

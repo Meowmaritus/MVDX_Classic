@@ -161,6 +161,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             (b) => DBG.ShowGrid = b, () => DBG.ShowGrid),
                         new DbgMenuItemBool("Textures", "ON", "OFF",
                             (b) => GFX.EnableTextures = b, () => GFX.EnableTextures),
+                        new DbgMenuItemBool("Wireframe Mode", "ON", "OFF",
+                            (b) => GFX.Wireframe = b, () => GFX.Wireframe),
                         new DbgMenuItemBool("View Frustum Culling (Experimental)", "ON", "OFF",
                             (b) => GFX.EnableFrustumCulling = b, () => GFX.EnableFrustumCulling),
                         new DbgMenuItemNumber("Vertical Field of View (Degrees)", 20, 150, 1,

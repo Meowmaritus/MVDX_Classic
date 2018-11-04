@@ -211,15 +211,18 @@ namespace DarkSoulsModelViewerDX
 
             foreach (var faceset in mesh.FaceSets)
             {
+                //TODO: Add the check when TK finishes.
+                bool is32bit = (faceset.IndexSize == 0x20);
+
                 var newFaceSet = new FlverSubmeshRendererFaceSet()
                 {
                     BackfaceCulling = faceset.CullBackfaces,
                     IsTriangleStrip = faceset.TriangleStrip,
                     IndexBuffer = new IndexBuffer(
                                 GFX.Device,
-                                IndexElementSize.SixteenBits,
-                                sizeof(short) * faceset.Vertices.Length,
-                                BufferUsage.None),
+                                is32bit ? IndexElementSize.ThirtyTwoBits : IndexElementSize.SixteenBits,
+                                faceset.Vertices.Length,
+                                BufferUsage.WriteOnly),
                     IndexCount = faceset.Vertices.Length,
                 };
 
@@ -234,15 +237,15 @@ namespace DarkSoulsModelViewerDX
                     HasNoLODs = false;
                 }
 
-                newFaceSet.IndexBuffer.SetData(faceset.Vertices
-                    .Select(x =>
-                    {
-                        if (x == ushort.MaxValue)
-                            return (short)(-1);
-                        else
-                            return (short)x;
-                    })
-                    .ToArray());
+                if (is32bit)
+                {
+                    newFaceSet.IndexBuffer.SetData(faceset.Vertices);
+                }
+                else
+                {
+                    newFaceSet.IndexBuffer.SetData(faceset.Vertices.Select(x => (ushort)x).ToArray());
+                }
+
                 MeshFacesets.Add(newFaceSet);
             }
 

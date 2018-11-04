@@ -31,12 +31,12 @@ namespace DarkSoulsModelViewerDX
 
             //DEBUG//
             //Console.WriteLine($"{flver.Meshes[0].DefaultBoneIndex}");
-            Console.WriteLine();
-            Console.WriteLine();
-            foreach (var mat in flver.Materials)
-            {
-                Console.WriteLine($"{mat.Name}: {mat.MTD}");
-            }
+            //Console.WriteLine();
+            //Console.WriteLine();
+            //foreach (var mat in flver.Materials)
+            //{
+            //    Console.WriteLine($"{mat.Name}: {mat.MTD}");
+            //}
             /////////
 
             if (Submeshes.Count == 0)
