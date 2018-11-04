@@ -71,30 +71,30 @@ with.
         <End>&#xFFEF;</End>
       </CharacterRegion>
       <!-- Everything Else -->
-      <CharacterRegion>
-        <Start>&#x4E00;</Start>
-        <End>&#x4FFF;</End>
-      </CharacterRegion>
-      <CharacterRegion>
-        <Start>&#x5000;</Start>
-        <End>&#x5FFF;</End>
-      </CharacterRegion>
-      <CharacterRegion>
-        <Start>&#x6000;</Start>
-        <End>&#x6FFF;</End>
-      </CharacterRegion>
-      <CharacterRegion>
-        <Start>&#x7000;</Start>
-        <End>&#x7FFF;</End>
-      </CharacterRegion>
-      <CharacterRegion>
-        <Start>&#x8000;</Start>
-        <End>&#x8FFF;</End>
-      </CharacterRegion>
-      <CharacterRegion>
-        <Start>&#x9000;</Start>
-        <End>&#x9FAF;</End>
-      </CharacterRegion>
+      <!-- <CharacterRegion> -->
+        <!-- <Start>&#x4E00;</Start> -->
+        <!-- <End>&#x4FFF;</End> -->
+      <!-- </CharacterRegion> -->
+      <!-- <CharacterRegion> -->
+        <!-- <Start>&#x5000;</Start> -->
+        <!-- <End>&#x5FFF;</End> -->
+      <!-- </CharacterRegion> -->
+      <!-- <CharacterRegion> -->
+        <!-- <Start>&#x6000;</Start> -->
+        <!-- <End>&#x6FFF;</End> -->
+      <!-- </CharacterRegion> -->
+      <!-- <CharacterRegion> -->
+        <!-- <Start>&#x7000;</Start> -->
+        <!-- <End>&#x7FFF;</End> -->
+      <!-- </CharacterRegion> -->
+      <!-- <CharacterRegion> -->
+        <!-- <Start>&#x8000;</Start> -->
+        <!-- <End>&#x8FFF;</End> -->
+      <!-- </CharacterRegion> -->
+      <!-- <CharacterRegion> -->
+        <!-- <Start>&#x9000;</Start> -->
+        <!-- <End>&#x9FAF;</End> -->
+      <!-- </CharacterRegion> -->
     </CharacterRegions>
   </Asset>
 </XnaContent>

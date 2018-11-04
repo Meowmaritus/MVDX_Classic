@@ -25,11 +25,24 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             var chrFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\chr\"), @"*.chrbnd")
                 .Select(Path.GetFileNameWithoutExtension);
             IDList = new List<int>();
+            var IDSet = new HashSet<int>();
             foreach (var cf in chrFiles)
             {
                 if (int.TryParse(cf.Substring(1, 4), out int id))
                 {
                     IDList.Add(id);
+                    IDSet.Add(id);
+                }
+            }
+
+            var chrFilesDCX = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\chr\"), @"*.chrbnd.dcx")
+                .Select(Path.GetFileNameWithoutExtension).Select(Path.GetFileNameWithoutExtension);
+            foreach (var cf in chrFilesDCX)
+            {
+                if (int.TryParse(cf.Substring(1, 4), out int id))
+                {
+                    if (!IDSet.Contains(id))
+                        IDList.Add(id);
                 }
             }
             NeedsTextUpdate = true;
@@ -106,6 +119,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 UpdateText();
                 NeedsTextUpdate = false;
             }
+        }
+
+        public override void OnRequestTextRefresh()
+        {
+            UpdateSpawnIDs();
+            UpdateText();
         }
     }
 

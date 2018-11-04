@@ -133,17 +133,25 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     BuildSceneItems();
                 }
                 
-                if (SelectedIndex >= baseMenuItems.Count && SelectedIndex < Items.Count)
+                if (!IsModelGroupingKind)
                 {
-                    GFX.ModelDrawer.Selected = MapMenuEntriesToModels[Items[SelectedIndex]];
-                }
-                else
-                {
-                    GFX.ModelDrawer.Selected = null;
+                    if (SelectedIndex >= baseMenuItems.Count && SelectedIndex < Items.Count)
+                    {
+                        GFX.ModelDrawer.Selected = MapMenuEntriesToModels[Items[SelectedIndex]];
+                    }
+                    else
+                    {
+                        GFX.ModelDrawer.Selected = null;
+                    }
                 }
             }
 
             base.UpdateUI();
+        }
+
+        public override void OnRequestTextRefresh()
+        {
+            UpdateUI();
         }
     }
 }

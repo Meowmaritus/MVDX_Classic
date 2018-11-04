@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarkSoulsModelViewerDX", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeowDSIO", "MeowDSIO\MeowDSIO\MeowDSIO.csproj", "{4AD69470-8146-4D20-94F0-DA9844EEE5A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoulsFormats", "SoulsFormats\SoulsFormats\SoulsFormats.csproj", "{22C664BD-877B-44DF-8ECF-2808522469A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{4AD69470-8146-4D20-94F0-DA9844EEE5A2}.Release|x64.Build.0 = Release|x64
 		{4AD69470-8146-4D20-94F0-DA9844EEE5A2}.Release|x86.ActiveCfg = Release|Any CPU
 		{4AD69470-8146-4D20-94F0-DA9844EEE5A2}.Release|x86.Build.0 = Release|Any CPU
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Debug|x64.ActiveCfg = Debug|x64
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Debug|x64.Build.0 = Debug|x64
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Debug|x86.Build.0 = Debug|Any CPU
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|x64.ActiveCfg = Release|x64
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|x64.Build.0 = Release|x64
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|x86.ActiveCfg = Release|Any CPU
+		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

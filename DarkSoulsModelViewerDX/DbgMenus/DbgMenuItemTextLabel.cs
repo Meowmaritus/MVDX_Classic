@@ -20,5 +20,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             Text = GetText.Invoke();
             base.UpdateUI();
         }
+
+        public override void OnRequestTextRefresh()
+        {
+            UpdateUI();
+        }
     }
 }

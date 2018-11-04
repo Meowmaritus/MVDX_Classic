@@ -84,5 +84,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             UpdateText();
             base.OnResetDefault();
         }
+
+        public override void OnRequestTextRefresh()
+        {
+            UpdateText();
+        }
     }
 }

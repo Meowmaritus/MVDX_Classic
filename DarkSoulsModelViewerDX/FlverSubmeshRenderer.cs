@@ -1,6 +1,7 @@
 ﻿using DarkSoulsModelViewerDX.GFXShaders;
 using MeowDSIO;
-using MeowDSIO.DataTypes.FLVER;
+//using MeowDSIO.DataTypes.FLVER;
+using SoulsFormats;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -42,7 +43,7 @@ namespace DarkSoulsModelViewerDX
 
         public int VertexCount { get; private set; }
 
-        public FlverSubmeshRenderer(FlverSubmesh f)
+        /*public FlverSubmeshRenderer(FlverSubmesh f)
         {
             var shortMaterialName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(f.Material.MTDName);
             if (shortMaterialName.EndsWith("_Alp") || shortMaterialName.EndsWith("_Edge"))
@@ -125,6 +126,115 @@ namespace DarkSoulsModelViewerDX
                 }
 
                 newFaceSet.IndexBuffer.SetData(faceset.VertexIndices
+                    .Select(x =>
+                    {
+                        if (x == ushort.MaxValue)
+                            return (short)(-1);
+                        else
+                            return (short)x;
+                    })
+                    .ToArray());
+                MeshFacesets.Add(newFaceSet);
+            }
+
+            Bounds = BoundingBox.CreateFromPoints(MeshVertices.Select(x => x.Position));
+
+            VertBuffer = new VertexBuffer(GFX.Device,
+                typeof(VertexPositionColorNormalTangentTexture), MeshVertices.Length, BufferUsage.WriteOnly);
+            VertBuffer.SetData(MeshVertices);
+        }*/
+
+        public FlverSubmeshRenderer(FLVER flvr, FLVER.Mesh mesh)
+        {
+            var shortMaterialName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(flvr.Materials[mesh.MaterialIndex].MTD);
+            if (shortMaterialName.EndsWith("_Alp") ||
+                shortMaterialName.Contains("_Edge") ||
+                shortMaterialName.Contains("_Decal") ||
+                shortMaterialName.Contains("_Cloth") ||
+                shortMaterialName.Contains("_al") ||
+                shortMaterialName.Contains("BlendOpacity"))
+            {
+                DrawStep = GFXDrawStep.AlphaEdge;
+            }
+            else
+            {
+                DrawStep = GFXDrawStep.Opaque;
+            }
+
+            foreach (var matParam in flvr.Materials[mesh.MaterialIndex].Params)
+            {
+                var paramNameCheck = matParam.Param.ToUpper();
+                // DS3/BB
+                if (paramNameCheck == "G_DIFFUSETEXTURE")
+                    TexNameDiffuse = matParam.Value;
+                else if (paramNameCheck == "G_SPECULARTEXTURE")
+                    TexNameSpecular = matParam.Value;
+                else if (paramNameCheck == "G_BUMPMAPTEXTURE")
+                    TexNameNormal = matParam.Value;
+                // DS1 params
+                else if (paramNameCheck == "G_DIFFUSE")
+                    TexNameDiffuse = matParam.Value;
+                else if (paramNameCheck == "G_SPECULAR")
+                    TexNameSpecular = matParam.Value;
+                else if (paramNameCheck == "G_BUMPMAP")
+                    TexNameNormal = matParam.Value;
+            }
+
+            var MeshVertices = new VertexPositionColorNormalTangentTexture[mesh.VertexGroups[0].Vertices.Count];
+            for (int i = 0; i < mesh.VertexGroups[0].Vertices.Count; i++)
+            {
+                var vert = mesh.VertexGroups[0].Vertices[i];
+                MeshVertices[i] = new VertexPositionColorNormalTangentTexture();
+
+                MeshVertices[i].Position = new Vector3(vert.Position.X, vert.Position.Y, vert.Position.Z);
+
+                if (vert.Normal != null && vert.Tangents != null && vert.Tangents.Count > 0)
+                {
+                    MeshVertices[i].Normal = Vector3.Normalize(new Vector3(vert.Normal.X, vert.Normal.Y, vert.Normal.Z));
+                    MeshVertices[i].Tangent = Vector3.Normalize(new Vector3(vert.Tangents[0].X, vert.Tangents[0].Y, vert.Tangents[0].Z));
+                    MeshVertices[i].Binormal = Vector3.Cross(Vector3.Normalize(MeshVertices[i].Normal), Vector3.Normalize(MeshVertices[i].Tangent)) * vert.Tangents[0].W;
+                }
+
+                if (vert.UVs.Count > 0)
+                {
+                    MeshVertices[i].TextureCoordinate = new Vector2(vert.UVs[0].X, vert.UVs[0].Y);
+                }
+                else
+                {
+                    MeshVertices[i].TextureCoordinate = Vector2.Zero;
+                }
+            }
+
+            VertexCount = MeshVertices.Length;
+
+            MeshFacesets = new List<FlverSubmeshRendererFaceSet>();
+
+            foreach (var faceset in mesh.FaceSets)
+            {
+                var newFaceSet = new FlverSubmeshRendererFaceSet()
+                {
+                    BackfaceCulling = faceset.CullBackfaces,
+                    IsTriangleStrip = faceset.TriangleStrip,
+                    IndexBuffer = new IndexBuffer(
+                                GFX.Device,
+                                IndexElementSize.SixteenBits,
+                                sizeof(short) * faceset.Vertices.Length,
+                                BufferUsage.None),
+                    IndexCount = faceset.Vertices.Length,
+                };
+
+                if (faceset.Flags == FLVER.FaceSet.FSFlags.LodLevel1)
+                {
+                    newFaceSet.LOD = (byte)1;
+                    HasNoLODs = false;
+                }
+                else if (faceset.Flags == FLVER.FaceSet.FSFlags.LodLevel2)
+                {
+                    newFaceSet.LOD = (byte)2;
+                    HasNoLODs = false;
+                }
+
+                newFaceSet.IndexBuffer.SetData(faceset.Vertices
                     .Select(x =>
                     {
                         if (x == ushort.MaxValue)

@@ -92,6 +92,7 @@
     <Compile Include="DebugPrimitives\DbgPrimWireSphere.cs" />
     <Compile Include="DebugPrimitives\IDbgPrim.cs" />
     <Compile Include="TextureFetchRequest.cs" />
+    <Compile Include="VertexPositionColorNormalTangentTexture.cs" />
     <Compile Include="WorldView.cs" />
     <Compile Include="DBG.cs" />
     <Compile Include="DebugPrimitives\DbgPrimWireGrid.cs" />
@@ -263,6 +264,9 @@
     <None Include="Content\Hud.xnb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Content\MissingTexture.xnb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Content\NormalMapShader.xnb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -281,6 +285,10 @@
     <ProjectReference Include="..\MeowDSIO\MeowDSIO\MeowDSIO.csproj">
       <Project>{4ad69470-8146-4d20-94f0-da9844eee5a2}</Project>
       <Name>MeowDSIO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SoulsFormats\SoulsFormats\SoulsFormats.csproj">
+      <Project>{22c664bd-877b-44df-8ecf-2808522469a8}</Project>
+      <Name>SoulsFormats</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,5 +1,6 @@
 ﻿using MeowDSIO;
 using MeowDSIO.DataFiles;
+using SoulsFormats;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -35,11 +36,19 @@ namespace DarkSoulsModelViewerDX
             Fetches.Clear();
         }
 
-        public static void AddFetch(TPF tpf, string texName)
+        public static void AddFetch(SoulsFormats.TPF tpf, string texName)
         {
             string shortName = Path.GetFileNameWithoutExtension(texName);
             if (!Fetches.ContainsKey(shortName))
                 Fetches.Add(shortName, new TextureFetchRequest(tpf, texName));
+        }
+
+        public static void AddTpf(SoulsFormats.TPF tpf)
+        {
+            foreach (var tex in tpf.Textures)
+            {
+                AddFetch(tpf, tex.Name);
+            }
         }
 
         public static void AddTextureBnd(BND chrbnd)
@@ -47,22 +56,14 @@ namespace DarkSoulsModelViewerDX
             var tpfFiles = chrbnd.Where(x => x.Name.EndsWith(".tpf"));
             foreach (var t in tpfFiles)
             {
-                var tpf = t.ReadDataAs<TPF>();
+                var tpf = SoulsFormats.TPF.Read(t.GetBytes());
                 AddTpf(tpf);
-            }
-        }
-
-        public static void AddTpf(TPF tpf)
-        {
-            foreach (var tex in tpf)
-            {
-                AddFetch(tpf, tex.Name);
             }
         }
 
         public static void AddTpfFromPath(string path)
         {
-            TPF tpf = InterrootLoader.DirectLoadTpf(path);
+            SoulsFormats.TPF tpf = InterrootLoader.DirectLoadTpf(path);
             AddTpf(tpf);
         }
 
@@ -99,7 +100,6 @@ namespace DarkSoulsModelViewerDX
                     }
                 }
             }
-            
         }
 
         public static void AddChrBndsThatEndIn9()
@@ -127,6 +127,83 @@ namespace DarkSoulsModelViewerDX
                     entityBnd = DataFile.LoadFromFile<BND>(ctew9);
                 }
                 AddTextureBnd(entityBnd);
+            }
+        }
+
+        public static void AddChrBnd(int id, int idx)
+        {
+            var path = InterrootLoader.GetInterrootPath($@"chr\c{id:D4}.texbnd.dcx");
+            if (!File.Exists(path))
+            {
+                // Bloodborne being a special snowflake :fatcat:
+                path = InterrootLoader.GetInterrootPath($@"chr\c{id:D4}.chrbnd.dcx");
+            }
+
+            lock (_lock_IO)
+            {
+                var bnd = BND4.Read(path);
+                int i;
+                for (i = 0; i < bnd.Files.Count(); i++)
+                {
+                    if (bnd.Files[i].Name.Contains(".tpf"))
+                        break;
+                }
+                if (i == bnd.Files.Count())
+                    return; // No textures I guess
+                var tpf = SoulsFormats.TPF.Read(bnd.Files[i].Bytes);
+
+                foreach (var tn in tpf.Textures)
+                {
+                    AddFetch(tpf, tn.Name);
+                }
+            }
+        }
+
+        /*public static void AddObjBnd(int id, int idx)
+        {
+            /*var path = InterrootLoader.GetInterrootPath($@"obj\o{id:D4}.objbnd");
+
+            var texNames = FLVEROptimized.ReadTextureNamesFromBnd(path, idx);
+
+            foreach (var tn in texNames)
+            {
+                AddFetch(TextureFetchRequestType.EntityBnd, path, tn);
+            }
+                var tpf = t.ReadDataAs<TPF>();
+                AddTpf(tpf);
+            
+        }*/
+
+
+
+        public static void AddMapTexBhds(int area)
+        {
+            var dir = InterrootLoader.GetInterrootPath($"map\\m{area:D2}");
+            if (!Directory.Exists(dir))
+                return;
+            var mapTpfFileNames = Directory.GetFiles(dir);
+            foreach (var t in mapTpfFileNames)
+            {
+                if (t.EndsWith(".tpfbhd"))
+                {
+                    lock (_lock_IO)
+                    {
+                        BXF4 bxf = BXF4.Read(t, t.Substring(0, t.Length - 7) + ".tpfbdt");
+                        int i;
+                        for (i = 0; i < bxf.Files.Count(); i++)
+                        {
+                            if (bxf.Files[i].Name.Contains(".tpf"))
+                            {
+                                var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
+
+                                foreach (var tn in tpf.Textures)
+                                {
+                                    AddFetch(tpf, tn.Name);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

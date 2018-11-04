@@ -1,5 +1,6 @@
-﻿using MeowDSIO;
-using MeowDSIO.DataFiles;
+﻿//using MeowDSIO;
+//using MeowDSIO.DataFiles;
+using SoulsFormats;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,12 +16,14 @@ namespace DarkSoulsModelViewerDX
     {
         EntityBnd,
         Tpf,
+        TexBnd,
     }
     public class TextureFetchRequest : IDisposable
     {
         public TPF TPFReference { get; private set; }
         public string TexName;
         private Texture2D CachedTexture;
+        private bool IsDX10;
 
         public TextureFetchRequest(TPF tpf, string texName)
         {
@@ -30,7 +33,45 @@ namespace DarkSoulsModelViewerDX
 
         private byte[] FetchBytes()
         {
-            return TPFReference.Where(x => x.Name == TexName).First().DDSBytes;
+            if (TPFReference.Platform == TPF.TPFPlatform.PS4)
+            {
+                TPFReference.ConvertPS4ToPC();
+            }
+            else if (TPFReference.Platform == TPF.TPFPlatform.Xbone)
+            {
+                // Because there are actually xbone textures in the PC version for some dumb reason
+                return null;
+            }
+
+            if (TPFReference == null)
+                return null;
+
+            var matchedTextures = TPFReference.Textures.Where(x => x.Name == TexName).ToList();
+
+            if (matchedTextures.Count > 0)
+            {
+                var tex = matchedTextures.First();
+                var texBytes = tex.Bytes;
+                
+                //foreach (var match in matchedTextures)
+                //{
+                //    match.Bytes = null;
+                //    match.Header = null;
+                //    TPFReference.Textures.Remove(match);
+                //}
+
+                //if (TPFReference.Textures.Count == 0)
+                //{
+                //    TPFReference.Textures = null;
+                //    TPFReference = null;
+                //}
+
+                return texBytes;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private static SurfaceFormat GetSurfaceFormatFromString(string str)
@@ -43,6 +84,10 @@ namespace DarkSoulsModelViewerDX
                     return SurfaceFormat.Dxt3;
                 case "DXT5":
                     return SurfaceFormat.Dxt5;
+                case "ATI1":
+                    return SurfaceFormat.Dxt1; // Monogame workaround :fatcat
+                case "ATI2":
+                    return SurfaceFormat.Dxt3;
                 default:
                     throw new Exception($"Unknown DDS Type: {str}");
             }
@@ -62,50 +107,67 @@ namespace DarkSoulsModelViewerDX
             if (CachedTexture != null)
                 return CachedTexture;
 
-            var bytes = FetchBytes();
-            if (bytes == null)
+            var textureBytes = FetchBytes();
+            if (textureBytes == null)
                 return null;
 
-            using (var tempStream = new MemoryStream(bytes))
+            DDS header = new DDS(textureBytes);
+            int height = header.dwHeight;
+            int width = header.dwWidth;
+
+            int mipmapCount = header.dwMipMapCount;
+            using (var br = new BinaryReaderEx(false, textureBytes))
             {
-                //var dds = TeximpNet.Surface.LoadFromStream(tempStream);
+                br.Skip((int)header.dataOffset);
 
-                using (DSBinaryReader bin = new DSBinaryReader(TexName, tempStream))
+                SurfaceFormat surfaceFormat;
+                if (header.ddspf.dwFourCC == "DX10")
                 {
-                    bin.Position += 4;
-                    int headerSize = bin.ReadInt32();
-                    int flags = bin.ReadInt32();
-                    int height = bin.ReadInt32();
-                    int width = bin.ReadInt32();
-
-                    bin.Position += (4 * 2);
-
-                    int mipmapCount = bin.ReadInt32();
-
-                    bin.Position += (4 * 13);
-
-                    string ddsType = bin.ReadStringAscii(4);
-
-                    var surfaceFormat = GetSurfaceFormatFromString(ddsType);
-
-                    bin.Position += (4 * 10);
-
-                    Texture2D tex = new Texture2D(GFX.Device, width, height, true, surfaceFormat);
-
-                    for (int i = 0; i < mipmapCount; i++)
+                    // See if there are DX9 textures
+                    int fmt = (int)header.header10.dxgiFormat;
+                    if (fmt == 71)
+                        surfaceFormat = SurfaceFormat.Dxt1;
+                    else if (fmt == 72)
+                        surfaceFormat = SurfaceFormat.Dxt1;
+                    else if (fmt == 73)
+                        surfaceFormat = SurfaceFormat.Dxt3;
+                    else if (fmt == 74)
+                        surfaceFormat = SurfaceFormat.Dxt3;
+                    else if (fmt == 76)
+                        surfaceFormat = SurfaceFormat.Dxt5;
+                    else if (fmt == 77)
+                        surfaceFormat = SurfaceFormat.Dxt5;
+                    else
                     {
-                        int numTexels = GetNextMultipleOf4(width >> i) * GetNextMultipleOf4(height >> i);
-                        if (surfaceFormat == SurfaceFormat.Dxt1)
-                            numTexels /= 2;
-                        byte[] thisMipMap = bin.ReadBytes(numTexels);
-                        tex.SetData(i, 0, null, thisMipMap, 0, numTexels);
-                        thisMipMap = null;
+                        // No DX10 texture support in monogame yet
+                        IsDX10 = true;
+                        CachedTexture = Main.DEFAULT_TEXTURE_MISSING;
+                        return CachedTexture;
                     }
-
-                    CachedTexture = tex;
                 }
+                else
+                {
+                    surfaceFormat = GetSurfaceFormatFromString(header.ddspf.dwFourCC);
+                }
+                // Adjust width and height because from has some DXTC textures that have dimensions not a multiple of 4 :shrug:
+                Texture2D tex = new Texture2D(GFX.Device, GetNextMultipleOf4(width), GetNextMultipleOf4(height), true, surfaceFormat);
+
+                for (int i = 0; i < mipmapCount; i++)
+                {
+                    int numTexels = GetNextMultipleOf4(width >> i) * GetNextMultipleOf4(height >> i);
+                    if (surfaceFormat == SurfaceFormat.Dxt1 || surfaceFormat == SurfaceFormat.Dxt1SRgb)
+                        numTexels /= 2;
+                    byte[] thisMipMap = br.ReadBytes(numTexels);
+                    tex.SetData(i, 0, null, thisMipMap, 0, numTexels);
+                    thisMipMap = null;
+                }
+
+                CachedTexture = tex;
+
+
+                return CachedTexture;
             }
-            return CachedTexture;
+            
 
         }
 

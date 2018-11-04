@@ -20,13 +20,37 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             var msbFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\map\MapStudio\"), @"*.msb")
                 .Select(Path.GetFileNameWithoutExtension);
             IDList = new List<string>();
+            var IDSet = new HashSet<string>();
             foreach (var cf in msbFiles)
             {
                 var dotIndex = cf.IndexOf('.');
                 if (dotIndex >= 0)
+                {
                     IDList.Add(cf.Substring(0, dotIndex));
+                    IDSet.Add(cf.Substring(0, dotIndex));
+                }
                 else
+                {
                     IDList.Add(cf);
+                    IDSet.Add(cf);
+                }
+            }
+
+            var msbFilesDCX = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\map\MapStudio\"), @"*.msb.dcx")
+                .Select(Path.GetFileNameWithoutExtension).Select(Path.GetFileNameWithoutExtension);
+            foreach (var cf in msbFilesDCX)
+            {
+                var dotIndex = cf.IndexOf('.');
+                if (dotIndex >= 0)
+                {
+                    if (!IDSet.Contains(cf.Substring(0, dotIndex)))
+                        IDList.Add(cf.Substring(0, dotIndex));
+                }
+                else
+                {
+                    if (!IDSet.Contains(cf))
+                        IDList.Add(cf);
+                }
             }
             NeedsTextUpdate = true;
         }
@@ -117,6 +141,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 UpdateText();
                 NeedsTextUpdate = false;
             }
+        }
+
+        public override void OnRequestTextRefresh()
+        {
+            UpdateSpawnIDs();
+            UpdateText();
         }
     }
 }

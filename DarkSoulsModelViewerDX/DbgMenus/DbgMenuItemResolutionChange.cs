@@ -80,5 +80,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     return $"<{nameof(SurfaceFormat)}.{f.ToString()}>";
             }
         }
+
+        public override void OnRequestTextRefresh()
+        {
+            UpdateText();
+        }
     }
 }

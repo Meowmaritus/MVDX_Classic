@@ -14,9 +14,11 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public readonly Func<T> GetValue;
         public readonly T DefaultValue;
         public readonly T[] EnumValues;
+        public readonly Dictionary<T, string> NameOverrides = null;
         private int currentValueIndex;
 
-        public DbgMenuItemEnum(string name, Action<T> setValue, Func<T> getValue, List<T> enumItemsNotToShow = null)
+        public DbgMenuItemEnum(string name, Action<T> setValue, Func<T> getValue, 
+            List<T> enumItemsNotToShow = null, Dictionary<T, string> nameOverrides = null)
         {
             Name = name;
             SetValue = setValue;
@@ -35,7 +37,17 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
             EnumValues = enumValueList.ToArray();
 
+            NameOverrides = nameOverrides;
+
             UpdateText();
+        }
+
+        private string GetEnumValueName(T val)
+        {
+            if (NameOverrides != null && NameOverrides.ContainsKey(val))
+                return NameOverrides[val];
+            else
+                return val.ToString();
         }
 
         public void UpdateText()
@@ -43,7 +55,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             var currentValue = GetValue.Invoke();
             currentValueIndex = Array.IndexOf(EnumValues, currentValue);
 
-            Text = $"{Name}: <{currentValue.ToString()}>";
+            Text = $"{Name}: <{GetEnumValueName(currentValue)}>";
         }
 
         public override void OnIncrease(bool isRepeat, int incrementAmount)
@@ -84,6 +96,11 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
             SetValue.Invoke(EnumValues[currentValueIndex]);
 
+            UpdateText();
+        }
+
+        public override void OnRequestTextRefresh()
+        {
             UpdateText();
         }
     }

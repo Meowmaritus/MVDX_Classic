@@ -1,4 +1,5 @@
 ﻿using MeowDSIO;
+using SoulsFormats;
 using MeowDSIO.DataFiles;
 using MeowDSIO.DataTypes.MSB;
 using Microsoft.Xna.Framework;
@@ -10,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -17,36 +19,127 @@ namespace DarkSoulsModelViewerDX
     {
         private static object _lock_IO = new object();
 
+        public enum InterrootType
+        {
+            InterrootDS1,
+            InterrootDS3,
+            // InterrootDS2,
+            InterrootBloodborne,
+        };
+
+        public static InterrootType Type = InterrootType.InterrootDS1;
+
         static InterrootLoader()
         {
-            lock (_lock_IO)
-            {
-                if (File.Exists("DSMVDX_InterrootPath.txt"))
-                    Interroot = File.ReadAllText("DSMVDX_InterrootPath.txt").Trim('\n');
-            }
-            
+            LoadInterrootPathAndInterrootType();
 
             TexturePool.OnLoadError += TexPool_OnLoadError;
         }
 
-        public static void SaveInterrootPath()
+        public static void LoadInterrootPathAndInterrootType()
         {
             lock (_lock_IO)
-                File.WriteAllText("DSMVDX_InterrootPath.txt", Interroot);
+            {
+                if (File.Exists("DSMVDX_InterrootPath.txt"))
+                {
+                    string[] cfg = File.ReadLines("DSMVDX_InterrootPath.txt").ToArray();
+                    if (cfg.Length > 0)
+                        Interroot = cfg[0].Trim('\n');
+
+                    if (cfg.Length > 1 && Enum.TryParse(cfg[1].Trim('\n'), out InterrootType cfgInterrootType))
+                    {
+                        Type = cfgInterrootType;
+                    }
+                    else
+                    {
+                        // If its not in the file for some reason, try to guess
+                        if (Interroot.Contains("Dark Souls Prepare to Die Edition"))
+                            Type = InterrootType.InterrootDS1;
+                        else if (Interroot.Contains("DARK SOULS REMASTERED"))
+                            Type = InterrootType.InterrootDS1;
+                        // the check for DARK SOULS III comes before DARK SOULS II 
+                        // because "DARK SOULS III" contains "DARK SOULS II" in it.
+                        else if (Interroot.Contains("DARK SOULS III"))
+                            Type = InterrootType.InterrootDS3;
+                        //else if (Interroot.Contains("DARK SOULS II"))
+                        //    Type = InterrootType.InterrootDS2;
+                        //else if (Interroot.Contains("Dark Souls II Scholar of the First Sin"))
+                        //    Type = InterrootType.InterrootDS2;
+
+                        else if (Interroot.Contains("CUSA00900") || Interroot.ToUpper().Contains("BLOODBORNE"))
+                            Type = InterrootType.InterrootBloodborne;
+
+                        // Resave to save the new interroot type.
+                        SaveInterrootPathAndInterrootType();
+                    }
+                }
+
+
+            }
+        }
+
+        public static void SaveInterrootPathAndInterrootType()
+        {
+            lock (_lock_IO)
+                File.WriteAllText("DSMVDX_InterrootPath.txt",
+                    $"{Interroot}\n{Type.ToString()}");
         }
 
         public static void Browse()
         {
             OpenFileDialog dlg = new OpenFileDialog()
             {
-                FileName = "DARKSOULS.exe",
-                Filter = "EXEs (*.exe)|*.exe",
-                Title = "Select DARKSOULS.exe",
+                FileName = "DarkSoulsIII.exe",
+                Filter = "All Files (*.*)|*.*",
+                Title = "Select Game Executable (*.exe for PC, eboot.bin for PS4)",
             };
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                Interroot = new FileInfo(dlg.FileName).DirectoryName;
-                SaveInterrootPath();
+                if (dlg.FileName.ToUpper().EndsWith("EBOOT.BIN"))
+                {
+                    Type = InterrootType.InterrootBloodborne;
+                    string possibleInterroot = Path.Combine(new FileInfo(dlg.FileName).DirectoryName, "dvdroot_ps4");
+                    if (Directory.Exists(possibleInterroot))
+                    {
+                        Interroot = possibleInterroot;
+                        SaveInterrootPathAndInterrootType();
+                    }
+                    else
+                    {
+                        MessageBox.Show("A PS4 executable was selected but no /dvdroot_ps4/ folder was found next to it. Unable to determine data root path.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    MessageBox.Show("Automatically switched to Bloodborne game type since it is the PS4 exclusive one.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
+                }
+                else
+                {
+                    Interroot = new FileInfo(dlg.FileName).DirectoryName;
+
+                    if (dlg.FileName.Contains("DARKSOULS.exe"))
+                    {
+                        Type = InterrootType.InterrootDS1;
+                        MessageBox.Show("Automatically switched to Dark Souls game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
+                    }
+                    else if (dlg.FileName.Contains("DarkSoulsRemastered.exe"))
+                    {
+                        Type = InterrootType.InterrootDS1;
+                        MessageBox.Show("Automatically switched to Dark Souls game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
+                    }
+                    //else if (dlg.FileName.Contains("DarkSoulsII.exe"))
+                    //{
+                    //    Type = InterrootType.InterrootDS2;
+                    //    MessageBox.Show("Automatically switched to Dark Souls II game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
+                    //}
+                    else if (dlg.FileName.Contains("DarkSoulsIII.exe"))
+                    {
+                        Type = InterrootType.InterrootDS3;
+                        MessageBox.Show("Automatically switched to Dark Souls III game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
+                    }
+
+                    SaveInterrootPathAndInterrootType();
+                }
+                
+                
             }
         }
 
@@ -84,56 +177,87 @@ namespace DarkSoulsModelViewerDX
 
         public static string Interroot = @"G:\SteamLibrary\steamapps\common\Dark Souls Prepare to Die Edition\DATA";
 
-        public static List<TPF> DirectLoadAllTpfInDir(string relPath)
+        // Utility function to detect and load a potentially DCX compressed BND
+        public static BND LoadDecompressedBND(string path)
+        {
+            // Search for the decompressed bnd
+            BND bnd = null;
+            if (File.Exists(path))
+            {
+                lock (_lock_IO)
+                {
+                    bnd = DataFile.LoadFromFile<BND>(path);
+                }
+            }
+            // Look for a compressed one if no decompressed one exists
+            else if (File.Exists(path + ".dcx"))
+            {
+                lock (_lock_IO)
+                {
+                    bnd = DataFile.LoadFromDcxFile<BND>(path + ".dcx");
+                }
+            }
+            return bnd;
+        }
+
+        public static List<SoulsFormats.TPF> DirectLoadAllTpfInDir(string relPath)
         {
             lock (_lock_IO)
             {
                 var path = GetInterrootPath(relPath);
                 if (!Directory.Exists(path))
-                    return new List<TPF>();
+                    return new List<SoulsFormats.TPF>();
 
-                var tpfNames = Directory.GetFiles(path, "*.tpf");
+                var tpfNames = (Type == InterrootType.InterrootDS1) ? Directory.GetFiles(path, "*.tpf") : Directory.GetFiles(path, "*.tpf.dcx");
                 return tpfNames
-                    .Select(x => DataFile.LoadFromFile<TPF>(x))
+                    .Select(x => SoulsFormats.TPF.Read(x))
                     .ToList();
             }
                
         }
 
-        public static List<TPF> LoadChrTexUdsfm(int id)
+        public static List<SoulsFormats.TPF> LoadChrTexUdsfm(int id)
         {
             return DirectLoadAllTpfInDir($@"chr\c{id:D4}");
         }
 
-        public static TPF DirectLoadTpf(string path)
+        public static SoulsFormats.TPF DirectLoadTpf(string path)
         {
             lock (_lock_IO)
-                return DataFile.LoadFromFile<TPF>(path);
+                return SoulsFormats.TPF.Read(path);
         }
 
         public static List<Model> LoadModelsFromBnd(BND bnd)
         {
             var modelEntries = bnd.Where(x => x.Name.ToUpper().EndsWith(".FLVER"));
             if (modelEntries.Any())
-                return modelEntries.Select(x => new Model(x.ReadDataAs<FLVER>())).ToList();
+                return modelEntries.Select(x => new Model(SoulsFormats.FLVER.Read(x.GetBytes()))).ToList();
             else
                 return new List<Model>();
         }
 
-
         public static List<Model> LoadModelChr(int id)
         {
             var bndName = GetInterrootPath($@"chr\c{id:D4}.chrbnd");
+            var texBndName = GetInterrootPath($@"chr\c{id:D4}.texbnd");
 
-            if (File.Exists(bndName))
+            BND bnd = LoadDecompressedBND(bndName);
+            if (bnd != null)
             {
-                BND bnd = null;
-                lock (_lock_IO)
-                {
-                    bnd = DataFile.LoadFromFile<BND>(bndName);
-                }
                 var models = LoadModelsFromBnd(bnd);
-                TexturePool.AddTextureBnd(bnd);
+                if (Type == InterrootType.InterrootDS3)
+                {
+                    // DS3 has separate texbnds for textures
+                    BND texbnd = LoadDecompressedBND(texBndName);
+                    if (texbnd != null)
+                    {
+                        TexturePool.AddTextureBnd(texbnd);
+                    }
+                }
+                else
+                {
+                    TexturePool.AddTextureBnd(bnd);
+                }
                 return models;
             }
 
@@ -144,9 +268,9 @@ namespace DarkSoulsModelViewerDX
         {
             var bndName = GetInterrootPath($@"obj\o{id:D4}.objbnd");
 
-            if (File.Exists(bndName))
+            BND bnd = LoadDecompressedBND(bndName);
+            if (bnd != null)
             {
-                BND bnd = null;
                 lock (_lock_IO)
                 {
                     bnd = DataFile.LoadFromFile<BND>(bndName);
@@ -159,10 +283,46 @@ namespace DarkSoulsModelViewerDX
             return new List<Model>();
         }
 
+        public static SoulsFormats.FLVER LoadMapFlver(string noExtensionPath)
+        {
+            if (File.Exists(noExtensionPath + ".mapbnd.dcx"))
+            {
+                // DS3's snowflake packaging of flvers
+                return SoulsFormats.FLVER.Read(BND4.Read(noExtensionPath + ".mapbnd.dcx").Files[0].Bytes);
+            }
+            else if (File.Exists(noExtensionPath + ".flver"))
+            {
+                // Usual case for DS1 with udsfm
+                return SoulsFormats.FLVER.Read(noExtensionPath + ".flver");
+            }
+            else if (File.Exists(noExtensionPath + ".flver.dcx"))
+            {
+                // Bloodborne and possibly DS2
+                return SoulsFormats.FLVER.Read(noExtensionPath + ".flver.dcx");
+            }
+            return null;
+        }
+
         public static void LoadMapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
         {
+            if (Type == InterrootType.InterrootDS1)
+            {
+                LoadDS1MapInBackground(area, block, excludeScenery, addMapModel);
+            }
+            else if (Type == InterrootType.InterrootBloodborne || Type == InterrootType.InterrootDS3)
+            {
+                LoadBBMapInBackground(area, block, excludeScenery, addMapModel);
+            }
+            else
+            {
+                throw new NotImplementedException("Only DS1 msb loading implemented");
+            }
+        }
+
+        public static void LoadDS1MapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
+        {
             var modelDir = GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00");
-            var modelDict = new Dictionary<string, FLVER>();
+            var modelDict = new Dictionary<string, SoulsFormats.FLVER>();
             //foreach (var mfn in modelFileNames)
             //{
             //    if (excludeScenery && (mfn.StartsWith("m8") || mfn.StartsWith("m9")))
@@ -170,19 +330,19 @@ namespace DarkSoulsModelViewerDX
             //    modelDict.Add(MiscUtil.GetFileNameWithoutDirectoryOrExtension(mfn), DataFile.LoadFromFile<FLVER>(mfn));
             //}
 
-            FLVER loadModel(string modelName, PartsParamSubtype partType)
+            SoulsFormats.FLVER loadModel(string modelName, PartsParamSubtype partType)
             {
                 if (!modelDict.ContainsKey(modelName))
                 {
-                    FLVER flver = null;
+                    SoulsFormats.FLVER flver = null;
 
                     lock (_lock_IO)
                     {
                         switch (partType)
                         {
                             case PartsParamSubtype.MapPieces:
-                                flver = DataFile.LoadFromFile<FLVER>(
-                                    GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\{modelName}A{area:D2}.flver"));
+                                flver = LoadMapFlver(
+                                    GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\{modelName}A{area:D2}"));
                                 break;
                             case PartsParamSubtype.NPCs:
                             case PartsParamSubtype.DummyNPCs:
@@ -193,14 +353,14 @@ namespace DarkSoulsModelViewerDX
                                     ? $@"obj\{modelName}.objbnd" : $@"chr\{modelName}.chrbnd";
 
 
-                                var bnd = DataFile.LoadFromFile<BND>(GetInterrootPath(bndRelPath));
+                                var bnd = LoadDecompressedBND(GetInterrootPath(bndRelPath));
                                 foreach (var entry in bnd)
                                 {
                                     var compareName = entry.Name.ToUpper();
                                     if (flver == null && compareName.EndsWith(".FLVER"))
-                                        flver = entry.ReadDataAs<FLVER>();
+                                        flver = SoulsFormats.FLVER.Read(entry.GetBytes());
                                     else if (compareName.EndsWith(".TPF"))
-                                        TexturePool.AddTpf(entry.ReadDataAs<TPF>());
+                                        TexturePool.AddTpf(SoulsFormats.TPF.Read(entry.GetBytes()));
                                 }
                                 break;
                         }
@@ -241,6 +401,58 @@ namespace DarkSoulsModelViewerDX
                     addMapModel.Invoke(partModelInstance);
                 }
                 
+            }
+
+            modelDict = null;
+        }
+
+        public static void LoadBBMapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
+        {
+            var modelDir = GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00");
+            var modelDict = new Dictionary<string, SoulsFormats.FLVER>();
+
+            SoulsFormats.FLVER loadModel(string modelName)
+            {
+                if (!modelDict.ContainsKey(modelName))
+                {
+                    SoulsFormats.FLVER flver = null;
+
+                    lock (_lock_IO)
+                    {
+                      
+                        flver = LoadMapFlver(
+                            GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\m{area:D2}_{block:D2}_00_00_{modelName.Substring(1)}"));
+                    }
+
+                    modelDict.Add(modelName, flver);
+                }
+
+                if (modelDict.ContainsKey(modelName))
+                    return modelDict[modelName];
+                else
+                    return null;
+            }
+
+            // Load the maps texture bhds
+            TexturePool.AddMapTexBhds(area);
+
+            var msb = MSB64.Read(GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb.dcx"),
+                (Type == InterrootType.InterrootBloodborne ? MSB64.MSBVersion.MSBVersionBB : MSB64.MSBVersion.MSBVersionDS3));
+            foreach (var part in msb.Parts.MapPieces)
+            {
+                var flverMesh = loadModel(part.ModelName);
+
+                if (flverMesh != null)
+                {
+                    var model = new Model(flverMesh);
+
+                    var partModelInstance = new ModelInstance(part.Name, model, new Transform(part.Position.X, part.Position.Y, part.Position.Z,
+                        MathHelper.ToRadians(part.Rotation.X), MathHelper.ToRadians(part.Rotation.Y), MathHelper.ToRadians(part.Rotation.Z),
+                        part.Scale.X, part.Scale.Y, part.Scale.Z), (int)part.DrawGroup1, (int)part.DrawGroup2, (int)part.DrawGroup3, (int)part.DrawGroup4);
+
+                    addMapModel.Invoke(partModelInstance);
+                }
+
             }
 
             modelDict = null;

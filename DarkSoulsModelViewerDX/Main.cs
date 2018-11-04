@@ -29,8 +29,21 @@ namespace DarkSoulsModelViewerDX
 
         public static bool DISABLE_DRAW_ERROR_HANDLE = true;
 
+        private static float MemoryUsageCheckTimer = 0;
+        private static long MemoryUsage_Unmanaged = 0;
+        private static long MemoryUsage_Managed = 0;
+        private const float MemoryUsageCheckInterval = 0.5f;
+
         public static readonly Color SELECTED_MESH_COLOR = Color.Yellow * 0.05f;
         public static readonly Color SELECTED_MESH_WIREFRAME_COLOR = Color.Yellow;
+
+        public static Texture2D DEFAULT_TEXTURE_DIFFUSE;
+        public static Texture2D DEFAULT_TEXTURE_SPECULAR;
+        public static Texture2D DEFAULT_TEXTURE_NORMAL;
+        public static Texture2D DEFAULT_TEXTURE_MISSING;
+        public const string DEFAULT_TEXTURE_MISSING_NAME = "Content\\MissingTexture";
+
+        public Rectangle ClientBounds => Window.ClientBounds;
 
         private static GraphicsDeviceManager graphics;
         //public ContentManager Content;
@@ -59,11 +72,7 @@ namespace DarkSoulsModelViewerDX
             graphics.ApplyChanges();
         }
 
-        public static Texture2D DEFAULT_TEXTURE_DIFFUSE;
-        public static Texture2D DEFAULT_TEXTURE_SPECULAR;
-        public static Texture2D DEFAULT_TEXTURE_NORMAL;
-
-        public Rectangle ClientBounds => Window.ClientBounds;
+       
 
         //MCG MCGTEST_MCG;
 
@@ -123,6 +132,8 @@ namespace DarkSoulsModelViewerDX
             DEFAULT_TEXTURE_NORMAL = new Texture2D(GraphicsDevice, 1, 1);
             DEFAULT_TEXTURE_NORMAL.SetData(new Color[] { new Color(0.5f, 0.5f, 1.0f) });
 
+            DEFAULT_TEXTURE_MISSING = Content.Load<Texture2D>(DEFAULT_TEXTURE_MISSING_NAME);
+
             GFX.Device = GraphicsDevice;
 
             base.Initialize();
@@ -165,11 +176,53 @@ namespace DarkSoulsModelViewerDX
             GFX.World.CameraTransform.EulerRotation.X = MathHelper.PiOver4 / 8;
 
             DbgMenuItem.Init();
+
+            UpdateMemoryUsage();
         }
 
         private void InterrootLoader_OnLoadError(string contentName, string error)
         {
             Console.WriteLine($"CONTENT LOAD ERROR\nCONTENT NAME:{contentName}\nERROR:{error}");
+        }
+
+        private string GetMemoryUseString(string prefix, long MemoryUsage)
+        {
+            const double MEM_KB = 1024f;
+            const double MEM_MB = 1024f * 1024f;
+            const double MEM_GB = 1024f * 1024f * 1024f;
+
+            if (MemoryUsage < MEM_KB)
+                return $"{prefix}{(1.0 * MemoryUsage):0} B";
+            else if (MemoryUsage < MEM_MB)
+                return $"{prefix}{(1.0 * MemoryUsage / MEM_KB):0.00} KB";
+            else if (MemoryUsage < MEM_GB)
+                return $"{prefix}{(1.0 * MemoryUsage / MEM_MB):0.00} MB";
+            else
+                return $"{prefix}{(1.0 * MemoryUsage / MEM_GB):0.00} GB";
+        }
+
+        private void DrawMemoryUsage()
+        {
+            var str_managed = GetMemoryUseString("CLR Mem:  ", MemoryUsage_Managed);
+            var str_unmanaged = GetMemoryUseString("Process Mem:  ", MemoryUsage_Unmanaged);
+
+            var strSize_managed = DBG.DEBUG_FONT_SMALL.MeasureString(str_managed);
+            var strSize_unmanaged = DBG.DEBUG_FONT_SMALL.MeasureString(str_unmanaged);
+
+            DBG.DrawOutlinedText(str_managed, new Vector2(GFX.Device.Viewport.Width - 8, 8),
+                Color.Yellow, DBG.DEBUG_FONT_SMALL, scaleOrigin: new Vector2(strSize_managed.X, 0));
+
+            DBG.DrawOutlinedText(str_unmanaged, new Vector2(GFX.Device.Viewport.Width - 8, 8 + strSize_managed.Y),
+                Color.Yellow, DBG.DEBUG_FONT_SMALL, scaleOrigin: new Vector2(strSize_unmanaged.X, 0));
+        }
+
+        private void UpdateMemoryUsage()
+        {
+            using (var proc = Process.GetCurrentProcess())
+            {
+                MemoryUsage_Unmanaged = proc.PrivateMemorySize64;
+            }
+            MemoryUsage_Managed = GC.GetTotalMemory(forceFullCollection: false);
         }
 
         protected override void Update(GameTime gameTime)
@@ -199,12 +252,20 @@ namespace DarkSoulsModelViewerDX
             if (REQUEST_EXIT)
                 Exit();
 
+            MemoryUsageCheckTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (MemoryUsageCheckTimer >= MemoryUsageCheckInterval)
+            {
+                MemoryUsageCheckTimer = 0;
+                UpdateMemoryUsage();
+            }
+
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GFX.DrawScene(gameTime);
+            DrawMemoryUsage();
         }
     }
 }

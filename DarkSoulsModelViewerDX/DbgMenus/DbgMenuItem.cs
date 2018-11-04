@@ -62,38 +62,44 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     {
                         new DbgMenuItemTextLabel(() => $"Data Root: \"{InterrootLoader.Interroot}\"\n     [Click to Browse...]")
                         {
-                            ClickAction = (m) => InterrootLoader.Browse()
+                            ClickAction = (m) =>
+                            {
+                                InterrootLoader.Browse();
+                                CurrentMenu.RequestTextRefresh();
+                            }
                         },
+                        new DbgMenuItemEnum<InterrootLoader.InterrootType>("Game Type", 
+                            v =>
+                            {
+                                InterrootLoader.Type = v;
+                                InterrootLoader.SaveInterrootPathAndInterrootType();
+                            },
+                            () => InterrootLoader.Type,
+                            nameOverrides: new Dictionary<InterrootLoader.InterrootType, string>
+                            {
+                                { InterrootLoader.InterrootType.InterrootBloodborne, "Bloodborne" },
+                                { InterrootLoader.InterrootType.InterrootDS1, "Dark Souls I" },
+                                // { InterrootLoader.InterrootType.InterrootDS2, "Dark Souls II" },
+                                { InterrootLoader.InterrootType.InterrootDS3, "Dark Souls III" },
+                            }
+                            ),
                         new DbgMenuItem()
                         {
-                            Text = "Scan All Map Textures",
+                            Text = "Scan All Separate Texture Files",
                             ClickAction = (m) =>
                             {
                                 TexturePool.AddMapTexUdsfm();
-                            }
-                        },
-                        new DbgMenuItem()
-                        {
-                            Text = "Scan cXXX9 Character Texture Packs",
-                            ClickAction = (m) =>
-                            {
                                 TexturePool.AddChrBndsThatEndIn9();
-                            }
-                        },
-                        new DbgMenuItem()
-                        {
-                            Text = "Scan oXXX9 Object Texture Packs",
-                            ClickAction = (m) =>
-                            {
                                 TexturePool.AddChrBndsThatEndIn9();
-                            }
-                        },
-                        new DbgMenuItem()
-                        {
-                            Text = "Scan Loose Folder UDSFM Character Textures",
-                            ClickAction = (m) =>
-                            {
                                 TexturePool.AddChrTexUdsfm();
+                            }
+                        },
+                        new DbgMenuItem()
+                        {
+                            Text = "Purge Texture Cache",
+                            ClickAction = (m) =>
+                            {
+                               TexturePool.Flush();
                             }
                         },
                         new DbgMenuItemSpawnChr(),
@@ -306,6 +312,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public static void EnterNewSubMenu(DbgMenuItem menu)
         {
+            menu.RequestTextRefresh();
             DbgMenuStack.Push(CurrentMenu);
             CurrentMenu = menu;
         }
@@ -327,6 +334,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         private float menuHeight = 0;
         public DbgMenuItem SelectedItem => SelectedIndex == -1 ? null : Items[SelectedIndex];
         public Action<DbgMenuItem> ClickAction = null;
+
         public virtual void OnClick()
         {
             ClickAction?.Invoke(this);
@@ -345,6 +353,18 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public virtual void OnDecrease(bool isRepeat, int incrementAmount)
         {
 
+        }
+
+        public virtual void OnRequestTextRefresh()
+        {
+
+        }
+
+        public void RequestTextRefresh()
+        {
+            OnRequestTextRefresh();
+            foreach (var item in Items)
+                item.OnRequestTextRefresh();
         }
 
         public void GoDown(bool isRepeat, int incrementAmount)

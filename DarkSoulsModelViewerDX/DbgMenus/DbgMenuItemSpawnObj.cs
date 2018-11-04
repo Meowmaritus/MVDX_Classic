@@ -20,14 +20,31 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             var objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd")
                 .Select(Path.GetFileNameWithoutExtension);
             IDList = new List<int>();
+            var IDSet = new HashSet<int>();
             IsSixDigit = false;
             foreach (var cf in objFiles)
             {
                 if (int.TryParse(cf.Substring(1, 4), out int id))
                 {
                     IDList.Add(id);
+                    IDSet.Add(id);
                     if (id > 9999)
                         IsSixDigit = true;
+                }
+            }
+
+            var objFilesDCX = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd.dcx")
+                .Select(Path.GetFileNameWithoutExtension).Select(Path.GetFileNameWithoutExtension);
+            foreach (var cf in objFilesDCX)
+            {
+                if (int.TryParse(cf.Substring(1, 4), out int id))
+                {
+                    if (!IDSet.Contains(id))
+                    {
+                        IDList.Add(id);
+                        if (id > 9999)
+                            IsSixDigit = true;
+                    }
                 }
             }
             NeedsTextUpdate = true;
@@ -114,6 +131,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 UpdateText();
                 NeedsTextUpdate = false;
             }
+        }
+
+        public override void OnRequestTextRefresh()
+        {
+            UpdateSpawnIDs();
+            UpdateText();
         }
     }
 }
