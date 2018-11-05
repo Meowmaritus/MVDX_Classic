@@ -21,32 +21,34 @@
 
         public DDS(byte[] bytes)
         {
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            br.AssertASCII("DDS ");
-            br.AssertInt32(124);
-            dwFlags = br.ReadInt32();
-            dwHeight = br.ReadInt32();
-            dwWidth = br.ReadInt32();
-            dwPitchOrLinearSize = br.ReadInt32();
-            dwDepth = br.ReadInt32();
-            dwMipMapCount = br.ReadInt32();
+            using (BinaryReaderEx br = new BinaryReaderEx(false, bytes))
+            {
+                br.AssertASCII("DDS ");
+                br.AssertInt32(124);
+                dwFlags = br.ReadInt32();
+                dwHeight = br.ReadInt32();
+                dwWidth = br.ReadInt32();
+                dwPitchOrLinearSize = br.ReadInt32();
+                dwDepth = br.ReadInt32();
+                dwMipMapCount = br.ReadInt32();
 
-            // dwReserved1
-            br.Skip(4 * 11);
+                // dwReserved1
+                br.Skip(4 * 11);
 
-            ddspf = new PIXELFORMAT(br);
-            dwCaps = br.ReadInt32();
-            dwCaps2 = br.ReadInt32();
+                ddspf = new PIXELFORMAT(br);
+                dwCaps = br.ReadInt32();
+                dwCaps2 = br.ReadInt32();
 
-            // dwCaps3, dwCaps4, dwReserved2
-            br.Skip(4 * 3);
+                // dwCaps3, dwCaps4, dwReserved2
+                br.Skip(4 * 3);
 
-            if (ddspf.dwFourCC == "DX10")
-                header10 = new HEADER_DXT10(br);
-            else
-                header10 = null;
+                if (ddspf.dwFourCC == "DX10")
+                    header10 = new HEADER_DXT10(br);
+                else
+                    header10 = null;
 
-            dataOffset = br.Position;
+                dataOffset = br.Position;
+            }
         }
 
         public class PIXELFORMAT

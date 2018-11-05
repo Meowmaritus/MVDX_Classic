@@ -108,12 +108,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         new DbgMenuItemSpawnMap(isRegionSpawner: true),
                         new DbgMenuItem()
                         {
-                            Text = "Load CHR Lineup (clears current scene)",
+                            Text = "Load All Characters Lineup",
                             ClickAction = (m) => GFX.ModelDrawer.TestAddAllChr(),
                         },
                         new DbgMenuItem()
                         {
-                            Text = "Load OBJ Lineup (clears current scene)",
+                            Text = "Load All Objects Lineup",
                             ClickAction = (m) => GFX.ModelDrawer.TestAddAllObj(),
                         },
                     }

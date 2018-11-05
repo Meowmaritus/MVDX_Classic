@@ -85,7 +85,7 @@ namespace DarkSoulsModelViewerDX
                 case "DXT5":
                     return SurfaceFormat.Dxt5;
                 case "ATI1":
-                    return SurfaceFormat.Dxt1; // Monogame workaround :fatcat
+                    return SurfaceFormat.Dxt1; // Monogame workaround :fatcat:
                 case "ATI2":
                     return SurfaceFormat.Dxt3;
                 default:
@@ -142,6 +142,7 @@ namespace DarkSoulsModelViewerDX
                         // No DX10 texture support in monogame yet
                         IsDX10 = true;
                         CachedTexture = Main.DEFAULT_TEXTURE_MISSING;
+                        header = null;
                         return CachedTexture;
                     }
                 }
@@ -151,7 +152,7 @@ namespace DarkSoulsModelViewerDX
                 }
                 // Adjust width and height because from has some DXTC textures that have dimensions not a multiple of 4 :shrug:
                 Texture2D tex = new Texture2D(GFX.Device, GetNextMultipleOf4(width), GetNextMultipleOf4(height), true, surfaceFormat);
-
+                
                 for (int i = 0; i < mipmapCount; i++)
                 {
                     int numTexels = GetNextMultipleOf4(width >> i) * GetNextMultipleOf4(height >> i);
@@ -163,8 +164,7 @@ namespace DarkSoulsModelViewerDX
                 }
 
                 CachedTexture = tex;
-
-
+                header = null;
                 return CachedTexture;
             }
             

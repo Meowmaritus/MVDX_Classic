@@ -130,52 +130,6 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public static void AddChrBnd(int id, int idx)
-        {
-            var path = InterrootLoader.GetInterrootPath($@"chr\c{id:D4}.texbnd.dcx");
-            if (!File.Exists(path))
-            {
-                // Bloodborne being a special snowflake :fatcat:
-                path = InterrootLoader.GetInterrootPath($@"chr\c{id:D4}.chrbnd.dcx");
-            }
-
-            lock (_lock_IO)
-            {
-                var bnd = BND4.Read(path);
-                int i;
-                for (i = 0; i < bnd.Files.Count(); i++)
-                {
-                    if (bnd.Files[i].Name.Contains(".tpf"))
-                        break;
-                }
-                if (i == bnd.Files.Count())
-                    return; // No textures I guess
-                var tpf = SoulsFormats.TPF.Read(bnd.Files[i].Bytes);
-
-                foreach (var tn in tpf.Textures)
-                {
-                    AddFetch(tpf, tn.Name);
-                }
-            }
-        }
-
-        /*public static void AddObjBnd(int id, int idx)
-        {
-            /*var path = InterrootLoader.GetInterrootPath($@"obj\o{id:D4}.objbnd");
-
-            var texNames = FLVEROptimized.ReadTextureNamesFromBnd(path, idx);
-
-            foreach (var tn in texNames)
-            {
-                AddFetch(TextureFetchRequestType.EntityBnd, path, tn);
-            }
-                var tpf = t.ReadDataAs<TPF>();
-                AddTpf(tpf);
-            
-        }*/
-
-
-
         public static void AddMapTexBhds(int area)
         {
             var dir = InterrootLoader.GetInterrootPath($"map\\m{area:D2}");
@@ -186,44 +140,45 @@ namespace DarkSoulsModelViewerDX
             {
                 if (t.EndsWith(".tpfbhd"))
                 {
+                    BXF4 bxf = null;
                     lock (_lock_IO)
                     {
-                        BXF4 bxf = BXF4.Read(t, t.Substring(0, t.Length - 7) + ".tpfbdt");
-                        int i;
-                        for (i = 0; i < bxf.Files.Count(); i++)
-                        {
-                            if (bxf.Files[i].Name.Contains(".tpf"))
-                            {
-                                var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
+                        bxf = BXF4.Read(t, t.Substring(0, t.Length - 7) + ".tpfbdt");
+                    }
 
-                                foreach (var tn in tpf.Textures)
-                                {
-                                    AddFetch(tpf, tn.Name);
-                                }
+                    for (int i = 0; i < bxf.Files.Count(); i++)
+                    {
+                        if (bxf.Files[i].Name.Contains(".tpf"))
+                        {
+                            var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
+
+                            foreach (var tn in tpf.Textures)
+                            {
+                                AddFetch(tpf, tn.Name);
                             }
+
+                            tpf = null;
                         }
                     }
+
+                    bxf = null;
                 }
             }
         }
 
         public static Texture2D FetchTexture(string name)
         {
-            lock (_lock_IO)
+            if (name == null)
+                return null;
+            var shortName = Path.GetFileNameWithoutExtension(name);
+            if (Fetches.ContainsKey(shortName))
             {
-                if (name == null)
-                    return null;
-                var shortName = Path.GetFileNameWithoutExtension(name);
-                if (Fetches.ContainsKey(shortName))
-                {
-                    return Fetches[shortName].Fetch();
-                }
-                else
-                {
-                    return null;
-                }
+                return Fetches[shortName].Fetch();
             }
-                
+            else
+            {
+                return null;
+            }
         }
     }
 }

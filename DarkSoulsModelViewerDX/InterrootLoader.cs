@@ -419,7 +419,6 @@ namespace DarkSoulsModelViewerDX
 
                     lock (_lock_IO)
                     {
-                      
                         flver = LoadMapFlver(
                             GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\m{area:D2}_{block:D2}_00_00_{modelName.Substring(1)}"));
                     }
@@ -460,8 +459,10 @@ namespace DarkSoulsModelViewerDX
 
         public static void LoadDragDroppedFiles(string[] fileNames)
         {
+            var spawnTransform = GFX.World.GetSpawnPointFromMouseCursor(10.0f, false, true, true);
             foreach (var fn in fileNames)
             {
+                var shortName = Path.GetFileNameWithoutExtension(fn);
                 var upper = fn.ToUpper();
                 if (upper.EndsWith(".CHRBND") || upper.EndsWith(".OBJBND") || upper.EndsWith(".PARTSBND"))
                 {
@@ -474,9 +475,16 @@ namespace DarkSoulsModelViewerDX
                     var models = LoadModelsFromBnd(bnd);
                     foreach (var m in models)
                     {
-                        GFX.ModelDrawer.AddModelInstance(new ModelInstance(Path.GetFileNameWithoutExtension(fn), m,
-                            GFX.World.GetSpawnPointFromMouseCursor(10.0f, false, true, true), -1, -1, -1, -1));
+                        GFX.ModelDrawer.AddModelInstance(
+                            new ModelInstance(shortName, m, spawnTransform, -1, -1, -1, -1));
                     }
+                }
+                else if (upper.EndsWith(".FLVER"))
+                {
+                    var flver = SoulsFormats.FLVER.Read(File.ReadAllBytes(fn));
+                    var model = new Model(flver);
+                    var modelInstance = new ModelInstance(shortName, model, spawnTransform, -1, -1, -1, -1);
+                    GFX.ModelDrawer.AddModelInstance(modelInstance);
                 }
             }
         }

@@ -211,7 +211,6 @@ namespace DarkSoulsModelViewerDX
 
             foreach (var faceset in mesh.FaceSets)
             {
-                //TODO: Add the check when TK finishes.
                 bool is32bit = (faceset.IndexSize == 0x20);
 
                 var newFaceSet = new FlverSubmeshRendererFaceSet()

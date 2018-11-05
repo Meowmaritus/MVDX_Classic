@@ -51,11 +51,15 @@ namespace SoulsFormats
         /// </summary>
         public static TFormat Read(byte[] bytes)
         {
-            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
-            TFormat file = new TFormat();
-            br = Util.GetDecompressedBR(br, out file.Compression);
-            file.Read(br);
-            return file;
+            using (BinaryReaderEx br = new BinaryReaderEx(false, bytes))
+            {
+                TFormat file = new TFormat();
+                using (var dcbr = Util.GetDecompressedBR(br, out file.Compression))
+                {
+                    file.Read(dcbr);
+                    return file;
+                }
+            }
         }
 
         /// <summary>
@@ -65,11 +69,16 @@ namespace SoulsFormats
         {
             using (FileStream stream = File.OpenRead(path))
             {
-                BinaryReaderEx br = new BinaryReaderEx(false, stream);
-                TFormat file = new TFormat();
-                br = Util.GetDecompressedBR(br, out file.Compression);
-                file.Read(br);
-                return file;
+                using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
+                {
+                    TFormat file = new TFormat();
+                    using (var dcbr = Util.GetDecompressedBR(br, out file.Compression))
+                    {
+                        file.Read(dcbr);
+                        return file;
+                    }
+                }
+                    
             }
         }
 
