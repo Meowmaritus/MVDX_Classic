@@ -235,6 +235,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 new DbgMenuItem() { Text = "Hold RB + Move LS: Move Menu" },
                                 new DbgMenuItem() { Text = "Hold RB + Move RS: Resize Menu" },
                                 new DbgMenuItem() { Text = "Hold LB + Move or Resize Menu: Move or Resize Menu Faster" },
+                                new DbgMenuItem() { Text = "Click RS: Toggle 3D Render Pause" },
                             }
                         },
                         new DbgMenuItem()
@@ -268,6 +269,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 new DbgMenuItem() { Text = "Home/Middle Click: Reset Value to Default" },
                                 new DbgMenuItem() { Text = "Hold Shift: Increase/Decrease 10x Faster" },
                                 new DbgMenuItem() { Text = "Hold Ctrl: Increase/Decrease 100x Faster" },
+                                new DbgMenuItem() { Text = "Pause Key: Toggle 3D Render Pause" },
                             }
                         },
                         new DbgMenuItem()
