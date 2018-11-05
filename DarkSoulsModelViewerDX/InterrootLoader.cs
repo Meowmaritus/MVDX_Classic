@@ -409,9 +409,9 @@ namespace DarkSoulsModelViewerDX
         public static void LoadBBMapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
         {
             var modelDir = GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00");
-            var modelDict = new Dictionary<string, SoulsFormats.FLVER>();
+            var modelDict = new Dictionary<string, Model>();
 
-            SoulsFormats.FLVER loadModel(string modelName)
+            Model loadModel(string modelName)
             {
                 if (!modelDict.ContainsKey(modelName))
                 {
@@ -423,7 +423,7 @@ namespace DarkSoulsModelViewerDX
                             GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\m{area:D2}_{block:D2}_00_00_{modelName.Substring(1)}"));
                     }
 
-                    modelDict.Add(modelName, flver);
+                    modelDict.Add(modelName, new Model(flver));
                 }
 
                 if (modelDict.ContainsKey(modelName))
@@ -439,12 +439,10 @@ namespace DarkSoulsModelViewerDX
                 (Type == InterrootType.InterrootBloodborne ? MSB64.MSBVersion.MSBVersionBB : MSB64.MSBVersion.MSBVersionDS3));
             foreach (var part in msb.Parts.MapPieces)
             {
-                var flverMesh = loadModel(part.ModelName);
+                var model = loadModel(part.ModelName);
 
-                if (flverMesh != null)
+                if (model != null)
                 {
-                    var model = new Model(flverMesh);
-
                     var partModelInstance = new ModelInstance(part.Name, model, new Transform(part.Position.X, part.Position.Y, part.Position.Z,
                         MathHelper.ToRadians(part.Rotation.X), MathHelper.ToRadians(part.Rotation.Y), MathHelper.ToRadians(part.Rotation.Z),
                         part.Scale.X, part.Scale.Y, part.Scale.Z), (int)part.DrawGroup1, (int)part.DrawGroup2, (int)part.DrawGroup3, (int)part.DrawGroup4);
