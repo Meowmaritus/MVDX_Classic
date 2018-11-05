@@ -103,6 +103,11 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                TexturePool.Flush();
                             }
                         },
+                        new DbgMenuItem()
+                        {
+                            Text = "[CLICK TO CLEAR SCENE]",
+                            ClickAction = (m) => GFX.ModelDrawer.ClearScene()
+                        },
                         new DbgMenuItemSpawnChr(),
                         new DbgMenuItemSpawnObj(),
                         new DbgMenuItemSpawnMap(isRegionSpawner: false),
