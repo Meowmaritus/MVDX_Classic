@@ -18,7 +18,8 @@ namespace DarkSoulsModelViewerDX
         Opaque = 1,
         AlphaEdge = 2,
         DbgPrim = 3,
-        GUI  = 4,
+        GUI = 4,
+        GUILoadingTasks = 5,
     }
 
     public static class GFX
@@ -140,9 +141,7 @@ namespace DarkSoulsModelViewerDX
                 case GFXDrawStep.Opaque:
                     Device.DepthStencilState = DepthStencilState_Normal;
                     break;
-                case GFXDrawStep.AlphaEdge:
-                case GFXDrawStep.DbgPrim:
-                case GFXDrawStep.GUI:
+                default:
                     Device.DepthStencilState = DepthStencilState_DontWriteDepth;
                     break;
             }
@@ -260,6 +259,9 @@ namespace DarkSoulsModelViewerDX
                 case GFXDrawStep.GUI:
                     DbgMenuItem.CurrentMenu.Draw((float)gameTime.ElapsedGameTime.TotalSeconds);
                     break;
+                case GFXDrawStep.GUILoadingTasks:
+                    LoadingTaskMan.DrawAllTasks();
+                    break;
             }
         }
 
@@ -282,9 +284,6 @@ namespace DarkSoulsModelViewerDX
                     DBG.DrawOutlinedText(errText, new Vector2(Device.Viewport.Width / 2, Device.Viewport.Height / 2), Color.Red, DBG.DEBUG_FONT_HQ, 0, 0.25f, errTextSize / 2);
                 }
             }
-
-            
-            
         }
 
         public static void DrawScene(GameTime gameTime)

@@ -88,10 +88,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             Text = "Scan All Separate Texture Files",
                             ClickAction = (m) =>
                             {
-                                TexturePool.AddMapTexUdsfm();
-                                TexturePool.AddChrBndsThatEndIn9();
-                                TexturePool.AddChrBndsThatEndIn9();
-                                TexturePool.AddChrTexUdsfm();
+                                TexturePool.AddAllExternalDS1TexturesInBackground();
                             }
                         },
                         new DbgMenuItem()

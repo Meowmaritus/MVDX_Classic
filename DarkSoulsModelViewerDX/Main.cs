@@ -164,12 +164,6 @@ namespace DarkSoulsModelViewerDX
             DBG.LoadContent(Content);
             InterrootLoader.OnLoadError += InterrootLoader_OnLoadError;
 
-            //////// Here is where you should load things for testing. ////////
-
-
-
-            ///////////////////////////////////////////////////////////////////
-
             DBG.CreateDebugPrimitives();
 
             GFX.World.CameraTransform.Position = new Vector3(0, -1.5f, -13);
@@ -209,10 +203,12 @@ namespace DarkSoulsModelViewerDX
             var strSize_managed = DBG.DEBUG_FONT_SMALL.MeasureString(str_managed);
             var strSize_unmanaged = DBG.DEBUG_FONT_SMALL.MeasureString(str_unmanaged);
 
-            DBG.DrawOutlinedText(str_managed, new Vector2(GFX.Device.Viewport.Width - 8, 8),
+            DBG.DrawOutlinedText(str_managed, new Vector2(GFX.Device.Viewport.Width - 8, 
+                GFX.Device.Viewport.Height - 8 - strSize_managed.Y - strSize_unmanaged.Y),
                 Color.Yellow, DBG.DEBUG_FONT_SMALL, scaleOrigin: new Vector2(strSize_managed.X, 0));
 
-            DBG.DrawOutlinedText(str_unmanaged, new Vector2(GFX.Device.Viewport.Width - 8, 8 + strSize_managed.Y),
+            DBG.DrawOutlinedText(str_unmanaged, new Vector2(GFX.Device.Viewport.Width - 8, 
+                GFX.Device.Viewport.Height - 8 - strSize_unmanaged.Y),
                 Color.Yellow, DBG.DEBUG_FONT_SMALL, scaleOrigin: new Vector2(strSize_unmanaged.X, 0));
         }
 
@@ -227,12 +223,13 @@ namespace DarkSoulsModelViewerDX
 
         protected override void Update(GameTime gameTime)
         {
+            float elapsed = (float)gameTime.ElapsedGameTime.TotalSeconds;
             IsFixedTimeStep = FIXED_TIME_STEP;
 
             Active = IsActive;
 
-            DbgMenuItem.UpdateInput((float)gameTime.ElapsedGameTime.TotalSeconds);
-            DbgMenuItem.UICursorBlinkUpdate((float)gameTime.ElapsedGameTime.TotalSeconds);
+            DbgMenuItem.UpdateInput(elapsed);
+            DbgMenuItem.UICursorBlinkUpdate(elapsed);
 
             if (DbgMenuItem.MenuOpenState != DbgMenuOpenState.Open)
             {
@@ -252,12 +249,14 @@ namespace DarkSoulsModelViewerDX
             if (REQUEST_EXIT)
                 Exit();
 
-            MemoryUsageCheckTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            MemoryUsageCheckTimer += elapsed;
             if (MemoryUsageCheckTimer >= MemoryUsageCheckInterval)
             {
                 MemoryUsageCheckTimer = 0;
                 UpdateMemoryUsage();
             }
+
+            LoadingTaskMan.Update(elapsed);
 
             base.Update(gameTime);
         }

@@ -251,12 +251,12 @@ namespace DarkSoulsModelViewerDX
                     BND texbnd = LoadDecompressedBND(texBndName);
                     if (texbnd != null)
                     {
-                        TexturePool.AddTextureBnd(texbnd);
+                        TexturePool.AddTextureBnd(texbnd, null);
                     }
                 }
                 else
                 {
-                    TexturePool.AddTextureBnd(bnd);
+                    TexturePool.AddTextureBnd(bnd, null);
                 }
                 return models;
             }
@@ -276,7 +276,7 @@ namespace DarkSoulsModelViewerDX
                     bnd = DataFile.LoadFromFile<BND>(bndName);
                 }
                 var models = LoadModelsFromBnd(bnd);
-                TexturePool.AddTextureBnd(bnd);
+                TexturePool.AddTextureBnd(bnd, null);
                 return models;
             }
 
@@ -305,24 +305,35 @@ namespace DarkSoulsModelViewerDX
 
         public static void LoadMapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
         {
+            var mapStr = $"m{area:D2}_{block:D2}_00_00";
+            
             if (Type == InterrootType.InterrootDS1)
             {
-                LoadDS1MapInBackground(area, block, excludeScenery, addMapModel);
+                LoadingTaskMan.DoLoadingTask($"LoadMapInBackground[{mapStr}]", $"Loading {mapStr} models...", prog =>
+                {
+                    LoadDS1MapInBackground(area, block, excludeScenery, addMapModel, prog);
+                });
             }
             else if (Type == InterrootType.InterrootBloodborne || Type == InterrootType.InterrootDS3)
             {
-                LoadBBMapInBackground(area, block, excludeScenery, addMapModel);
+                LoadingTaskMan.DoLoadingTask($"LoadMapInBackground_Models[{mapStr}]", $"Loading {mapStr} models...", prog =>
+                {
+                    LoadBBMapInBackground(area, block, excludeScenery, addMapModel, prog);
+                });
+
+                LoadingTaskMan.DoLoadingTask($"LoadMapInBackground_Textures[{mapStr}]", $"Loading {mapStr} textures...", prog =>
+                {
+                    TexturePool.AddMapTexBhds(area);
+                });   
             }
-            else
-            {
-                throw new NotImplementedException("Only DS1 msb loading implemented");
-            }
+            
         }
 
-        public static void LoadDS1MapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
+        public static void LoadDS1MapInBackground(int area, int block, bool excludeScenery, 
+            Action<ModelInstance> addMapModel, IProgress<double> progress)
         {
             var modelDir = GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00");
-            var modelDict = new Dictionary<string, SoulsFormats.FLVER>();
+            var modelDict = new Dictionary<string, Model>();
             //foreach (var mfn in modelFileNames)
             //{
             //    if (excludeScenery && (mfn.StartsWith("m8") || mfn.StartsWith("m9")))
@@ -330,7 +341,7 @@ namespace DarkSoulsModelViewerDX
             //    modelDict.Add(MiscUtil.GetFileNameWithoutDirectoryOrExtension(mfn), DataFile.LoadFromFile<FLVER>(mfn));
             //}
 
-            SoulsFormats.FLVER loadModel(string modelName, PartsParamSubtype partType)
+            Model loadModel(string modelName, PartsParamSubtype partType)
             {
                 if (!modelDict.ContainsKey(modelName))
                 {
@@ -352,21 +363,24 @@ namespace DarkSoulsModelViewerDX
                                     || partType == PartsParamSubtype.DummyObjects)
                                     ? $@"obj\{modelName}.objbnd" : $@"chr\{modelName}.chrbnd";
 
-
                                 var bnd = LoadDecompressedBND(GetInterrootPath(bndRelPath));
-                                foreach (var entry in bnd)
+                                if (bnd != null)
                                 {
-                                    var compareName = entry.Name.ToUpper();
-                                    if (flver == null && compareName.EndsWith(".FLVER"))
-                                        flver = SoulsFormats.FLVER.Read(entry.GetBytes());
-                                    else if (compareName.EndsWith(".TPF"))
-                                        TexturePool.AddTpf(SoulsFormats.TPF.Read(entry.GetBytes()));
+                                    foreach (var entry in bnd)
+                                    {
+                                        var compareName = entry.Name.ToUpper();
+                                        if (flver == null && compareName.EndsWith(".FLVER"))
+                                            flver = SoulsFormats.FLVER.Read(entry.GetBytes());
+                                        else if (compareName.EndsWith(".TPF"))
+                                            TexturePool.AddTpf(SoulsFormats.TPF.Read(entry.GetBytes()));
+                                    }
                                 }
                                 break;
                         }
                     }
 
-                    modelDict.Add(modelName, flver);
+                    if (flver != null)
+                        modelDict.Add(modelName, new Model(flver));
                 }
 
                 if (modelDict.ContainsKey(modelName))
@@ -376,19 +390,15 @@ namespace DarkSoulsModelViewerDX
             }
 
             var msb = DataFile.LoadFromFile<MSB>(GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb"));
-            foreach (var part in msb.Parts.GlobalList)
-            {
-                //if (excludeScenery && (part.ModelName.StartsWith("m8") || part.ModelName.StartsWith("m9") || !part.IsShadowDest))
-                //    continue;
 
+            void addMsbPart(MsbPartsBase part)
+            {
                 var partSubtype = part.GetSubtypeValue();
 
-                var flverMesh = loadModel(part.ModelName, partSubtype);
+                var model = loadModel(part.ModelName, partSubtype);
 
-                if (flverMesh != null)
+                if (model != null)
                 {
-                    var model = new Model(flverMesh);
-
                     var partModelInstance = new ModelInstance(part.Name, model, new Transform(part.PosX, part.PosY, part.PosZ,
                         MathHelper.ToRadians(part.RotX), MathHelper.ToRadians(part.RotY), MathHelper.ToRadians(part.RotZ),
                         part.ScaleX, part.ScaleY, part.ScaleZ), part.DrawGroup1, part.DrawGroup2, part.DrawGroup3, part.DrawGroup4);
@@ -400,13 +410,54 @@ namespace DarkSoulsModelViewerDX
 
                     addMapModel.Invoke(partModelInstance);
                 }
-                
+            }
+
+            // Be sure to update this count if more types of parts are loaded.
+            int totalNumberOfParts =
+                msb.Parts.MapPieces.Count +
+                msb.Parts.NPCs.Count +
+                msb.Parts.DummyNPCs.Count +
+                msb.Parts.Objects.Count +
+                msb.Parts.DummyObjects.Count
+                ;
+
+            int i = 0;
+
+            foreach (var part in msb.Parts.MapPieces)
+            {
+                addMsbPart(part);
+                progress?.Report(1.0 * (++i) / totalNumberOfParts);
+            }
+
+            foreach (var part in msb.Parts.NPCs)
+            {
+                addMsbPart(part);
+                progress?.Report(1.0 * (++i) / totalNumberOfParts);
+            }
+
+            foreach (var part in msb.Parts.DummyNPCs)
+            {
+                addMsbPart(part);
+                progress?.Report(1.0 * (++i) / totalNumberOfParts);
+            }
+
+            foreach (var part in msb.Parts.Objects)
+            {
+                addMsbPart(part);
+                progress?.Report(1.0 * (++i) / totalNumberOfParts);
+            }
+
+            foreach (var part in msb.Parts.DummyObjects)
+            {
+                addMsbPart(part);
+                progress?.Report(1.0 * (++i) / totalNumberOfParts);
             }
 
             modelDict = null;
         }
 
-        public static void LoadBBMapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
+        public static void LoadBBMapInBackground(int area, int block, bool excludeScenery, 
+            Action<ModelInstance> addMapModel, IProgress<double> progress)
         {
             var modelDir = GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00");
             var modelDict = new Dictionary<string, Model>();
@@ -423,7 +474,8 @@ namespace DarkSoulsModelViewerDX
                             GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\m{area:D2}_{block:D2}_00_00_{modelName.Substring(1)}"));
                     }
 
-                    modelDict.Add(modelName, new Model(flver));
+                    if (flver != null)
+                        modelDict.Add(modelName, new Model(flver));
                 }
 
                 if (modelDict.ContainsKey(modelName))
@@ -432,12 +484,10 @@ namespace DarkSoulsModelViewerDX
                     return null;
             }
 
-            // Load the maps texture bhds
-            TexturePool.AddMapTexBhds(area);
-
             var msb = MSB64.Read(GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb.dcx"),
                 (Type == InterrootType.InterrootBloodborne ? MSB64.MSBVersion.MSBVersionBB : MSB64.MSBVersion.MSBVersionDS3));
-            foreach (var part in msb.Parts.MapPieces)
+
+            void addMsbPart(MSB64.Part part)
             {
                 var model = loadModel(part.ModelName);
 
@@ -449,7 +499,19 @@ namespace DarkSoulsModelViewerDX
 
                     addMapModel.Invoke(partModelInstance);
                 }
+            }
 
+            // Be sure to update this count if more types of parts are loaded.
+            int totalNumberOfParts = 
+                msb.Parts.MapPieces.Count
+                ;
+
+            int i = 0;
+
+            foreach (var part in msb.Parts.MapPieces)
+            {
+                addMsbPart(part);
+                progress?.Report(1.0 * (++i) / totalNumberOfParts);
             }
 
             modelDict = null;
@@ -457,34 +519,41 @@ namespace DarkSoulsModelViewerDX
 
         public static void LoadDragDroppedFiles(string[] fileNames)
         {
-            var spawnTransform = GFX.World.GetSpawnPointFromMouseCursor(10.0f, false, true, true);
-            foreach (var fn in fileNames)
+            LoadingTaskMan.DoLoadingTask("LoadDragDroppedFiles_" + DateTime.Now.Ticks, "Loading dropped models...", prog =>
             {
-                var shortName = Path.GetFileNameWithoutExtension(fn);
-                var upper = fn.ToUpper();
-                if (upper.EndsWith(".CHRBND") || upper.EndsWith(".OBJBND") || upper.EndsWith(".PARTSBND"))
+                var spawnTransform = GFX.World.GetSpawnPointFromMouseCursor(10.0f, false, true, true);
+                int i = 0;
+                foreach (var fn in fileNames)
                 {
-                    BND bnd = null;
-                    lock (_lock_IO)
+                    var shortName = Path.GetFileNameWithoutExtension(fn);
+                    var upper = fn.ToUpper();
+                    if (upper.EndsWith(".CHRBND") || upper.EndsWith(".OBJBND") || upper.EndsWith(".PARTSBND"))
                     {
-                        bnd = DataFile.LoadFromFile<BND>(fn);
+                        BND bnd = null;
+                        lock (_lock_IO)
+                        {
+                            bnd = DataFile.LoadFromFile<BND>(fn);
+                        }
+                        TexturePool.AddTextureBnd(bnd, null);
+                        var models = LoadModelsFromBnd(bnd);
+                        foreach (var m in models)
+                        {
+                            GFX.ModelDrawer.AddModelInstance(
+                                new ModelInstance(shortName, m, spawnTransform, -1, -1, -1, -1));
+                        }
                     }
-                    TexturePool.AddTextureBnd(bnd);
-                    var models = LoadModelsFromBnd(bnd);
-                    foreach (var m in models)
+                    else if (upper.EndsWith(".FLVER"))
                     {
-                        GFX.ModelDrawer.AddModelInstance(
-                            new ModelInstance(shortName, m, spawnTransform, -1, -1, -1, -1));
+                        var flver = SoulsFormats.FLVER.Read(File.ReadAllBytes(fn));
+                        var model = new Model(flver);
+                        var modelInstance = new ModelInstance(shortName, model, spawnTransform, -1, -1, -1, -1);
+                        GFX.ModelDrawer.AddModelInstance(modelInstance);
                     }
+                    prog?.Report(1.0 * (++i) / fileNames.Length);
                 }
-                else if (upper.EndsWith(".FLVER"))
-                {
-                    var flver = SoulsFormats.FLVER.Read(File.ReadAllBytes(fn));
-                    var model = new Model(flver);
-                    var modelInstance = new ModelInstance(shortName, model, spawnTransform, -1, -1, -1, -1);
-                    GFX.ModelDrawer.AddModelInstance(modelInstance);
-                }
-            }
+            });
+
+            
         }
     }
 }

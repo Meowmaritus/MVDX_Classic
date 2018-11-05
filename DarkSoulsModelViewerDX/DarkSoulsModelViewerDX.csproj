@@ -91,6 +91,7 @@
     <Compile Include="DebugPrimitives\DbgPrimWireCylinder.cs" />
     <Compile Include="DebugPrimitives\DbgPrimWireSphere.cs" />
     <Compile Include="DebugPrimitives\IDbgPrim.cs" />
+    <Compile Include="LoadingTaskMan.cs" />
     <Compile Include="TextureFetchRequest.cs" />
     <Compile Include="VertexPositionColorNormalTangentTexture.cs" />
     <Compile Include="WorldView.cs" />

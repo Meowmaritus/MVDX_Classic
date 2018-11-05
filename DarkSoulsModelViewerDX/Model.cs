@@ -62,11 +62,18 @@ namespace DarkSoulsModelViewerDX
 
         public void Dispose()
         {
-            for (int i = 0; i < Submeshes.Count; i++)
+            if (Submeshes != null)
             {
-                Submeshes[i].Dispose();
+                for (int i = 0; i < Submeshes.Count; i++)
+                {
+                    if (Submeshes[i] != null)
+                        Submeshes[i].Dispose();
+                }
+
+                Submeshes = null;
             }
-            Submeshes = null;
+            
+            
         }
     }
 }

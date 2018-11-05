@@ -77,56 +77,50 @@ namespace DarkSoulsModelViewerDX
 
         public void TestAddAllChr()
         {
-            var thread = new Thread(() =>
+            LoadingTaskMan.DoLoadingTask("TestAddAllChr", "Loading lineup of all characters...", prog =>
             {
                 float currentX = 0;
 
-                TexturePool.AddChrBndsThatEndIn9();
-
-                foreach (int i in DbgMenus.DbgMenuItemSpawnChr.IDList)
+                //TexturePool.AddChrBndsThatEndIn9();
+                int i = 0;
+                foreach (int ID in DbgMenus.DbgMenuItemSpawnChr.IDList)
                 {
-                    var newChrs = AddChr(i, new Transform(currentX, 0, 0, 0, 0, 0));
-                    foreach (var newChr in newChrs)
+                    var newModels = AddChr(ID, new Transform(currentX, 0, 0, 0, 0, 0));
+                    foreach (var mdl in newModels)
                     {
-                        float thisChrWidth = new Vector3(newChr.Model.Bounds.Max.X, 0, newChr.Model.Bounds.Max.Z).Length()
-                            + new Vector3(newChr.Model.Bounds.Min.X, 0, newChr.Model.Bounds.Min.Z).Length();
-                        newChr.Transform.Position.X += thisChrWidth / 2;
-                        currentX += thisChrWidth;
+                        float thisModelWidth = new Vector3(mdl.Model.Bounds.Max.X, 0, mdl.Model.Bounds.Max.Z).Length()
+                            + new Vector3(mdl.Model.Bounds.Min.X, 0, mdl.Model.Bounds.Min.Z).Length();
+                        mdl.Transform.Position.X += thisModelWidth / 2;
+                        currentX += thisModelWidth;
                     }
+                    prog?.Report(1.0 * (++i) / DbgMenus.DbgMenuItemSpawnChr.IDList.Count);
                 }
+
             });
-
-            thread.IsBackground = true;
-
-            thread.Start();
         }
 
         public void TestAddAllObj()
         {
-            var thread = new Thread(() =>
+            LoadingTaskMan.DoLoadingTask("TestAddAllObj", "Loading lineup of all objects...", prog =>
             {
                 float currentX = 0;
 
-                //TexturePool.AddMapTexUdsfm();
-                TexturePool.AddObjBndsThatEndIn9();
-
-                foreach (int i in DbgMenus.DbgMenuItemSpawnObj.IDList)
+                //TexturePool.AddObjBndsThatEndIn9();
+                int i = 0;
+                foreach (int ID in DbgMenus.DbgMenuItemSpawnObj.IDList)
                 {
-                    var newChrs = AddObj(i, new Transform(currentX, 0, 0, 0, 0, 0));
-                    foreach (var newChr in newChrs)
+                    var newModels = AddObj(ID, new Transform(currentX, 0, 0, 0, 0, 0));
+                    foreach (var mdl in newModels)
                     {
-                        float thisChrWidth = new Vector3(newChr.Model.Bounds.Max.X, 0, newChr.Model.Bounds.Max.Z).Length()
-                            + new Vector3(newChr.Model.Bounds.Min.X, 0, newChr.Model.Bounds.Min.Z).Length();
-                        newChr.Transform.Position.X += thisChrWidth / 2;
-                        currentX += thisChrWidth;
+                        float thisModelWidth = new Vector3(mdl.Model.Bounds.Max.X, 0, mdl.Model.Bounds.Max.Z).Length()
+                            + new Vector3(mdl.Model.Bounds.Min.X, 0, mdl.Model.Bounds.Min.Z).Length();
+                        mdl.Transform.Position.X += thisModelWidth / 2;
+                        currentX += thisModelWidth;
                     }
+                    prog?.Report(1.0 * (++i) / DbgMenus.DbgMenuItemSpawnObj.IDList.Count);
                 }
+
             });
-
-            thread.IsBackground = true;
-
-            thread.Start();
-            
         }
 
         public List<ModelInstance> AddChr(int id, Transform location)
@@ -163,14 +157,7 @@ namespace DarkSoulsModelViewerDX
 
         public void AddMap(int area, int block, bool excludeScenery)
         {
-            var thread = new Thread(() =>
-            {
-                InterrootLoader.LoadMapInBackground(area, block, excludeScenery, AddModelInstance);
-            });
-
-            thread.IsBackground = true;
-
-            thread.Start();
+            InterrootLoader.LoadMapInBackground(area, block, excludeScenery, AddModelInstance);
         }
 
         private void DrawFlverAt(Model flver, Transform transform)

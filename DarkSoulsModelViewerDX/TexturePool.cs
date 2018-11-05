@@ -40,7 +40,11 @@ namespace DarkSoulsModelViewerDX
         {
             string shortName = Path.GetFileNameWithoutExtension(texName);
             if (!Fetches.ContainsKey(shortName))
-                Fetches.Add(shortName, new TextureFetchRequest(tpf, texName));
+            {
+                var newFetch = new TextureFetchRequest(tpf, texName);
+                Fetches.Add(shortName, newFetch);
+            }
+                
         }
 
         public static void AddTpf(SoulsFormats.TPF tpf)
@@ -51,13 +55,15 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public static void AddTextureBnd(BND chrbnd)
+        public static void AddTextureBnd(BND chrbnd, IProgress<double> prog)
         {
-            var tpfFiles = chrbnd.Where(x => x.Name.EndsWith(".tpf"));
+            var tpfFiles = chrbnd.Where(x => x.Name.EndsWith(".tpf")).ToList();
+            int i = 0;
             foreach (var t in tpfFiles)
             {
                 var tpf = SoulsFormats.TPF.Read(t.GetBytes());
                 AddTpf(tpf);
+                prog?.Report(1.0 * (++i) / tpfFiles.Count);
             }
         }
 
@@ -67,67 +73,74 @@ namespace DarkSoulsModelViewerDX
             AddTpf(tpf);
         }
 
-        public static void AddMapTexUdsfm()
+        public static void AddAllExternalDS1TexturesInBackground()
         {
-            var thread = new Thread(() =>
+            LoadingTaskMan.DoLoadingTask($"AddAllExternalDS1TexturesInBackground_UDSFM_MAP", $"Loading external map textures for DS1...", prog =>
             {
+                //UDSFM MAP TEX
                 var dir = InterrootLoader.GetInterrootPath(@"map\tx");
-                if (!Directory.Exists(dir))
-                    return;
-                var mapTpfFileNames = Directory.GetFiles(dir);
-                foreach (var t in mapTpfFileNames)
+                if (Directory.Exists(dir))
                 {
-                    AddTpfFromPath(t);
-                }
-            });
-            thread.IsBackground = true;
-            thread.Start();
-        }
-
-        public static void AddChrTexUdsfm()
-        {
-            var udsfmTexFolderPath = InterrootLoader.GetInterrootPath($@"chr");
-            if (Directory.Exists(udsfmTexFolderPath))
-            {
-                var subDirectories = Directory.GetDirectories(udsfmTexFolderPath);
-
-                foreach (var subDir in subDirectories)
-                {
-                    var chrTpfFileNames = Directory.GetFiles(subDir, "*.tpf");
-                    foreach (var t in chrTpfFileNames)
+                    var mapTpfFileNames = Directory.GetFiles(dir);
+                    int i = 0;
+                    foreach (var t in mapTpfFileNames)
                     {
                         AddTpfFromPath(t);
+                        prog?.Report(1.0 * (++i) / mapTpfFileNames.Length);
                     }
                 }
-            }
-        }
+                
+            });
 
-        public static void AddChrBndsThatEndIn9()
-        {
-            var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"chr"), "*9.chrbnd");
-            foreach (var ctew9 in chrbndsThatEndWith9)
+            LoadingTaskMan.DoLoadingTask($"AddAllExternalDS1TexturesInBackground_UDSFM_CHR", $"Loading external boss character textures for DS1...", prog =>
             {
-                BND entityBnd = null;
-                lock (_lock_IO)
+                // UDSFM CHR TEX
+                var udsfmTexFolderPath = InterrootLoader.GetInterrootPath($@"chr");
+                if (Directory.Exists(udsfmTexFolderPath))
                 {
-                    entityBnd = DataFile.LoadFromFile<BND>(ctew9);
+                    var subDirectories = Directory.GetDirectories(udsfmTexFolderPath);
+                    int i = 0;
+                    foreach (var subDir in subDirectories)
+                    {
+                        var chrTpfFileNames = Directory.GetFiles(subDir, "*.tpf");
+                        foreach (var t in chrTpfFileNames)
+                        {
+                            AddTpfFromPath(t);
+                        }
+                        prog?.Report(1.0 * (++i) / subDirectories.Length);
+                    }
                 }
-                AddTextureBnd(entityBnd);
-            }
-        }
+            });
 
-        public static void AddObjBndsThatEndIn9()
-        {
-            var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"obj"), "*9.objbnd");
-            foreach (var ctew9 in chrbndsThatEndWith9)
+            LoadingTaskMan.DoLoadingTask($"AddAllExternalDS1TexturesInBackground_CHRBND_9", $"Loading external character textures for DS1...", prog =>
             {
-                BND entityBnd = null;
-                lock (_lock_IO)
+                // CHRBND-9
+                var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"chr"), "*9.chrbnd");
+                foreach (var ctew9 in chrbndsThatEndWith9)
                 {
-                    entityBnd = DataFile.LoadFromFile<BND>(ctew9);
+                    BND entityBnd = null;
+                    lock (_lock_IO)
+                    {
+                        entityBnd = DataFile.LoadFromFile<BND>(ctew9);
+                    }
+                    AddTextureBnd(entityBnd, prog);
                 }
-                AddTextureBnd(entityBnd);
-            }
+            });
+
+            LoadingTaskMan.DoLoadingTask($"AddAllExternalDS1TexturesInBackground_OBJBND_9", $"Loading external object textures for DS1...", prog =>
+            {
+                // CHRBND-9
+                var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"obj"), "*9.objbnd");
+                foreach (var ctew9 in chrbndsThatEndWith9)
+                {
+                    BND entityBnd = null;
+                    lock (_lock_IO)
+                    {
+                        entityBnd = DataFile.LoadFromFile<BND>(ctew9);
+                    }
+                    AddTextureBnd(entityBnd, prog);
+                }
+            });
         }
 
         public static void AddMapTexBhds(int area)
