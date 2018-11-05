@@ -80,7 +80,7 @@ namespace DarkSoulsModelViewerDX
 
         public void TestAddAllChr()
         {
-            LoadingTaskMan.DoLoadingTask("TestAddAllChr", "Loading lineup of all characters...", prog =>
+            LoadingTaskMan.DoLoadingTask($"{nameof(TestAddAllChr)}", "Loading lineup of all characters...", prog =>
             {
                 float currentX = 0;
 
@@ -105,7 +105,7 @@ namespace DarkSoulsModelViewerDX
 
         public void TestAddAllObj()
         {
-            LoadingTaskMan.DoLoadingTask("TestAddAllObj", "Loading lineup of all objects...", prog =>
+            LoadingTaskMan.DoLoadingTask($"{nameof(TestAddAllObj)}", "Loading lineup of all objects...", prog =>
             {
                 float currentX = 0;
 
@@ -182,6 +182,9 @@ namespace DarkSoulsModelViewerDX
 
         public void Draw()
         {
+            if (DbgMenus.DbgMenuItem.MenuOpenState == DbgMenus.DbgMenuOpenState.Open && DbgMenus.DbgMenuItem.IsPauseRendering)
+                return;
+
             lock (_lock_ModelLoad_Draw)
             {
                 if (IsTextureLoadRequested)

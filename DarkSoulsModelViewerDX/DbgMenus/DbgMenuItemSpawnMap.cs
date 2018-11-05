@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -65,6 +66,14 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         private void UpdateText()
         {
             string actionText = IsRegionSpawner ? "Click to Spawn MAP - Event Regions" : "Click to Spawn MAP - Models";
+
+            if (!IsRegionSpawner)
+            {
+                CustomColorFunction = () => (
+                    LoadingTaskMan.IsTaskRunning($"{nameof(InterrootLoader.LoadMapInBackground)}_Textures[{IDList[IDIndex]}]")
+                    || LoadingTaskMan.IsTaskRunning($"{nameof(InterrootLoader.LoadMapInBackground)}_Models[{IDList[IDIndex]}]"))
+                    ? Color.Cyan * 0.5f : Color.Cyan;
+            }
 
             if (IDList.Count == 0)
             {

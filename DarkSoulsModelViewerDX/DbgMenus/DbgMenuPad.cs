@@ -48,6 +48,9 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public static DbgMenuPadRepeater ToggleMenu
             = new DbgMenuPadRepeater(Buttons.Back, float.PositiveInfinity, float.PositiveInfinity);
 
+        public static DbgMenuPadRepeater PauseRendering
+            = new DbgMenuPadRepeater(Buttons.RightStick, float.PositiveInfinity, float.PositiveInfinity);
+
         public static Point MousePos = new Point();
         private static Point prevMousePos = new Point();
         public static bool IsMouseMovedThisFrame = false;
@@ -80,6 +83,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 Enter.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.Enter));
                 Cancel.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.Back) || mouse.RightButton == ButtonState.Pressed);
                 ResetDefault.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.Home));
+                PauseRendering.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.Pause));
 
                 MoveFastHeld = gamepad.IsButtonDown(Buttons.LeftShoulder) ||
                     (Main.Active && (keyboard.IsKeyDown(Keys.LeftShift) || keyboard.IsKeyDown(Keys.RightShift)));

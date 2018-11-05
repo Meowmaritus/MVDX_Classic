@@ -108,19 +108,30 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             Text = "[CLICK TO CLEAR SCENE]",
                             ClickAction = (m) => GFX.ModelDrawer.ClearScene()
                         },
-                        new DbgMenuItemSpawnChr(),
-                        new DbgMenuItemSpawnObj(),
+                        new DbgMenuItemSpawnChr()
+                        {
+                            CustomColorFunction = () => Color.Cyan
+                        },
+                        new DbgMenuItemSpawnObj()
+                        {
+                            CustomColorFunction = () => Color.Cyan
+                        },
                         new DbgMenuItemSpawnMap(isRegionSpawner: false),
-                        new DbgMenuItemSpawnMap(isRegionSpawner: true),
+                        new DbgMenuItemSpawnMap(isRegionSpawner: true)
+                        {
+                            CustomColorFunction = () => Color.Cyan
+                        },
                         new DbgMenuItem()
                         {
                             Text = "Load All Characters Lineup",
                             ClickAction = (m) => GFX.ModelDrawer.TestAddAllChr(),
+                            CustomColorFunction = () => LoadingTaskMan.IsTaskRunning($"{nameof(GFX.ModelDrawer.TestAddAllChr)}") ? Color.Cyan * 0.5f : Color.Cyan
                         },
                         new DbgMenuItem()
                         {
                             Text = "Load All Objects Lineup",
                             ClickAction = (m) => GFX.ModelDrawer.TestAddAllObj(),
+                            CustomColorFunction = () => LoadingTaskMan.IsTaskRunning($"{nameof(GFX.ModelDrawer.TestAddAllObj)}") ? Color.Cyan * 0.5f : Color.Cyan
                         },
                     }
                 },
@@ -304,6 +315,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public static SpriteFont FONT => DBG.DEBUG_FONT_UI;
         public static DbgMenuOpenState MenuOpenState = DbgMenuOpenState.Open;
+        public static bool IsPauseRendering = false;
         public static DbgMenuItem CurrentMenu = new DbgMenuItem();
         public static Stack<DbgMenuItem> DbgMenuStack = new Stack<DbgMenuItem>();
         public static Vector2 MenuPosition = Vector2.One * 8;
@@ -434,6 +446,9 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
                 if (DbgMenuPad.Right.State)
                     CurrentMenu.SelectedItem.OnIncrease(!DbgMenuPad.Right.IsInitalButtonTap, incrementAmount);
+
+                if (DbgMenuPad.PauseRendering.State)
+                    IsPauseRendering = !IsPauseRendering;
 
                 if (DbgMenuPad.Enter.State)
                 {
@@ -590,15 +605,29 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             {
                 UpdateUI();
 
-                float menuBackgroundOpacityMult = MenuOpenState == DbgMenuOpenState.Open ? 1.0f : 0.5f;
+                float menuBackgroundOpacityMult = MenuOpenState == DbgMenuOpenState.Open ? 1.0f : 0f;
 
                 // Draw menu background rect
                 GFX.SpriteBatch.Begin();
                 //---- Full Background
-                GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, MenuRect, Color.Black * 0.75f * menuBackgroundOpacityMult);
+                GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, MenuRect, Color.Black * 0.5f * menuBackgroundOpacityMult);
                 //---- Slightly Darker Part On Top
                 GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, 
                     new Rectangle(MenuRect.X, MenuRect.Y, MenuRect.Width, 40), Color.Black * 0.5f * menuBackgroundOpacityMult);
+
+                if (MenuOpenState == DbgMenuOpenState.Open)
+                {
+                    var renderPauseStr = $"Render Pause:{(IsPauseRendering ? "Active" : "Inactive")}\n(Click RS / Press Pause Key)";
+                    var renderPauseStrScale = DBG.DEBUG_FONT_BIG.MeasureString(renderPauseStr);
+                    var renderPauseStrColor = !IsPauseRendering ? Color.White : Color.Yellow;
+
+                    DBG.DrawOutlinedText(renderPauseStr,
+                        new Vector2(8, GFX.Device.Viewport.Height - 20),
+                        renderPauseStrColor, DBG.DEBUG_FONT_BIG, scaleOrigin: new Vector2(0, renderPauseStrScale.Y), 
+                        //scale: IsPauseRendering ? 1f : 0.75f,
+                        startAndEndSpriteBatchForMe: false);
+                }
+
                 GFX.SpriteBatch.End();
                 
                 // Draw name on top
@@ -700,6 +729,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     {
                         // Draw Items
 
+                        var selectionPrefixTextSize = Vector2.Zero;// FONT.MeasureString($"  {UICursorBlinkString} ");
+
+                        GFX.SpriteBatch.Begin();
+
                         for (int i = roughStartDrawIndex; i <= roughEndDrawIndex; i++)
                         {
                             Items[i].UpdateUI();
@@ -713,14 +746,30 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 var itemTextColor = Items[i].CustomColorFunction?.Invoke() ?? ((SelectedIndex == i
                                     && MenuOpenState == DbgMenuOpenState.Open)
                                     ? Color.LightGreen : Color.White);
+
+                                if (SelectedIndex == i && MenuOpenState == DbgMenuOpenState.Open)
+                                {
+                                    var underlineRect = new Rectangle(
+                                        itemRect.X - SubMenuRect.X + (int)selectionPrefixTextSize.X - 4,
+                                        itemRect.Y - SubMenuRect.Y - 1,
+                                        MenuRect.Width - (int)(selectionPrefixTextSize.X),
+                                        itemRect.Height + 2);
+
+                                    GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, underlineRect, 
+                                        Color.Black);
+                                }
+
+                                
                                 // We have to SUBTRACT the menu top/left coord because the string 
                                 // drawing is relative to the VIEWPORT, which takes up just the actual menu rect
                                 DBG.DrawOutlinedText(entryText,
                                     new Vector2(itemRect.X - SubMenuRect.X, itemRect.Y - SubMenuRect.Y),
-                                    itemTextColor, FONT, disableSmoothing: true);
+                                    itemTextColor, FONT, disableSmoothing: true, startAndEndSpriteBatchForMe: false);
                             }
 
                         }
+
+                        GFX.SpriteBatch.End();
 
                         // Draw Scrollbar
                         // Only if there's stuff that passes the bottom of the menu.

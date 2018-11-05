@@ -311,14 +311,14 @@ namespace DarkSoulsModelViewerDX
             
             if (Type == InterrootType.InterrootDS1)
             {
-                LoadingTaskMan.DoLoadingTask($"LoadMapInBackground[{mapStr}]", $"Loading {mapStr} models...", prog =>
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Textures[{mapStr}]", $"Loading {mapStr} models...", prog =>
                 {
                     LoadDS1MapInBackground(area, block, excludeScenery, addMapModel, prog);
                 });
             }
             else if (Type == InterrootType.InterrootBloodborne || Type == InterrootType.InterrootDS3)
             {
-                LoadingTaskMan.DoLoadingTask($"LoadMapInBackground_Models[{mapStr}]", $"Loading {mapStr} models...", prog =>
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Models[{mapStr}]", $"Loading {mapStr} models...", prog =>
                 {
                     LoadBBMapInBackground(area, block, excludeScenery, addMapModel, prog);
                 });
