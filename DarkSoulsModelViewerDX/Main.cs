@@ -86,7 +86,8 @@ namespace DarkSoulsModelViewerDX
 
             IsFixedTimeStep = true;
             TargetElapsedTime = TimeSpan.FromTicks(166667);
-            MaxElapsedTime = TimeSpan.FromTicks(166667);
+            // Setting this max higher allows it to skip frames instead of do slow motion.
+            MaxElapsedTime = TimeSpan.FromTicks(1000000);
 
             //IsFixedTimeStep = false;
             graphics.SynchronizeWithVerticalRetrace = true;
