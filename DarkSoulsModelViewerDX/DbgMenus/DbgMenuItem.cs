@@ -83,6 +83,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 { InterrootLoader.InterrootType.InterrootDS3, "Dark Souls III" },
                             }
                             ),
+                        new DbgMenuItemTaskKiller()
+                        {
+                            Text = "[LOAD TASK KILLER]"
+                        },
                         new DbgMenuItem()
                         {
                             Text = "Scan All Separate Texture Files",
@@ -298,7 +302,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public static DbgMenuItem CurrentMenu = new DbgMenuItem();
         public static Stack<DbgMenuItem> DbgMenuStack = new Stack<DbgMenuItem>();
         public static Vector2 MenuPosition = Vector2.One * 8;
-        public static Vector2 MenuSize = new Vector2(1280, 720);
+        public static Vector2 MenuSize = new Vector2(1200, 720);
         public static Rectangle MenuRect => new Rectangle(
             (int)MenuPosition.X, (int)MenuPosition.Y, (int)MenuSize.X, (int)MenuSize.Y);
         public static Rectangle SubMenuRect => new Rectangle(MenuRect.Left, 
@@ -333,6 +337,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         private float menuHeight = 0;
         public DbgMenuItem SelectedItem => SelectedIndex == -1 ? null : Items[SelectedIndex];
         public Action<DbgMenuItem> ClickAction = null;
+        public Func<string> RefreshTextFunction = null;
+        public Func<Color> CustomColorFunction = null;
 
         public virtual void OnClick()
         {
@@ -356,14 +362,16 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public virtual void OnRequestTextRefresh()
         {
-
+            Text = RefreshTextFunction?.Invoke() ?? Text;
         }
 
         public void RequestTextRefresh()
         {
             OnRequestTextRefresh();
             foreach (var item in Items)
+            {
                 item.OnRequestTextRefresh();
+            }
         }
 
         public void GoDown(bool isRepeat, int incrementAmount)
@@ -533,7 +541,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public string GetActualItemDisplayText(int i)
         {
             return $"{(SelectedIndex == i ? $"  {UICursorBlinkString} " : "     ")}{Items[i].Text}" +
-                            $"{(Items[i].Items.Count > 0 ? $" ({Items[i].Items.Count})" : "")}";
+                       $"{(Items[i].Items.Count > 0 ? $" ({Items[i].Items.Count})" : "")}";
         }
 
         private Vector2 GetItemSize(int i)
@@ -582,10 +590,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 // Draw menu background rect
                 GFX.SpriteBatch.Begin();
                 //---- Full Background
-                GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, MenuRect, Color.Black * 0.25f * menuBackgroundOpacityMult);
+                GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, MenuRect, Color.Black * 0.75f * menuBackgroundOpacityMult);
                 //---- Slightly Darker Part On Top
                 GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, 
-                    new Rectangle(MenuRect.X, MenuRect.Y, MenuRect.Width, 40), Color.Black * 0.25f * menuBackgroundOpacityMult);
+                    new Rectangle(MenuRect.X, MenuRect.Y, MenuRect.Width, 40), Color.Black * 0.5f * menuBackgroundOpacityMult);
                 GFX.SpriteBatch.End();
                 
                 // Draw name on top
@@ -608,126 +616,136 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 sb.Append($"{Text}{(Items.Count > 0 ? $" ({Items.Count})" : "")}");
 
                 //---- Draw full menu name
-                DBG.DrawOutlinedText(sb.ToString(), MenuRect.TopLeftCorner() + new Vector2(8, 4), Color.White, DBG.DEBUG_FONT_BIG);
+                DBG.DrawOutlinedText(sb.ToString(), MenuRect.TopLeftCorner() + new Vector2(8, 4), 
+                    CustomColorFunction?.Invoke() ?? Color.White, DBG.DEBUG_FONT_BIG);
 
-                var selectedItemRect = GetItemDisplayRect(SelectedIndex, SubMenuRect);
-
-                if (Items.Count != prevFrameItemCount)
-                    menuHeight = GetEntireMenuHeight();
-
-                // Only need to calculate scroll stuff if there's text that reaches past the bottom.
-                if (menuHeight > SubMenuRect.Height)
+                if (Items.Count != 0)
                 {
-                    // Scroll selected into view.
+                    if (SelectedIndex < 0)
+                        SelectedIndex = 0;
+                    else if (SelectedIndex >= Items.Count)
+                        SelectedIndex = Items.Count - 1;
 
-                    //---- If item is ABOVE view
-                    if (selectedItemRect.Top < SubMenuRect.Top)
+                    var selectedItemRect = GetItemDisplayRect(SelectedIndex, SubMenuRect);
+
+                    if (Items.Count != prevFrameItemCount)
+                        menuHeight = GetEntireMenuHeight();
+
+                    // Only need to calculate scroll stuff if there's text that reaches past the bottom.
+                    if (menuHeight > SubMenuRect.Height)
                     {
-                        int distanceNeededToScroll = SubMenuRect.Top - selectedItemRect.Top;
-                        Scroll -= distanceNeededToScroll;
+                        // Scroll selected into view.
+
+                        //---- If item is ABOVE view
+                        if (selectedItemRect.Top < SubMenuRect.Top)
+                        {
+                            int distanceNeededToScroll = SubMenuRect.Top - selectedItemRect.Top;
+                            Scroll -= distanceNeededToScroll;
+                        }
+                        //---- If item is BELOW view
+                        if (selectedItemRect.Bottom > SubMenuRect.Bottom)
+                        {
+                            int distanceNeededToScroll = selectedItemRect.Bottom - SubMenuRect.Bottom;
+                            Scroll += distanceNeededToScroll;
+                        }
                     }
-                    //---- If item is BELOW view
-                    if (selectedItemRect.Bottom > SubMenuRect.Bottom)
+
+                    // Clamp scroll
+
+                    MaxScroll = Math.Max(GetEntireMenuHeight() - SubMenuRect.Height, 0);
+                    if (Scroll > MaxScroll)
+                        Scroll = MaxScroll;
+                    else if (Scroll < 0)
+                        Scroll = 0;
+
+                    // Debug display of menu item rectangles:
+                    //for (int i = 0; i < Items.Count; i++)
+                    //{
+                    //    var TEST_DebugDrawItemRect = GetItemDisplayRect(i, SubMenuRect);
+
+                    //    GFX.SpriteBatch.Begin();
+                    //    GFX.SpriteBatch.Draw(MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE, TEST_DebugDrawItemRect, Color.Yellow);
+                    //    GFX.SpriteBatch.End();
+                    //}
+
+                    // ONLY draw the menu items that are in-frame
+
+                    int roughStartDrawIndex = (int)((Scroll / menuHeight) * (Items.Count - 1)) - 1;
+                    int roughEndDrawIndex = (int)(((Scroll + MenuRect.Height) / menuHeight) * (Items.Count - 1)) + 1;
+
+                    if (roughStartDrawIndex < 0)
+                        roughStartDrawIndex = 0;
+                    else if (roughStartDrawIndex >= Items.Count)
+                        roughStartDrawIndex = Items.Count - 1;
+
+                    if (roughEndDrawIndex < 0)
+                        roughEndDrawIndex = 0;
+                    else if (roughEndDrawIndex >= Items.Count)
+                        roughEndDrawIndex = Items.Count - 1;
+
+                    // Store current viewport, then switch viewport to JUST the menu rect
+                    var oldViewport = GFX.Device.Viewport;
+                    GFX.Device.Viewport = new Viewport(
+                        oldViewport.X + SubMenuRect.X,
+                        oldViewport.Y + SubMenuRect.Y,
+                        SubMenuRect.Width,
+                        SubMenuRect.Height);
+                    // ---- These braces manually force a smaller scope so we 
+                    //      don't forget to return to the old viewport immediately afterward.
                     {
-                        int distanceNeededToScroll = selectedItemRect.Bottom - SubMenuRect.Bottom;
-                        Scroll += distanceNeededToScroll;
+                        // Draw Items
+
+                        for (int i = roughStartDrawIndex; i <= roughEndDrawIndex; i++)
+                        {
+                            Items[i].UpdateUI();
+                            var entryText = GetActualItemDisplayText(i);
+
+                            var itemRect = GetItemDisplayRect(i, SubMenuRect);
+
+                            // Check if this item is inside the actual menu rectangle.
+                            if (SubMenuRect.Intersects(itemRect))
+                            {
+                                var itemTextColor = Items[i].CustomColorFunction?.Invoke() ?? ((SelectedIndex == i
+                                    && MenuOpenState == DbgMenuOpenState.Open)
+                                    ? Color.LightGreen : Color.White);
+                                // We have to SUBTRACT the menu top/left coord because the string 
+                                // drawing is relative to the VIEWPORT, which takes up just the actual menu rect
+                                DBG.DrawOutlinedText(entryText,
+                                    new Vector2(itemRect.X - SubMenuRect.X, itemRect.Y - SubMenuRect.Y),
+                                    itemTextColor, FONT, disableSmoothing: true);
+                            }
+
+                        }
+
+                        // Draw Scrollbar
+                        // Only if there's stuff that passes the bottom of the menu.
+                        if (menuHeight > SubMenuRect.Height)
+                        {
+                            GFX.SpriteBatch.Begin(sortMode: SpriteSortMode.BackToFront);
+
+                            //---- Draw Scrollbar Background
+                            GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE,
+                                new Rectangle(0, 0, 8, SubMenuRect.Height), Color.White * 0.5f * menuBackgroundOpacityMult);
+
+                            float curScrollRectTop = (Scroll / menuHeight) * SubMenuRect.Height;
+                            float curScrollRectHeight = (SubMenuRect.Height / menuHeight) * SubMenuRect.Height;
+
+                            //---- Scroll Scrollbar current scroll
+                            GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE,
+                                new Rectangle(0, (int)curScrollRectTop, 8, (int)curScrollRectHeight),
+                                Color.White * 0.75f * menuBackgroundOpacityMult);
+
+                            GFX.SpriteBatch.End();
+                        }
                     }
+
+                    //---- Return to old viewport
+                    GFX.Device.Viewport = oldViewport;
                 }
 
                 
 
-                // Clamp scroll
-
-                MaxScroll = Math.Max(GetEntireMenuHeight() - SubMenuRect.Height, 0);
-                if (Scroll > MaxScroll)
-                    Scroll = MaxScroll;
-                else if (Scroll < 0)
-                    Scroll = 0;
-
-                // Debug display of menu item rectangles:
-                //for (int i = 0; i < Items.Count; i++)
-                //{
-                //    var TEST_DebugDrawItemRect = GetItemDisplayRect(i, SubMenuRect);
-
-                //    GFX.SpriteBatch.Begin();
-                //    GFX.SpriteBatch.Draw(MODEL_VIEWER_MAIN.DEFAULT_TEXTURE_DIFFUSE, TEST_DebugDrawItemRect, Color.Yellow);
-                //    GFX.SpriteBatch.End();
-                //}
-
-
-                // ONLY draw the menu items that are in-frame
-
-                int roughStartDrawIndex = (int)((Scroll / menuHeight) * (Items.Count - 1)) - 1;
-                int roughEndDrawIndex = (int)(((Scroll + MenuRect.Height) / menuHeight) * (Items.Count - 1)) + 1;
-
-                if (roughStartDrawIndex < 0)
-                    roughStartDrawIndex = 0;
-                else if (roughStartDrawIndex >= Items.Count)
-                    roughStartDrawIndex = Items.Count - 1;
-
-                if (roughEndDrawIndex < 0)
-                    roughEndDrawIndex = 0;
-                else if (roughEndDrawIndex >= Items.Count)
-                    roughEndDrawIndex = Items.Count - 1;
-
-                // Store current viewport, then switch viewport to JUST the menu rect
-                var oldViewport = GFX.Device.Viewport;
-                GFX.Device.Viewport = new Viewport(
-                    oldViewport.X + SubMenuRect.X,
-                    oldViewport.Y + SubMenuRect.Y, 
-                    SubMenuRect.Width,
-                    SubMenuRect.Height);
-                // ---- These braces manually force a smaller scope so we 
-                //      don't forget to return to the old viewport immediately afterward.
-                {
-                    // Draw Items
-
-                    for (int i = roughStartDrawIndex; i <= roughEndDrawIndex; i++)
-                    {
-                        Items[i].UpdateUI();
-                        var entryText = GetActualItemDisplayText(i);
-
-                        var itemRect = GetItemDisplayRect(i, SubMenuRect);
-
-                        // Check if this item is inside the actual menu rectangle.
-                        if (SubMenuRect.Intersects(itemRect))
-                        {
-                            // We have to SUBTRACT the menu top/left coord because the string 
-                            // drawing is relative to the VIEWPORT, which takes up just the actual menu rect
-                            DBG.DrawOutlinedText(entryText, 
-                                new Vector2(itemRect.X - SubMenuRect.X, itemRect.Y - SubMenuRect.Y),
-                                (SelectedIndex == i && MenuOpenState == DbgMenuOpenState.Open) 
-                                    ? Color.LightGreen : Color.White, FONT, disableSmoothing: true);
-                        }
-
-                    }
-
-                    // Draw Scrollbar
-                    // Only if there's stuff that passes the bottom of the menu.
-                    if (menuHeight > SubMenuRect.Height)
-                    {
-                        GFX.SpriteBatch.Begin(sortMode: SpriteSortMode.BackToFront);
-
-                        //---- Draw Scrollbar Background
-                        GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, 
-                            new Rectangle(0, 0, 8, SubMenuRect.Height), Color.White * 0.5f * menuBackgroundOpacityMult);
-
-                        float curScrollRectTop = (Scroll / menuHeight) * SubMenuRect.Height;
-                        float curScrollRectHeight = (SubMenuRect.Height / menuHeight) * SubMenuRect.Height;
-
-                        //---- Scroll Scrollbar current scroll
-                        GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE,
-                            new Rectangle(0, (int)curScrollRectTop, 8, (int)curScrollRectHeight),
-                            Color.White * 0.75f * menuBackgroundOpacityMult);
-
-                        GFX.SpriteBatch.End();
-                    }
-
-                    
-                }
-
-                //---- Return to old viewport
-                GFX.Device.Viewport = oldViewport;
+                
 
                 prevFrameItemCount = Items.Count;
             }

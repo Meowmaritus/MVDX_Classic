@@ -266,15 +266,17 @@ namespace DarkSoulsModelViewerDX
 
         public static List<Model> LoadModelObj(int id)
         {
-            var bndName = GetInterrootPath($@"obj\o{id:D4}.objbnd");
+            string bndPath = "";
+            if (Type == InterrootType.InterrootDS3)
+                bndPath = $@"obj\o{id:D6}.objbnd";
+            else
+                bndPath = $@"obj\o{id:D4}.objbnd";
+
+            var bndName = GetInterrootPath(bndPath);
 
             BND bnd = LoadDecompressedBND(bndName);
             if (bnd != null)
             {
-                lock (_lock_IO)
-                {
-                    bnd = DataFile.LoadFromFile<BND>(bndName);
-                }
                 var models = LoadModelsFromBnd(bnd);
                 TexturePool.AddTextureBnd(bnd, null);
                 return models;
@@ -323,7 +325,7 @@ namespace DarkSoulsModelViewerDX
 
                 LoadingTaskMan.DoLoadingTask($"LoadMapInBackground_Textures[{mapStr}]", $"Loading {mapStr} textures...", prog =>
                 {
-                    TexturePool.AddMapTexBhds(area);
+                    TexturePool.AddMapTexBhds(area, prog);
                 });   
             }
             
@@ -454,6 +456,8 @@ namespace DarkSoulsModelViewerDX
             }
 
             modelDict = null;
+
+            GFX.ModelDrawer.RequestTextureLoad();
         }
 
         public static void LoadBBMapInBackground(int area, int block, bool excludeScenery, 
@@ -515,6 +519,8 @@ namespace DarkSoulsModelViewerDX
             }
 
             modelDict = null;
+
+            GFX.ModelDrawer.RequestTextureLoad();
         }
 
         public static void LoadDragDroppedFiles(string[] fileNames)

@@ -90,6 +90,11 @@ namespace DarkSoulsModelViewerDX
                 DBG.DrawTextOn3DLocation(GetTopCenterPoint(verticalOffset: 0.25f), Name, Color.Yellow, 0.5f);
         }
 
+        public void TryToLoadTextures()
+        {
+            Model.TryToLoadTextures();
+        }
+
         public void Dispose()
         {
             Model.Dispose();

@@ -10,17 +10,26 @@ namespace DarkSoulsModelViewerDX
 {
     public static class LoadingTaskMan
     {
-        private class LoadingTask
+        public class LoadingTask
         {
             public string DisplayString;
             public double ProgressRatio { get; private set; }
             public bool IsComplete { get; private set; }
+            public bool IsBeingKilledManually = false;
             Thread taskThread;
 
             public LoadingTask(string displayString, Action<IProgress<double>> doLoad)
             {
                 DisplayString = displayString;
-                IProgress<double> prog = new Progress<double>(x => ProgressRatio = x);
+                IProgress<double> prog = new Progress<double>(x =>
+                {
+                    ProgressRatio = x;
+                    if (IsBeingKilledManually)
+                    {
+                        Kill();
+                        IsComplete = true;
+                    }
+                });
 
                 taskThread = new Thread(() =>
                 {
@@ -44,9 +53,9 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        private static object _lock_TaskDictEdit = new object();
+        internal static object _lock_TaskDictEdit = new object();
 
-        private static Dictionary<string, LoadingTask> TaskDict = new Dictionary<string, LoadingTask>();
+        public static Dictionary<string, LoadingTask> TaskDict = new Dictionary<string, LoadingTask>();
 
         /// <summary>
         /// Starts a loading task if that task wasn't already running.
@@ -62,11 +71,24 @@ namespace DarkSoulsModelViewerDX
                 if (TaskDict.ContainsKey(taskKey))
                     return false;
                 // As soon as the LoadingTask is created it starts.
-                // The class is private because that's dangerous if you're an idiot.
                 TaskDict.Add(taskKey, new LoadingTask(displayString, taskDelegate));
             }
             
             return true;
+        }
+
+        public static bool KillTask(string taskKey)
+        {
+            if (IsTaskRunning(taskKey))
+            {
+                lock (_lock_TaskDictEdit)
+                {
+                    TaskDict[taskKey].IsBeingKilledManually = true;
+                }
+                return true;
+            }
+
+            return false;
         }
 
         public static bool IsTaskRunning(string taskKey)
@@ -116,64 +138,66 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
+        public const int GuiDistFromEdgesOfScreen = 8;
+        public const int GuiDistBetweenProgressRects = 8;
+        public const int GuiTaskRectWidth = 360;
+        public const int GuiTaskRectHeight = 64;
+        public const int GuiProgBarHeight = 20;
+        public const int GuiProgBarDistFromRectEdge = 8;
+        public const int GuiProgBarEdgeThickness = 2;
+        public const float GuiProgNameDistFromEdge = 8;
+
         public static void DrawAllTasks()
         {
-            const int DistFromEdgesOfScreen = 8;
-            const int DistBetweenProgressRects = 8;
-            const int TaskRectWidth = 360;
-            const int TaskRectHeight = 64;
-            const int ProgBarHeight = 20;
-            const int ProgBarDistFromRectEdge = 8;
-            const int ProgBarEdgeThickness = 2;
-            const float ProgNameDistFromEdge = 8;
-
-            if (TaskDict.Count > 0)
+            lock (_lock_TaskDictEdit)
             {
-                GFX.SpriteBatch.Begin();
-
-                int i = 0;
-                foreach (var kvp in TaskDict)
+                if (TaskDict.Count > 0)
                 {
-                    // Draw Task Rect
-                    Rectangle thisTaskRect = new Rectangle(
-                        GFX.Device.Viewport.Width - TaskRectWidth - DistFromEdgesOfScreen,
-                        DistFromEdgesOfScreen + ((DistBetweenProgressRects + TaskRectHeight) * i),
-                        TaskRectWidth, TaskRectHeight);
+                    GFX.SpriteBatch.Begin();
 
-                    GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, thisTaskRect, Color.Black * 0.75f);
+                    int i = 0;
+                    foreach (var kvp in TaskDict)
+                    {
+                        // Draw Task Rect
+                        Rectangle thisTaskRect = new Rectangle(
+                            GFX.Device.Viewport.Width - GuiTaskRectWidth - GuiDistFromEdgesOfScreen,
+                            GuiDistFromEdgesOfScreen + ((GuiDistBetweenProgressRects + GuiTaskRectHeight) * i),
+                            GuiTaskRectWidth, GuiTaskRectHeight);
 
-                    // Draw Progress Background Rect
+                        GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, thisTaskRect, Color.Black * 0.75f);
 
-                    Rectangle progBackgroundRect = new Rectangle(thisTaskRect.X + ProgBarDistFromRectEdge,
-                        thisTaskRect.Y + TaskRectHeight - ProgBarDistFromRectEdge - ProgBarHeight,
-                        thisTaskRect.Width - (ProgBarDistFromRectEdge * 2), ProgBarHeight);
+                        // Draw Progress Background Rect
 
-                    GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, progBackgroundRect, Color.DarkGray * 0.85f);
+                        Rectangle progBackgroundRect = new Rectangle(thisTaskRect.X + GuiProgBarDistFromRectEdge,
+                            thisTaskRect.Y + GuiTaskRectHeight - GuiProgBarDistFromRectEdge - GuiProgBarHeight,
+                            thisTaskRect.Width - (GuiProgBarDistFromRectEdge * 2), GuiProgBarHeight);
 
-                    // Draw Progress Foreground Rect
+                        GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, progBackgroundRect, new Color(0.25f, 0.25f, 0.25f) * 0.85f);
 
-                    Rectangle progForegroundRect = new Rectangle(
-                        progBackgroundRect.X + ProgBarEdgeThickness,
-                        progBackgroundRect.Y + ProgBarEdgeThickness,
-                        (int)((progBackgroundRect.Width - (ProgBarEdgeThickness * 2)) * kvp.Value.ProgressRatio),
-                        progBackgroundRect.Height - (ProgBarEdgeThickness * 2));
+                        // Draw Progress Foreground Rect
 
-                    GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, progForegroundRect, Color.White * 0.95f);
+                        Rectangle progForegroundRect = new Rectangle(
+                            progBackgroundRect.X + GuiProgBarEdgeThickness,
+                            progBackgroundRect.Y + GuiProgBarEdgeThickness,
+                            (int)((progBackgroundRect.Width - (GuiProgBarEdgeThickness * 2)) * kvp.Value.ProgressRatio),
+                            progBackgroundRect.Height - (GuiProgBarEdgeThickness * 2));
 
-                    // Draw Task Name
+                        GFX.SpriteBatch.Draw(Main.DEFAULT_TEXTURE_DIFFUSE, progForegroundRect, 
+                            kvp.Value.IsBeingKilledManually ? Color.Red : Color.White * 0.95f);
 
-                    Vector2 taskNamePos = new Vector2(thisTaskRect.X + ProgNameDistFromEdge, thisTaskRect.Y + ProgNameDistFromEdge);
+                        // Draw Task Name
 
-                    DBG.DrawOutlinedText(kvp.Value.DisplayString, taskNamePos, 
-                        Color.White, DBG.DEBUG_FONT_SMALL, startAndEndSpriteBatchForMe: false);
+                        Vector2 taskNamePos = new Vector2(thisTaskRect.X + GuiProgNameDistFromEdge, thisTaskRect.Y + GuiProgNameDistFromEdge);
 
-                    i++;
+                        DBG.DrawOutlinedText(kvp.Value.DisplayString, taskNamePos,
+                            Color.White, DBG.DEBUG_FONT_SMALL, startAndEndSpriteBatchForMe: false);
+
+                        i++;
+                    }
+
+                    GFX.SpriteBatch.End();
                 }
-
-                GFX.SpriteBatch.End();
             }
-
-            
         }
     }
 }

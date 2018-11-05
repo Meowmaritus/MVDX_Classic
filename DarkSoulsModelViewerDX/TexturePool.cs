@@ -89,7 +89,7 @@ namespace DarkSoulsModelViewerDX
                         prog?.Report(1.0 * (++i) / mapTpfFileNames.Length);
                     }
                 }
-                
+                GFX.ModelDrawer.RequestTextureLoad();
             });
 
             LoadingTaskMan.DoLoadingTask($"AddAllExternalDS1TexturesInBackground_UDSFM_CHR", $"Loading external boss character textures for DS1...", prog =>
@@ -110,6 +110,8 @@ namespace DarkSoulsModelViewerDX
                         prog?.Report(1.0 * (++i) / subDirectories.Length);
                     }
                 }
+
+                GFX.ModelDrawer.RequestTextureLoad();
             });
 
             LoadingTaskMan.DoLoadingTask($"AddAllExternalDS1TexturesInBackground_CHRBND_9", $"Loading external character textures for DS1...", prog =>
@@ -125,6 +127,8 @@ namespace DarkSoulsModelViewerDX
                     }
                     AddTextureBnd(entityBnd, prog);
                 }
+
+                GFX.ModelDrawer.RequestTextureLoad();
             });
 
             LoadingTaskMan.DoLoadingTask($"AddAllExternalDS1TexturesInBackground_OBJBND_9", $"Loading external object textures for DS1...", prog =>
@@ -140,43 +144,50 @@ namespace DarkSoulsModelViewerDX
                     }
                     AddTextureBnd(entityBnd, prog);
                 }
+
+                GFX.ModelDrawer.RequestTextureLoad();
             });
         }
 
-        public static void AddMapTexBhds(int area)
+        public static void AddMapTexBhds(int area, IProgress<double> prog)
         {
             var dir = InterrootLoader.GetInterrootPath($"map\\m{area:D2}");
             if (!Directory.Exists(dir))
                 return;
-            var mapTpfFileNames = Directory.GetFiles(dir);
+            var mapTpfFileNames = Directory.GetFiles(dir, "*.tpfbhd");
+            int fileIndex = 0;
             foreach (var t in mapTpfFileNames)
             {
-                if (t.EndsWith(".tpfbhd"))
+                BXF4 bxf = null;
+                lock (_lock_IO)
                 {
-                    BXF4 bxf = null;
-                    lock (_lock_IO)
-                    {
-                        bxf = BXF4.Read(t, t.Substring(0, t.Length - 7) + ".tpfbdt");
-                    }
-
-                    for (int i = 0; i < bxf.Files.Count(); i++)
-                    {
-                        if (bxf.Files[i].Name.Contains(".tpf"))
-                        {
-                            var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
-
-                            foreach (var tn in tpf.Textures)
-                            {
-                                AddFetch(tpf, tn.Name);
-                            }
-
-                            tpf = null;
-                        }
-                    }
-
-                    bxf = null;
+                    bxf = BXF4.Read(t, t.Substring(0, t.Length - 7) + ".tpfbdt");
                 }
+
+                for (int i = 0; i < bxf.Files.Count; i++)
+                {
+                    if (bxf.Files[i].Name.Contains(".tpf"))
+                    {
+                        var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
+
+                        foreach (var tn in tpf.Textures)
+                        {
+                            AddFetch(tpf, tn.Name);
+                        }
+
+                        tpf = null;
+                    }
+                    GFX.ModelDrawer.RequestTextureLoad();
+                    // Report each subfile as a tiny part of the bar
+                    prog?.Report((1.0 * fileIndex / mapTpfFileNames.Length) + ((1.0 / mapTpfFileNames.Length) * ((i + 1.0) / bxf.Files.Count)));
+                }
+                bxf = null;
+
+                fileIndex++;
+                prog?.Report((1.0 * fileIndex / mapTpfFileNames.Length));
             }
+
+            GFX.ModelDrawer.RequestTextureLoad();
         }
 
         public static Texture2D FetchTexture(string name)

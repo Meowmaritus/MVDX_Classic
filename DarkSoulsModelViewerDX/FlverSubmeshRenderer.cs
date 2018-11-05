@@ -253,23 +253,27 @@ namespace DarkSoulsModelViewerDX
             VertBuffer = new VertexBuffer(GFX.Device,
                 typeof(VertexPositionColorNormalTangentTexture), MeshVertices.Length, BufferUsage.WriteOnly);
             VertBuffer.SetData(MeshVertices);
+
+            TryToLoadTextures();
+        }
+
+        public void TryToLoadTextures()
+        {
+            if (TexDataDiffuse == null && TexNameDiffuse != null)
+                TexDataDiffuse = TexturePool.FetchTexture(TexNameDiffuse);
+
+            if (TexDataSpecular == null && TexNameSpecular != null)
+                TexDataSpecular = TexturePool.FetchTexture(TexNameSpecular);
+
+            if (TexDataNormal == null && TexNameNormal != null)
+                TexDataNormal = TexturePool.FetchTexture(TexNameNormal);
         }
 
         public void Draw<T>(int lod, IGFXShader<T> shader, bool forceNoBackfaceCulling = false)
             where T : Effect
         {
-
             if (GFX.EnableTextures && shader == GFX.FlverShader)
             {
-                if (TexDataDiffuse == null && TexNameDiffuse != null)
-                    TexDataDiffuse = TexturePool.FetchTexture(TexNameDiffuse);
-
-                if (TexDataSpecular == null && TexNameSpecular != null)
-                    TexDataSpecular = TexturePool.FetchTexture(TexNameSpecular);
-
-                if (TexDataNormal == null && TexNameNormal != null)
-                    TexDataNormal = TexturePool.FetchTexture(TexNameNormal);
-
                 GFX.FlverShader.Effect.ColorMap = TexDataDiffuse ?? Main.DEFAULT_TEXTURE_DIFFUSE;
                 GFX.FlverShader.Effect.SpecularMap = TexDataSpecular ?? Main.DEFAULT_TEXTURE_SPECULAR;
                 GFX.FlverShader.Effect.NormalMap = TexDataNormal ?? Main.DEFAULT_TEXTURE_NORMAL;

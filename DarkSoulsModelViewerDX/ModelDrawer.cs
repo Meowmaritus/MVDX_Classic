@@ -13,6 +13,9 @@ namespace DarkSoulsModelViewerDX
 {
     public class ModelDrawer
     {
+        private bool IsTextureLoadRequested = false;
+        public void RequestTextureLoad() => IsTextureLoadRequested = true;
+
         internal static object _lock_ModelLoad_Draw = new object();
         public List<ModelInstance> ModelInstanceList { get; private set; } = new List<ModelInstance>();
 
@@ -93,6 +96,7 @@ namespace DarkSoulsModelViewerDX
                         mdl.Transform.Position.X += thisModelWidth / 2;
                         currentX += thisModelWidth;
                     }
+
                     prog?.Report(1.0 * (++i) / DbgMenus.DbgMenuItemSpawnChr.IDList.Count);
                 }
 
@@ -117,6 +121,7 @@ namespace DarkSoulsModelViewerDX
                         mdl.Transform.Position.X += thisModelWidth / 2;
                         currentX += thisModelWidth;
                     }
+
                     prog?.Report(1.0 * (++i) / DbgMenus.DbgMenuItemSpawnObj.IDList.Count);
                 }
 
@@ -136,6 +141,8 @@ namespace DarkSoulsModelViewerDX
                 returnedModelInstances.Add(m);
             }
 
+            GFX.ModelDrawer.RequestTextureLoad();
+
             return returnedModelInstances;
         }
 
@@ -151,6 +158,8 @@ namespace DarkSoulsModelViewerDX
                 AddModelInstance(m);
                 returnedModelInstances.Add(m);
             }
+
+            GFX.ModelDrawer.RequestTextureLoad();
 
             return returnedModelInstances;
         }
@@ -175,6 +184,13 @@ namespace DarkSoulsModelViewerDX
         {
             lock (_lock_ModelLoad_Draw)
             {
+                if (IsTextureLoadRequested)
+                {
+                    foreach (var ins in ModelInstanceList)
+                        ins.TryToLoadTextures();
+                    IsTextureLoadRequested = false;
+                }
+
                 var drawOrderSortedModelInstances = ModelInstanceList
                 .Where(x => x.IsVisible && GFX.World.IsInFrustum(x.Model.Bounds, x.Transform))
                 .OrderByDescending(m => GFX.World.GetDistanceSquaredFromCamera(m.Transform));

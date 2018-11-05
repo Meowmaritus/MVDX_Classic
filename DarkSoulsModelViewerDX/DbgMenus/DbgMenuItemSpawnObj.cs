@@ -10,43 +10,40 @@ namespace DarkSoulsModelViewerDX.DbgMenus
     public class DbgMenuItemSpawnObj : DbgMenuItem
     {
         public static List<int> IDList = new List<int>();
-        public static bool IsSixDigit { get; private set; } = false;
         private static bool NeedsTextUpdate = false;
 
         public int IDIndex = 0;
 
         public static void UpdateSpawnIDs()
         {
-            var objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd")
-                .Select(Path.GetFileNameWithoutExtension);
+            string[] objFiles = null;
+
+            if (InterrootLoader.Type != InterrootLoader.InterrootType.InterrootDS1)
+            {
+                objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd.dcx")
+                    .Select(Path.GetFileNameWithoutExtension) //Remove .dcx
+                    .Select(Path.GetFileNameWithoutExtension) //Remove .objbnd
+                    .ToArray();
+            }
+            else
+            {
+                objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd")
+                    .Select(Path.GetFileNameWithoutExtension)
+                    .ToArray();
+            }
+
             IDList = new List<int>();
             var IDSet = new HashSet<int>();
-            IsSixDigit = false;
             foreach (var cf in objFiles)
             {
-                if (int.TryParse(cf.Substring(1, 4), out int id))
+                if (int.TryParse(InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS3
+                    ? cf.Substring(1, 6) : cf.Substring(1, 4), out int id))
                 {
                     IDList.Add(id);
                     IDSet.Add(id);
-                    if (id > 9999)
-                        IsSixDigit = true;
                 }
             }
 
-            var objFilesDCX = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd.dcx")
-                .Select(Path.GetFileNameWithoutExtension).Select(Path.GetFileNameWithoutExtension);
-            foreach (var cf in objFilesDCX)
-            {
-                if (int.TryParse(cf.Substring(1, 4), out int id))
-                {
-                    if (!IDSet.Contains(id))
-                    {
-                        IDList.Add(id);
-                        if (id > 9999)
-                            IsSixDigit = true;
-                    }
-                }
-            }
             NeedsTextUpdate = true;
         }
 
@@ -68,7 +65,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 if (IDIndex >= IDList.Count)
                     IDIndex = IDList.Count - 1;
 
-                if (IsSixDigit)
+                if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS3)
                     Text = $"Click to Spawn OBJ [ID: <o{IDList[IDIndex]:D6}>]";
                 else
                     Text = $"Click to Spawn OBJ [ID: <o{IDList[IDIndex]:D4}>]";

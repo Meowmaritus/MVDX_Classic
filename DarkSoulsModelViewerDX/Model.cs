@@ -60,6 +60,12 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
+        public void TryToLoadTextures()
+        {
+            foreach (var sm in Submeshes)
+                sm.TryToLoadTextures();
+        }
+
         public void Dispose()
         {
             if (Submeshes != null)
@@ -72,8 +78,6 @@ namespace DarkSoulsModelViewerDX
 
                 Submeshes = null;
             }
-            
-            
         }
     }
 }
