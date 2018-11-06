@@ -314,7 +314,7 @@ namespace DarkSoulsModelViewerDX
             }
 
             GFX.UpdateFPS((float)FpsStopwatch.Elapsed.TotalSeconds);
-            DBG.DrawOutlinedText($"FPS: {(Math.Round(GFX.AverageFPS))}", new Vector2(0, GFX.Device.Viewport.Height - 24), Color.Yellow);
+            DBG.DrawOutlinedText($"FPS: {(Math.Round(GFX.AverageFPS))}", new Vector2(0, GFX.Device.Viewport.Height - 30), Color.Yellow);
             FpsStopwatch.Restart();
         }
 

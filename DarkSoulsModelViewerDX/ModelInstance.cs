@@ -87,7 +87,7 @@ namespace DarkSoulsModelViewerDX
             }
             
             if (DBG.ShowModelNames)
-                DBG.DrawTextOn3DLocation(GetTopCenterPoint(verticalOffset: 0.25f), Name, Color.Yellow, 0.5f);
+                DBG.DrawTextOn3DLocation(GetTopCenterPoint(verticalOffset: 0.25f), Name, Color.Yellow, 0.5f, startAndEndSpriteBatchForMe: false);
         }
 
         public void TryToLoadTextures()

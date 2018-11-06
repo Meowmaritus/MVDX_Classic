@@ -130,7 +130,21 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 prevMouseWheel = mouse.ScrollWheelValue;
             }
 
-            if (ToggleMenu.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.OemTilde)))
+            var mouseOver = Main.Active ? DbgMenuItem.DbgMenuTopLeftButtonRect.Contains(mouse.Position) : false;
+            var prevMouseOver = DbgMenuItem.DbgMenuTopLeftButtonRect.Contains(prevMousePos);
+
+            if (mouseOver)
+            {
+                System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Hand;
+            }
+            else
+            {
+                System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Default;
+            }
+
+            if (ToggleMenu.Update(gamepad, elapsedSeconds, keyboard.IsKeyDown(Keys.OemTilde) || 
+                (mouse.LeftButton == ButtonState.Pressed 
+                && mouseOver)))
             {
                 if (DbgMenuItem.MenuOpenState == DbgMenuOpenState.Closed)
                     DbgMenuItem.MenuOpenState = DbgMenuOpenState.Open;

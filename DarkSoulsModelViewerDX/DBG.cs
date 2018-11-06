@@ -89,19 +89,19 @@ namespace DarkSoulsModelViewerDX
         public static bool ShowGrid = true;
 
         public static SpriteFont DEBUG_FONT { get; private set; }
-        const string DEBUG_FONT_NAME = "Content\\CJKFontMono12pt";
+        const string DEBUG_FONT_NAME = "Content\\DbgMenuFont";
 
         public static SpriteFont DEBUG_FONT_SMALL { get; private set; }
-        const string DEBUG_FONT_SMALL_NAME = "Content\\CJKFont10pt";
+        const string DEBUG_FONT_SMALL_NAME = "Content\\DbgMenuFontSmall";
 
         public static SpriteFont DEBUG_FONT_BIG { get; private set; }
-        const string DEBUG_FONT_BIG_NAME = "Content\\CJKFont16x16";
+        const string DEBUG_FONT_BIG_NAME = "Content\\DbgMenuFont";
 
         public static SpriteFont DEBUG_FONT_UI { get; private set; }
         const string DEBUG_FONT_UI_NAME = "Content\\DbgMenuFont";
 
         public static SpriteFont DEBUG_FONT_HQ { get; private set; }
-        const string DEBUG_FONT_HQ_NAME = "Content\\CJKFont16x16"; //"Content\\DbgMenuFont"
+        const string DEBUG_FONT_HQ_NAME = "Content\\DbgMenuFont";
 
 
 

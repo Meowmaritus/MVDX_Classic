@@ -34,6 +34,7 @@ namespace DarkSoulsModelViewerDX
         public static Vector2 TopRightCorner(this Rectangle r) => new Vector2(r.Right, r.Top);
         public static Vector2 BottomLeftCorner(this Rectangle r) => new Vector2(r.Left, r.Bottom);
         public static Vector2 BottomRightCorner(this Rectangle r) => new Vector2(r.Right, r.Bottom);
+        public static Vector2 Center(this Rectangle r) => new Vector2(r.Center.X, r.Center.Y);
 
         public static Rectangle GetUniformShrunkFromBorder(this Rectangle r, int shrinkAmount)
         {

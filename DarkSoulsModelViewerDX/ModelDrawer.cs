@@ -271,10 +271,12 @@ namespace DarkSoulsModelViewerDX
         {
             lock (_lock_ModelLoad_Draw)
             {
+                GFX.SpriteBatch.Begin();
                 foreach (var ins in ModelInstanceList)
                 {
                     ins.DrawDebugInfo();
                 }
+                GFX.SpriteBatch.End();
             }
         }
 

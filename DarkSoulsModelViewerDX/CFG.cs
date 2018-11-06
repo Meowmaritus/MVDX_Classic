@@ -10,80 +10,88 @@ namespace DarkSoulsModelViewerDX
 {
     public class CFG
     {
+        private static object _lock_SaveLoadCFG = new object();
+
         public const string FileName = "DarkSoulsModelViewerDX_UserConfig.json";
         private static CFG Current = null;
 
         public static void Load()
         {
-            Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CFG>(
+            lock (_lock_SaveLoadCFG)
+            {
+                Current = Newtonsoft.Json.JsonConvert.DeserializeObject<CFG>(
                 File.ReadAllText(FileName));
 
-            InterrootLoader.Interroot = Current.InterrootLoader_Interroot;
-            InterrootLoader.Type = Current.InterrootLoader_Type;
+                InterrootLoader.Interroot = Current.InterrootLoader_Interroot;
+                InterrootLoader.Type = Current.InterrootLoader_Type;
 
-            GFX.LODMode = Current.GFX_LODMode;
-            GFX.LOD1Distance = Current.GFX_LOD1Distance;
-            GFX.LOD2Distance = Current.GFX_LOD2Distance;
-            GFX.EnableFrustumCulling = Current.GFX_EnableFrustumCulling;
-            GFX.EnableTextures = Current.GFX_EnableTextures;
-            GFX.Wireframe = Current.GFX_Wireframe;
+                GFX.LODMode = Current.GFX_LODMode;
+                GFX.LOD1Distance = Current.GFX_LOD1Distance;
+                GFX.LOD2Distance = Current.GFX_LOD2Distance;
+                GFX.EnableFrustumCulling = Current.GFX_EnableFrustumCulling;
+                GFX.EnableTextures = Current.GFX_EnableTextures;
+                GFX.Wireframe = Current.GFX_Wireframe;
 
-            DBG.ShowModelNames = Current.DBG_ShowModelNames;
-            DBG.ShowModelBoundingBoxes = Current.DBG_ShowModelBoundingBoxes;
-            DBG.ShowModelSubmeshBoundingBoxes = Current.DBG_ShowModelSubmeshBoundingBoxes;
-            DBG.ShowPrimitiveNametags = Current.DBG_ShowPrimitiveNametags;
-            DBG.ShowGrid = Current.DBG_ShowGrid;
+                DBG.ShowModelNames = Current.DBG_ShowModelNames;
+                DBG.ShowModelBoundingBoxes = Current.DBG_ShowModelBoundingBoxes;
+                DBG.ShowModelSubmeshBoundingBoxes = Current.DBG_ShowModelSubmeshBoundingBoxes;
+                DBG.ShowPrimitiveNametags = Current.DBG_ShowPrimitiveNametags;
+                DBG.ShowGrid = Current.DBG_ShowGrid;
 
-            GFX.World.CameraMoveSpeed = Current.GFX_World_CameraMoveSpeed;
-            GFX.World.CameraTurnSpeedGamepad = Current.GFX_World_CameraTurnSpeedGamepad;
-            GFX.World.CameraTurnSpeedMouse = Current.GFX_World_CameraTurnSpeedMouse;
-            GFX.World.FieldOfView = Current.GFX_World_FieldOfView;
-            GFX.World.NearClipDistance = Current.GFX_World_NearClipDistance;
-            GFX.World.FarClipDistance = Current.GFX_World_FarClipDistance;
+                GFX.World.CameraMoveSpeed = Current.GFX_World_CameraMoveSpeed;
+                GFX.World.CameraTurnSpeedGamepad = Current.GFX_World_CameraTurnSpeedGamepad;
+                GFX.World.CameraTurnSpeedMouse = Current.GFX_World_CameraTurnSpeedMouse;
+                GFX.World.FieldOfView = Current.GFX_World_FieldOfView;
+                GFX.World.NearClipDistance = Current.GFX_World_NearClipDistance;
+                GFX.World.FarClipDistance = Current.GFX_World_FarClipDistance;
 
-            GFX.Display.Width = Current.GFX_Display_Width;
-            GFX.Display.Height = Current.GFX_Display_Height;
-            GFX.Display.Format = Current.GFX_Display_Format;
-            GFX.Display.Vsync = Current.GFX_Display_Vsync;
-            GFX.Display.Fullscreen = Current.GFX_Display_Fullscreen;
-            GFX.Display.SimpleMSAA = Current.GFX_Display_SimpleMSAA;
+                GFX.Display.Width = Current.GFX_Display_Width;
+                GFX.Display.Height = Current.GFX_Display_Height;
+                GFX.Display.Format = Current.GFX_Display_Format;
+                GFX.Display.Vsync = Current.GFX_Display_Vsync;
+                GFX.Display.Fullscreen = Current.GFX_Display_Fullscreen;
+                GFX.Display.SimpleMSAA = Current.GFX_Display_SimpleMSAA;
+            }
         }
 
         public static void Save()
         {
-            Current.InterrootLoader_Interroot = InterrootLoader.Interroot;
-            Current.InterrootLoader_Type = InterrootLoader.Type;
+            lock (_lock_SaveLoadCFG)
+            {
+                Current.InterrootLoader_Interroot = InterrootLoader.Interroot;
+                Current.InterrootLoader_Type = InterrootLoader.Type;
 
-            Current.GFX_LODMode = GFX.LODMode;
-            Current.GFX_LOD1Distance = GFX.LOD1Distance;
-            Current.GFX_LOD2Distance = GFX.LOD2Distance;
-            Current.GFX_EnableFrustumCulling = GFX.EnableFrustumCulling;
-            Current.GFX_EnableTextures = GFX.EnableTextures;
-            Current.GFX_Wireframe = GFX.Wireframe;
+                Current.GFX_LODMode = GFX.LODMode;
+                Current.GFX_LOD1Distance = GFX.LOD1Distance;
+                Current.GFX_LOD2Distance = GFX.LOD2Distance;
+                Current.GFX_EnableFrustumCulling = GFX.EnableFrustumCulling;
+                Current.GFX_EnableTextures = GFX.EnableTextures;
+                Current.GFX_Wireframe = GFX.Wireframe;
 
-            Current.DBG_ShowModelNames = DBG.ShowModelNames;
-            Current.DBG_ShowModelBoundingBoxes = DBG.ShowModelBoundingBoxes;
-            Current.DBG_ShowModelSubmeshBoundingBoxes = DBG.ShowModelSubmeshBoundingBoxes;
-            Current.DBG_ShowPrimitiveNametags = DBG.ShowPrimitiveNametags;
-            Current.DBG_ShowGrid = DBG.ShowGrid;
+                Current.DBG_ShowModelNames = DBG.ShowModelNames;
+                Current.DBG_ShowModelBoundingBoxes = DBG.ShowModelBoundingBoxes;
+                Current.DBG_ShowModelSubmeshBoundingBoxes = DBG.ShowModelSubmeshBoundingBoxes;
+                Current.DBG_ShowPrimitiveNametags = DBG.ShowPrimitiveNametags;
+                Current.DBG_ShowGrid = DBG.ShowGrid;
 
-            Current.GFX_World_CameraMoveSpeed = GFX.World.CameraMoveSpeed;
-            Current.GFX_World_CameraTurnSpeedGamepad = GFX.World.CameraTurnSpeedGamepad;
-            Current.GFX_World_CameraTurnSpeedMouse = GFX.World.CameraTurnSpeedMouse;
-            Current.GFX_World_FieldOfView = GFX.World.FieldOfView;
-            Current.GFX_World_NearClipDistance = GFX.World.NearClipDistance;
-            Current.GFX_World_FarClipDistance = GFX.World.FarClipDistance;
+                Current.GFX_World_CameraMoveSpeed = GFX.World.CameraMoveSpeed;
+                Current.GFX_World_CameraTurnSpeedGamepad = GFX.World.CameraTurnSpeedGamepad;
+                Current.GFX_World_CameraTurnSpeedMouse = GFX.World.CameraTurnSpeedMouse;
+                Current.GFX_World_FieldOfView = GFX.World.FieldOfView;
+                Current.GFX_World_NearClipDistance = GFX.World.NearClipDistance;
+                Current.GFX_World_FarClipDistance = GFX.World.FarClipDistance;
 
-            Current.GFX_Display_Width = GFX.Display.Width;
-            Current.GFX_Display_Height = GFX.Display.Height;
-            Current.GFX_Display_Format = GFX.Display.Format;
-            Current.GFX_Display_Vsync = GFX.Display.Vsync;
-            Current.GFX_Display_Fullscreen = GFX.Display.Fullscreen;
-            Current.GFX_Display_SimpleMSAA = GFX.Display.SimpleMSAA;
+                Current.GFX_Display_Width = GFX.Display.Width;
+                Current.GFX_Display_Height = GFX.Display.Height;
+                Current.GFX_Display_Format = GFX.Display.Format;
+                Current.GFX_Display_Vsync = GFX.Display.Vsync;
+                Current.GFX_Display_Fullscreen = GFX.Display.Fullscreen;
+                Current.GFX_Display_SimpleMSAA = GFX.Display.SimpleMSAA;
 
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(
-                Current, Newtonsoft.Json.Formatting.Indented);
-            File.WriteAllText(FileName, json);
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    Current, Newtonsoft.Json.Formatting.Indented);
+                File.WriteAllText(FileName, json);
+            }
         }
 
         public static void Init()
@@ -112,11 +120,11 @@ namespace DarkSoulsModelViewerDX
         public bool GFX_Wireframe { get; set; } = false;
         public bool GFX_EnableFrustumCulling { get; set; } = false;
 
-        public bool DBG_ShowModelNames { get; set; } = true;
+        public bool DBG_ShowModelNames { get; set; } = false;
         public bool DBG_ShowModelBoundingBoxes { get; set; } = false;
         public bool DBG_ShowModelSubmeshBoundingBoxes { get; set; } = false;
         public bool DBG_ShowGrid { get; set; } = true;
-        public bool DBG_ShowPrimitiveNametags { get; set; } = true;
+        public bool DBG_ShowPrimitiveNametags { get; set; } = false;
 
         public float GFX_World_FieldOfView { get; set; } = 43.0f;
         public float GFX_World_CameraTurnSpeedGamepad { get; set; } = 1.5f;
