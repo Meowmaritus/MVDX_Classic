@@ -28,12 +28,15 @@ namespace DarkSoulsModelViewerDX
 
         public void ClearScene()
         {
-            foreach (var mi in ModelInstanceList)
-                mi.Dispose();
+            lock (_lock_ModelLoad_Draw)
+            {
+                foreach (var mi in ModelInstanceList)
+                    mi.Dispose();
 
-            TexturePool.Flush();
-            ModelInstanceList.Clear();
-            GC.Collect();
+                TexturePool.Flush();
+                ModelInstanceList.Clear();
+                GC.Collect();
+            }
         }
 
         public void InvertVisibility()
@@ -220,38 +223,47 @@ namespace DarkSoulsModelViewerDX
 
         public void DrawSelected()
         {
-            if (Selected != null && (HighlightSelectedPiece || WireframeSelectedPiece))
+            lock (_lock_ModelLoad_Draw)
             {
-                GFX.World.ApplyViewToShader(GFX.DbgPrimShader, Selected.Transform);
-
-                var lod = GFX.World.GetLOD(Selected.Transform);
-
-                var oldWireframeSetting = GFX.Wireframe;
-
-                var effect = ((BasicEffect)GFX.DbgPrimShader.Effect);
-
-                if (HighlightSelectedPiece)
+                if (Selected != null && (HighlightSelectedPiece || WireframeSelectedPiece))
                 {
-                    GFX.Wireframe = false;
+                    if (Selected.Model == null)
+                    {
+                        Selected = null;
+                        return;
+                    }
+
+                    GFX.World.ApplyViewToShader(GFX.DbgPrimShader, Selected.Transform);
+
+                    var lod = GFX.World.GetLOD(Selected.Transform);
+
+                    var oldWireframeSetting = GFX.Wireframe;
+
+                    var effect = ((BasicEffect)GFX.DbgPrimShader.Effect);
+
+                    if (HighlightSelectedPiece)
+                    {
+                        GFX.Wireframe = false;
+
+                        effect.VertexColorEnabled = true;
+
+                        foreach (var submesh in Selected.Model.Submeshes)
+                            submesh.Draw(lod, GFX.DbgPrimShader, forceNoBackfaceCulling: true);
+                    }
+
+                    if (WireframeSelectedPiece)
+                    {
+                        GFX.Wireframe = true;
+                        effect.VertexColorEnabled = false;
+
+                        foreach (var submesh in Selected.Model.Submeshes)
+                            submesh.Draw(lod, GFX.DbgPrimShader, forceNoBackfaceCulling: true);
+
+                        GFX.Wireframe = oldWireframeSetting;
+                    }
 
                     effect.VertexColorEnabled = true;
-
-                    foreach (var submesh in Selected.Model.Submeshes)
-                        submesh.Draw(lod, GFX.DbgPrimShader, forceNoBackfaceCulling: true);
                 }
-
-                if (WireframeSelectedPiece)
-                {
-                    GFX.Wireframe = true;
-                    effect.VertexColorEnabled = false;
-
-                    foreach (var submesh in Selected.Model.Submeshes)
-                        submesh.Draw(lod, GFX.DbgPrimShader, forceNoBackfaceCulling: true);
-
-                    GFX.Wireframe = oldWireframeSetting;
-                }
-
-                effect.VertexColorEnabled = true;
             }
         }
 

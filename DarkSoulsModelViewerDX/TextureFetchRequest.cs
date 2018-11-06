@@ -102,6 +102,18 @@ namespace DarkSoulsModelViewerDX
             return x;
         }
 
+        private static int GetNextPowerOf2(int x)
+        {
+            x--;
+            x |= x >> 1;
+            x |= x >> 2;
+            x |= x >> 4;
+            x |= x >> 8;
+            x |= x >> 16;
+            x++;
+            return x;
+        }
+
         public Texture2D Fetch()
         {
             if (CachedTexture != null)
@@ -125,17 +137,11 @@ namespace DarkSoulsModelViewerDX
                 {
                     // See if there are DX9 textures
                     int fmt = (int)header.header10.dxgiFormat;
-                    if (fmt == 71)
+                    if (fmt == 70 || fmt == 71 || fmt == 72)
                         surfaceFormat = SurfaceFormat.Dxt1;
-                    else if (fmt == 72)
-                        surfaceFormat = SurfaceFormat.Dxt1;
-                    else if (fmt == 73)
+                    else if (fmt == 73 || fmt == 74 || fmt == 75)
                         surfaceFormat = SurfaceFormat.Dxt3;
-                    else if (fmt == 74)
-                        surfaceFormat = SurfaceFormat.Dxt3;
-                    else if (fmt == 76)
-                        surfaceFormat = SurfaceFormat.Dxt5;
-                    else if (fmt == 77)
+                    else if (fmt == 76 || fmt == 77 || fmt == 78)
                         surfaceFormat = SurfaceFormat.Dxt5;
                     else
                     {
@@ -155,12 +161,20 @@ namespace DarkSoulsModelViewerDX
                 
                 for (int i = 0; i < mipmapCount; i++)
                 {
-                    int numTexels = GetNextMultipleOf4(width >> i) * GetNextMultipleOf4(height >> i);
-                    if (surfaceFormat == SurfaceFormat.Dxt1 || surfaceFormat == SurfaceFormat.Dxt1SRgb)
-                        numTexels /= 2;
-                    byte[] thisMipMap = br.ReadBytes(numTexels);
-                    tex.SetData(i, 0, null, thisMipMap, 0, numTexels);
-                    thisMipMap = null;
+                    try
+                    {
+                        int numTexels = GetNextMultipleOf4(width >> i) * GetNextMultipleOf4(height >> i);
+                        if (surfaceFormat == SurfaceFormat.Dxt1 || surfaceFormat == SurfaceFormat.Dxt1SRgb)
+                            numTexels /= 2;
+                        byte[] thisMipMap = br.ReadBytes(numTexels);
+                        tex.SetData(i, 0, null, thisMipMap, 0, numTexels);
+                        thisMipMap = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Error loading {TexName}: {ex.Message}");
+                    }
+                    
                 }
 
                 CachedTexture = tex;
