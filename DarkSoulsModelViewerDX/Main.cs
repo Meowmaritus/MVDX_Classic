@@ -59,13 +59,13 @@ namespace DarkSoulsModelViewerDX
             return result;
         }
 
-        public static void ApplyPresentationParameters(
-            DisplayMode displayMode, bool vsync, bool fullscreen, bool simpleMsaa)
+        public static void ApplyPresentationParameters(int width, int height, SurfaceFormat format,
+            bool vsync, bool fullscreen, bool simpleMsaa)
         {
             graphics.PreferMultiSampling = simpleMsaa;
-            graphics.PreferredBackBufferWidth = displayMode.Width;
-            graphics.PreferredBackBufferHeight = displayMode.Height;
-            graphics.PreferredBackBufferFormat = displayMode.Format;
+            graphics.PreferredBackBufferWidth = width;
+            graphics.PreferredBackBufferHeight = height;
+            graphics.PreferredBackBufferFormat = format;
             graphics.IsFullScreen = fullscreen;
             FIXED_TIME_STEP = graphics.SynchronizeWithVerticalRetrace = vsync;
             
@@ -90,20 +90,38 @@ namespace DarkSoulsModelViewerDX
             MaxElapsedTime = TimeSpan.FromTicks(1000000);
 
             //IsFixedTimeStep = false;
-            graphics.SynchronizeWithVerticalRetrace = true;
+            graphics.SynchronizeWithVerticalRetrace = GFX.Display.Vsync;
+            graphics.IsFullScreen = GFX.Display.Fullscreen;
+            graphics.PreferMultiSampling = GFX.Display.SimpleMSAA;
+            graphics.PreferredBackBufferWidth = GFX.Display.Width;
+            graphics.PreferredBackBufferHeight = GFX.Display.Height;
+            graphics.PreferredBackBufferFormat = GFX.Display.Format;
+            if (!GraphicsAdapter.DefaultAdapter.IsProfileSupported(GraphicsProfile.HiDef))
+            {
+                System.Windows.Forms.MessageBox.Show("MonoGame is detecting your GPU as too " +
+                    "low-end and refusing to enter the non-mobile Graphics Profile, " +
+                    "which is needed for Soulsborne files. It will likely crash.");
 
-            graphics.PreferMultiSampling = true;
-
-            graphics.PreferredBackBufferWidth = 1600;
-            graphics.PreferredBackBufferHeight = 900;
-            graphics.GraphicsProfile = GraphicsProfile.HiDef;
+                graphics.GraphicsProfile = GraphicsProfile.Reach;
+            }
+            else
+            {
+                graphics.GraphicsProfile = GraphicsProfile.HiDef;
+            }
+            
             graphics.ApplyChanges();
 
             Window.AllowUserResizing = true;
 
-            GFX.Display.Mode = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+            GFX.Display.SetFromDisplayMode(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode);
 
             //GFX.Device.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
+        }
+
+        protected override void OnExiting(object sender, EventArgs args)
+        {
+            CFG.Save();
+            base.OnExiting(sender, args);
         }
 
         private void Graphics_DeviceCreated(object sender, System.EventArgs e)
@@ -168,12 +186,13 @@ namespace DarkSoulsModelViewerDX
 
             DBG.CreateDebugPrimitives();
 
-            GFX.World.CameraTransform.Position = new Vector3(0, -1.5f, -13);
-            GFX.World.CameraTransform.EulerRotation.X = MathHelper.PiOver4 / 8;
+            GFX.World.ResetCameraLocation();
 
             DbgMenuItem.Init();
 
             UpdateMemoryUsage();
+
+            CFG.Init();
         }
 
         private void InterrootLoader_OnLoadError(string contentName, string error)

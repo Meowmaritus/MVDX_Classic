@@ -138,6 +138,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     DbgMenuItem.MenuOpenState = DbgMenuOpenState.Visible;
                 else if (DbgMenuItem.MenuOpenState == DbgMenuOpenState.Visible)
                     DbgMenuItem.MenuOpenState = DbgMenuOpenState.Closed;
+
+                CFG.Save();
             }
 
             prevMousePos = MousePos;

@@ -40,7 +40,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     modeIndex = supportedModes.Count - 1; //Stop
             }
 
-            GFX.Display.Mode = supportedModes[modeIndex];
+            GFX.Display.SetFromDisplayMode(supportedModes[modeIndex]);
 
             UpdateText();
         }
@@ -60,7 +60,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     modeIndex = 0; //Stop
             }
 
-            GFX.Display.Mode = supportedModes[modeIndex];
+            GFX.Display.SetFromDisplayMode(supportedModes[modeIndex]);
 
             UpdateText();
         }

@@ -37,6 +37,12 @@ namespace DarkSoulsModelViewerDX
         public float CameraTurnSpeedMouse = 1.5f;
         public float CameraMoveSpeed = 10;
 
+        public void ResetCameraLocation()
+        {
+            CameraTransform.Position = new Vector3(0, -1.5f, -13);
+            CameraTransform.EulerRotation = new Vector3(MathHelper.PiOver4 / 8, 0, 0);
+        }
+
         public float GetDistanceSquaredFromCamera(Transform t)
         {
             return (t.Position - GetCameraPhysicalLocation().Position).LengthSquared();
@@ -44,8 +50,8 @@ namespace DarkSoulsModelViewerDX
 
         public byte GetLOD(Transform modelTransform)
         {
-            if (GFX.ForceLOD >= 0)
-                return (byte)GFX.ForceLOD;
+            if (GFX.LODMode >= 0)
+                return (byte)GFX.LODMode;
             else
             {
                 var distSquared = GetDistanceSquaredFromCamera(modelTransform);
@@ -242,6 +248,8 @@ namespace DarkSoulsModelViewerDX
         const float SHITTY_CAM_PITCH_LIMIT_FATCAT_CLAMP = 0.999f;
         const float SHITTY_CAM_ZOOM_MIN_DIST = 0.2f;
 
+        private bool oldResetKeyPressed = false;
+
         private float GetGamepadTriggerDeadzone(float t, float d)
         {
             if (t < d)
@@ -267,7 +275,7 @@ namespace DarkSoulsModelViewerDX
 
             bool isSpeedupKeyPressed = keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) || keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightControl);
             bool isSlowdownKeyPressed = keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) || keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
-            bool isResetKeyPressed = false;// keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.R);
+            bool isResetKeyPressed = keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.R);
             bool isMoveLightKeyPressed = keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Space);
             bool isOrbitCamToggleKeyPressed = false;// keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.F);
             bool isPointCamAtObjectKeyPressed = false;// keyboard.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.T);
@@ -279,8 +287,8 @@ namespace DarkSoulsModelViewerDX
                     isSlowdownKeyPressed = true;
                 if (gamepad.IsButtonDown(Buttons.RightShoulder))
                     isSpeedupKeyPressed = true;
-                //if (gamepad.IsButtonDown(Buttons.LeftStick))
-                //    isResetKeyPressed = true;
+                if (gamepad.IsButtonDown(Buttons.RightStick))
+                    isResetKeyPressed = true;
                 if (gamepad.IsButtonDown(Buttons.LeftStick))
                     isMoveLightKeyPressed = true;
                 //if (gamepad.IsButtonDown(Buttons.DPadDown))
@@ -291,15 +299,12 @@ namespace DarkSoulsModelViewerDX
 
             
 
-            if (isResetKeyPressed)
+            if (isResetKeyPressed && !oldResetKeyPressed)
             {
-                SetCameraLocation(CameraPositionDefault.Position, Vector3.Zero);
-                CameraTransform.Position = CameraPositionDefault.Position;
-                CameraOrigin.Position.Y = CameraPositionDefault.Position.Y;
-                OrbitCamDistance = (CameraOrigin.Position - (CameraTransform.Position)).Length();
-                CameraTransform.EulerRotation = Vector3.Zero;
-                LightRotation = Vector3.Zero;
+                ResetCameraLocation();
             }
+
+            oldResetKeyPressed = isResetKeyPressed;
 
             if (isOrbitCamToggleKeyPressed && !oldOrbitCamToggleKeyPressed)
             {

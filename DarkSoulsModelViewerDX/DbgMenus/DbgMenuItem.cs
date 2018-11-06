@@ -72,7 +72,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             v =>
                             {
                                 InterrootLoader.Type = v;
-                                InterrootLoader.SaveInterrootPathAndInterrootType();
+                                CFG.Save();
                             },
                             () => InterrootLoader.Type,
                             nameOverrides: new Dictionary<InterrootLoader.InterrootType, string>
@@ -177,9 +177,13 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         new DbgMenuItemGfxFlverShaderAdjust(),
                         //new DbgMenuItemGfxBlendStateAdjust(),
                         //new DbgMenuItemGfxDepthStencilStateAdjust(),
-                        new DbgMenuItemNumber("Force LOD", -1, 2, 1,
-                            (f) => GFX.ForceLOD = ((int)(Math.Round(f))), () => GFX.ForceLOD,
-                            (f) => $"{((int)(Math.Round(f)))}"),
+                        new DbgMenuItemEnum<LODMode>("LOD Mode", v => GFX.LODMode = v, () => GFX.LODMode, 
+                        nameOverrides: new Dictionary<LODMode, string>
+                        {
+                            { LODMode.ForceFullRes, "Force Full Resolution" },
+                            { LODMode.ForceLOD1, "Force LOD Level 1" },
+                            { LODMode.ForceLOD2, "Force LOD Level 2" },
+                        }),
                         new DbgMenuItemNumber("LOD1 Distance", 0, 10000, 1,
                             (f) => GFX.LOD1Distance = f, () => GFX.LOD1Distance),
                         new DbgMenuItemNumber("LOD2 Distance", 0, 10000, 1,
@@ -221,7 +225,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                     {
                         new DbgMenuItemResolutionChange(),
                         new DbgMenuItemBool("Fullscreen", "YES", "NO", v => GFX.Display.Fullscreen = v, () => GFX.Display.Fullscreen),
-                        new DbgMenuItemBool("Vsync (do not disable if you use mouse)", "ON", "OFF", v => GFX.Display.Vsync = v, () => GFX.Display.Vsync),
+                        new DbgMenuItemBool("Vsync", "ON", "OFF", v => GFX.Display.Vsync = v, () => GFX.Display.Vsync),
                         new DbgMenuItemBool("Simple MSAA", "ON", "OFF", v => GFX.Display.SimpleMSAA = v, () => GFX.Display.SimpleMSAA),
                         new DbgMenuItem()
                         {
@@ -229,6 +233,11 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             ClickAction = (m) => GFX.Display.Apply(),
                         }
                     }
+                },
+                new DbgMenuItem()
+                {
+                    Text = "Return Camera to Origin",
+                    ClickAction = m => GFX.World.ResetCameraLocation()
                 },
                 new DbgMenuItem()
                 {
@@ -266,6 +275,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 new DbgMenuItem() { Text = "Hold LB: Move Camera More Slowly" },
                                 new DbgMenuItem() { Text = "Hold RB: Move Camera More Quickly" },
                                 new DbgMenuItem() { Text = "Click LS and Hold: Turn Light With RS Instead of Camera" },
+                                new DbgMenuItem() { Text = "Click RS: Reset Camera To Origin" },
                             }
                         },
                         new DbgMenuItem()
@@ -300,6 +310,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 new DbgMenuItem() { Text = "Hold Shift: Move Camera More Slowly" },
                                 new DbgMenuItem() { Text = "Hold Ctrl: Move Camera More Quickly" },
                                 new DbgMenuItem() { Text = "Hold Spacebar: Turn Light With Mouse Instead of Camera" },
+                                new DbgMenuItem() { Text = "R: Reset Camera To Origin" },
                             }
                         },
                     }
@@ -350,6 +361,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public static void EnterNewSubMenu(DbgMenuItem menu)
         {
+            CFG.Save();
+
             menu.RequestTextRefresh();
             DbgMenuStack.Push(CurrentMenu);
             CurrentMenu = menu;
@@ -357,6 +370,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public static void GoBack()
         {
+            CFG.Save();
+
             if (DbgMenuStack.Count > 0)
                 CurrentMenu = DbgMenuStack.Pop();
         }
@@ -377,12 +392,13 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public virtual void OnClick()
         {
+            CFG.Save();
             ClickAction?.Invoke(this);
         }
 
         public virtual void OnResetDefault()
         {
-
+            
         }
 
         public virtual void OnIncrease(bool isRepeat, int incrementAmount)

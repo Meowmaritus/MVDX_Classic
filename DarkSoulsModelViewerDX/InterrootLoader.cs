@@ -35,58 +35,9 @@ namespace DarkSoulsModelViewerDX
 
         static InterrootLoader()
         {
-            LoadInterrootPathAndInterrootType();
+            CFG.Load();
 
             TexturePool.OnLoadError += TexPool_OnLoadError;
-        }
-
-        public static void LoadInterrootPathAndInterrootType()
-        {
-            lock (_lock_IO)
-            {
-                if (File.Exists("DSMVDX_InterrootPath.txt"))
-                {
-                    string[] cfg = File.ReadLines("DSMVDX_InterrootPath.txt").ToArray();
-                    if (cfg.Length > 0)
-                        Interroot = cfg[0].Trim('\n');
-
-                    if (cfg.Length > 1 && Enum.TryParse(cfg[1].Trim('\n'), out InterrootType cfgInterrootType))
-                    {
-                        Type = cfgInterrootType;
-                    }
-                    else
-                    {
-                        // If its not in the file for some reason, try to guess
-                        if (Interroot.Contains("Dark Souls Prepare to Die Edition"))
-                            Type = InterrootType.InterrootDS1;
-                        else if (Interroot.Contains("DARK SOULS REMASTERED"))
-                            Type = InterrootType.InterrootDS1R;
-                        // the check for DARK SOULS III comes before DARK SOULS II 
-                        // because "DARK SOULS III" contains "DARK SOULS II" in it.
-                        else if (Interroot.Contains("DARK SOULS III"))
-                            Type = InterrootType.InterrootDS3;
-                        //else if (Interroot.Contains("DARK SOULS II"))
-                        //    Type = InterrootType.InterrootDS2;
-                        //else if (Interroot.Contains("Dark Souls II Scholar of the First Sin"))
-                        //    Type = InterrootType.InterrootDS2;
-
-                        else if (Interroot.Contains("CUSA00900") || Interroot.ToUpper().Contains("BLOODBORNE"))
-                            Type = InterrootType.InterrootBloodborne;
-
-                        // Resave to save the new interroot type.
-                        SaveInterrootPathAndInterrootType();
-                    }
-                }
-
-
-            }
-        }
-
-        public static void SaveInterrootPathAndInterrootType()
-        {
-            lock (_lock_IO)
-                File.WriteAllText("DSMVDX_InterrootPath.txt",
-                    $"{Interroot}\n{Type.ToString()}");
         }
 
         public static void Browse()
@@ -106,7 +57,7 @@ namespace DarkSoulsModelViewerDX
                     if (Directory.Exists(possibleInterroot))
                     {
                         Interroot = possibleInterroot;
-                        SaveInterrootPathAndInterrootType();
+                        CFG.Save();
                     }
                     else
                     {
@@ -140,7 +91,7 @@ namespace DarkSoulsModelViewerDX
                         MessageBox.Show("Automatically switched to Dark Souls III game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
                     }
 
-                    SaveInterrootPathAndInterrootType();
+                    CFG.Save();
                 }
                 
                 
@@ -579,7 +530,7 @@ namespace DarkSoulsModelViewerDX
                                 new ModelInstance(shortName, m, spawnTransform, -1, -1, -1, -1));
                         }
                     }
-                    else if (upper.EndsWith(".FLVER"))
+                    else if (upper.EndsWith(".FLVER") || upper.EndsWith(".FLVER.DCX"))
                     {
                         var flver = SoulsFormats.FLVER.Read(File.ReadAllBytes(fn));
                         var model = new Model(flver);

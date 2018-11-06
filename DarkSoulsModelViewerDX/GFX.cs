@@ -22,17 +22,33 @@ namespace DarkSoulsModelViewerDX
         GUILoadingTasks = 5,
     }
 
+    public enum LODMode : int
+    {
+        Automatic = -1,
+        ForceFullRes = 0,
+        ForceLOD1 = 1,
+        ForceLOD2 = 2,
+    }
+
     public static class GFX
     {
         public static class Display
         {
-            public static DisplayMode Mode;
+            public static void SetFromDisplayMode(DisplayMode mode)
+            {
+                Width = mode.Width;
+                Height = mode.Height;
+                Format = mode.Format;
+            }
+            public static int Width = 1600;
+            public static int Height = 900;
+            public static SurfaceFormat Format = SurfaceFormat.Color;
             public static bool Vsync = true;
             public static bool Fullscreen = false;
             public static bool SimpleMSAA = true;
             public static void Apply()
             {
-                Main.ApplyPresentationParameters(Mode, Vsync, Fullscreen, SimpleMSAA);
+                Main.ApplyPresentationParameters(Width, Height, Format, Vsync, Fullscreen, SimpleMSAA);
             }
         }
 
@@ -45,7 +61,7 @@ namespace DarkSoulsModelViewerDX
         }
 
         public const int LOD_MAX = 2;
-        public static int ForceLOD = -1;
+        public static LODMode LODMode = LODMode.Automatic;
         public static float LOD1Distance = 200;
         public static float LOD2Distance = 400;
 
@@ -192,12 +208,12 @@ namespace DarkSoulsModelViewerDX
 
             FlverShader = new FlverShader(c.Load<Effect>(FlverShader__Name));
 
-            FlverShader.Effect.AmbientColor = Vector4.One;
-            FlverShader.Effect.AmbientIntensity = 0.5f;
-            FlverShader.Effect.DiffuseColor = Vector4.One;
-            FlverShader.Effect.DiffuseIntensity = 0.75f;
-            FlverShader.Effect.SpecularColor = Vector4.One;
-            FlverShader.Effect.SpecularPower = 10f;
+            FlverShader.Effect.AmbientColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
+            FlverShader.Effect.AmbientIntensity = 0.25f;
+            FlverShader.Effect.DiffuseColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
+            FlverShader.Effect.DiffuseIntensity = 1f;
+            FlverShader.Effect.SpecularColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
+            FlverShader.Effect.SpecularPower = 20f;
             FlverShader.Effect.NormalMapCustomZ = 1.0f;
 
             DbgPrimShader = new DbgPrimShader(Device);
