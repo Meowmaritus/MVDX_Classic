@@ -37,53 +37,7 @@ namespace DarkSoulsModelViewerDX
 
         }
 
-        public static void LoadMsbRegions(int area, int block)
-        {
-            var cylinder = new DbgPrimWireCylinder(
-               location: Transform.Default,
-               range: 1.0f,
-               height: 1,
-               numSegments: 12,
-               color: Color.Cyan);
-
-            var sphere = new DbgPrimWireSphere(Transform.Default, 1f, 12, 12, Color.Red);
-
-            var point = new DbgPrimWireSphere(Transform.Default, 0.25f, 4, 4, Color.Lime);
-
-            var box = new DbgPrimWireBox(Transform.Default, Vector3.One, Color.Yellow);
-
-            var msb = DataFile.LoadFromFile<MSB>(InterrootLoader.GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb"));
-
-            foreach (var msbBox in msb.Regions.Boxes)
-            {
-                var newBox = box.Instantiate(msbBox.Name, new Transform(msbBox.PosX, msbBox.PosY, msbBox.PosZ, 
-                    MathHelper.ToRadians(msbBox.RotX), MathHelper.ToRadians(msbBox.RotY), MathHelper.ToRadians(msbBox.RotZ),
-                    msbBox.WidthX, msbBox.HeightY, msbBox.DepthZ));
-                AddPrimitive(newBox);
-            }
-
-            foreach (var msbSphere in msb.Regions.Spheres)
-            {
-                var newSphere = sphere.Instantiate(msbSphere.Name, new Transform(msbSphere.PosX, msbSphere.PosY, msbSphere.PosZ,
-                    MathHelper.ToRadians(msbSphere.RotX), MathHelper.ToRadians(msbSphere.RotY), MathHelper.ToRadians(msbSphere.RotZ), 
-                    msbSphere.Radius, msbSphere.Radius, msbSphere.Radius));
-                AddPrimitive(newSphere);
-            }
-
-            foreach (var msbCylinder in msb.Regions.Cylinders)
-            {
-                var newCylinder = cylinder.Instantiate(msbCylinder.Name, new Transform(msbCylinder.PosX, msbCylinder.PosY, msbCylinder.PosZ,
-                    MathHelper.ToRadians(msbCylinder.RotX), MathHelper.ToRadians(msbCylinder.RotY), MathHelper.ToRadians(msbCylinder.RotZ), 
-                    msbCylinder.Radius, msbCylinder.Height, msbCylinder.Radius));
-                AddPrimitive(newCylinder);
-            }
-
-            foreach (var msbPoint in msb.Regions.Points)
-            {
-                var newPoint = point.Instantiate(msbPoint.Name, new Transform(msbPoint.PosX, msbPoint.PosY, msbPoint.PosZ, 
-                    MathHelper.ToRadians(msbPoint.RotX), MathHelper.ToRadians(msbPoint.RotY), MathHelper.ToRadians(msbPoint.RotZ)));
-            }
-        }
+        
 
         private static List<IDbgPrim> Primitives = new List<IDbgPrim>();
 

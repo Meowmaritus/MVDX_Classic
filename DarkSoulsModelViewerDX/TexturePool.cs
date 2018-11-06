@@ -149,7 +149,48 @@ namespace DarkSoulsModelViewerDX
             });
         }
 
-        public static void AddMapTexBhds(int area, IProgress<double> prog)
+        public static void AddMapTexBXF3(int area, IProgress<double> prog)
+        {
+            var dir = InterrootLoader.GetInterrootPath($"map\\m{area:D2}");
+            if (!Directory.Exists(dir))
+                return;
+            var mapTpfFileNames = Directory.GetFiles(dir, "*.tpfbhd");
+            int fileIndex = 0;
+            foreach (var t in mapTpfFileNames)
+            {
+                BXF3 bxf = null;
+                lock (_lock_IO)
+                {
+                    bxf = BXF3.Read(t, t.Substring(0, t.Length - 7) + ".tpfbdt");
+                }
+
+                for (int i = 0; i < bxf.Files.Count; i++)
+                {
+                    if (bxf.Files[i].Name.Contains(".tpf"))
+                    {
+                        var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
+
+                        foreach (var tn in tpf.Textures)
+                        {
+                            AddFetch(tpf, tn.Name);
+                        }
+
+                        tpf = null;
+                    }
+                    GFX.ModelDrawer.RequestTextureLoad();
+                    // Report each subfile as a tiny part of the bar
+                    prog?.Report((1.0 * fileIndex / mapTpfFileNames.Length) + ((1.0 / mapTpfFileNames.Length) * ((i + 1.0) / bxf.Files.Count)));
+                }
+                bxf = null;
+
+                fileIndex++;
+                prog?.Report((1.0 * fileIndex / mapTpfFileNames.Length));
+            }
+
+            GFX.ModelDrawer.RequestTextureLoad();
+        }
+
+        public static void AddMapTexBXF4(int area, IProgress<double> prog)
         {
             var dir = InterrootLoader.GetInterrootPath($"map\\m{area:D2}");
             if (!Directory.Exists(dir))

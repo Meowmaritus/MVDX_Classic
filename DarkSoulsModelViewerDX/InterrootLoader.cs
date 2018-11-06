@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using DarkSoulsModelViewerDX.DebugPrimitives;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -22,6 +23,7 @@ namespace DarkSoulsModelViewerDX
         public enum InterrootType
         {
             InterrootDS1,
+            InterrootDS1R,
             InterrootDS3,
             // InterrootDS2,
             InterrootBloodborne,
@@ -56,7 +58,7 @@ namespace DarkSoulsModelViewerDX
                         if (Interroot.Contains("Dark Souls Prepare to Die Edition"))
                             Type = InterrootType.InterrootDS1;
                         else if (Interroot.Contains("DARK SOULS REMASTERED"))
-                            Type = InterrootType.InterrootDS1;
+                            Type = InterrootType.InterrootDS1R;
                         // the check for DARK SOULS III comes before DARK SOULS II 
                         // because "DARK SOULS III" contains "DARK SOULS II" in it.
                         else if (Interroot.Contains("DARK SOULS III"))
@@ -122,8 +124,8 @@ namespace DarkSoulsModelViewerDX
                     }
                     else if (dlg.FileName.Contains("DarkSoulsRemastered.exe"))
                     {
-                        Type = InterrootType.InterrootDS1;
-                        MessageBox.Show("Automatically switched to Dark Souls game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
+                        Type = InterrootType.InterrootDS1R;
+                        MessageBox.Show("Automatically switched to Dark Souls Remastered game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
                     }
                     //else if (dlg.FileName.Contains("DarkSoulsII.exe"))
                     //{
@@ -299,43 +301,59 @@ namespace DarkSoulsModelViewerDX
             }
             else if (File.Exists(noExtensionPath + ".flver.dcx"))
             {
-                // Bloodborne and possibly DS2
+                // Bloodborne and DS1R
                 return SoulsFormats.FLVER.Read(noExtensionPath + ".flver.dcx");
             }
             return null;
         }
 
-        public static void LoadMapInBackground(int area, int block, bool excludeScenery, Action<ModelInstance> addMapModel)
+        public static void LoadMapInBackground(string mapName, bool excludeScenery, Action<ModelInstance> addMapModel)
         {
-            var mapStr = $"m{area:D2}_{block:D2}_00_00";
             
             if (Type == InterrootType.InterrootDS1)
             {
-                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Textures[{mapStr}]", $"Loading {mapStr} models...", prog =>
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Models[{mapName}]", $"Loading {mapName} models...", prog =>
                 {
-                    LoadDS1MapInBackground(area, block, excludeScenery, addMapModel, prog);
+                    LoadDS1MapInBackground(mapName, excludeScenery, addMapModel, prog);
+                });
+            }
+            else if (Type == InterrootType.InterrootDS1R)
+            {
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Models[{mapName}]", $"Loading {mapName} models...", prog =>
+                {
+                    LoadDS1MapInBackground(mapName, excludeScenery, addMapModel, prog);
+                });
+
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Textures[{mapName}]", $"Loading {mapName} textures...", prog =>
+                {
+                    if (int.TryParse(mapName.Substring(1, 2), out int area))
+                        TexturePool.AddMapTexBXF3(area, prog);
                 });
             }
             else if (Type == InterrootType.InterrootBloodborne || Type == InterrootType.InterrootDS3)
             {
-                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Models[{mapStr}]", $"Loading {mapStr} models...", prog =>
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Models[{mapName}]", $"Loading {mapName} models...", prog =>
                 {
-                    LoadBBMapInBackground(area, block, excludeScenery, addMapModel, prog);
+                    LoadBBMapInBackground(mapName, excludeScenery, addMapModel, prog);
                 });
 
-                LoadingTaskMan.DoLoadingTask($"LoadMapInBackground_Textures[{mapStr}]", $"Loading {mapStr} textures...", prog =>
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Textures[{mapName}]", $"Loading {mapName} textures...", prog =>
                 {
-                    TexturePool.AddMapTexBhds(area, prog);
+                    if (int.TryParse(mapName.Substring(1, 2), out int area))
+                        TexturePool.AddMapTexBXF4(area, prog);
                 });   
             }
             
         }
 
-        public static void LoadDS1MapInBackground(int area, int block, bool excludeScenery, 
+        public static void LoadDS1MapInBackground(string mapName, bool excludeScenery, 
             Action<ModelInstance> addMapModel, IProgress<double> progress)
         {
-            var modelDir = GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00");
+            var modelDir = GetInterrootPath($@"map\{mapName}");
             var modelDict = new Dictionary<string, Model>();
+
+            int area = int.Parse(mapName.Substring(1, 2));
+
             //foreach (var mfn in modelFileNames)
             //{
             //    if (excludeScenery && (mfn.StartsWith("m8") || mfn.StartsWith("m9")))
@@ -355,7 +373,7 @@ namespace DarkSoulsModelViewerDX
                         {
                             case PartsParamSubtype.MapPieces:
                                 flver = LoadMapFlver(
-                                    GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\{modelName}A{area:D2}"));
+                                    GetInterrootPath($@"map\{mapName}\{modelName}A{area:D2}"));
                                 break;
                             case PartsParamSubtype.NPCs:
                             case PartsParamSubtype.DummyNPCs:
@@ -391,7 +409,7 @@ namespace DarkSoulsModelViewerDX
                     return null;
             }
 
-            var msb = DataFile.LoadFromFile<MSB>(GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb"));
+            var msb = DataFile.LoadFromFile<MSB>(GetInterrootPath($@"map\MapStudio\{mapName}.msb"));
 
             void addMsbPart(MsbPartsBase part)
             {
@@ -460,10 +478,10 @@ namespace DarkSoulsModelViewerDX
             GFX.ModelDrawer.RequestTextureLoad();
         }
 
-        public static void LoadBBMapInBackground(int area, int block, bool excludeScenery, 
+        public static void LoadBBMapInBackground(string mapName, bool excludeScenery, 
             Action<ModelInstance> addMapModel, IProgress<double> progress)
         {
-            var modelDir = GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00");
+            var modelDir = GetInterrootPath($@"map\{mapName}");
             var modelDict = new Dictionary<string, Model>();
 
             Model loadModel(string modelName)
@@ -475,7 +493,7 @@ namespace DarkSoulsModelViewerDX
                     lock (_lock_IO)
                     {
                         flver = LoadMapFlver(
-                            GetInterrootPath($@"map\m{area:D2}_{block:D2}_00_00\m{area:D2}_{block:D2}_00_00_{modelName.Substring(1)}"));
+                            GetInterrootPath($@"map\{mapName}\{mapName}_{modelName.Substring(1)}"));
                     }
 
                     if (flver != null)
@@ -488,7 +506,7 @@ namespace DarkSoulsModelViewerDX
                     return null;
             }
 
-            var msb = MSB64.Read(GetInterrootPath($@"map\MapStudio\m{area:D2}_{block:D2}_00_00.msb.dcx"),
+            var msb = MSB64.Read(GetInterrootPath($@"map\MapStudio\{mapName}.msb.dcx"),
                 (Type == InterrootType.InterrootBloodborne ? MSB64.MSBVersion.MSBVersionBB : MSB64.MSBVersion.MSBVersionDS3));
 
             void addMsbPart(MSB64.Part part)
@@ -560,6 +578,129 @@ namespace DarkSoulsModelViewerDX
             });
 
             
+        }
+
+        public static void LoadMsbRegions(string mapName)
+        {
+            if (Type == InterrootType.InterrootDS1 || Type == InterrootType.InterrootDS1R)
+            {
+                LoadMsbRegionsDS1(mapName);
+            }
+            else if (Type == InterrootType.InterrootBloodborne)
+            {
+                LoadMsbRegionsDS3andBB(mapName, MSB64.MSBVersion.MSBVersionBB);
+            }
+            else if (Type == InterrootType.InterrootDS3)
+            {
+                LoadMsbRegionsDS3andBB(mapName, MSB64.MSBVersion.MSBVersionDS3);
+            }
+        }
+
+        public static void LoadMsbRegionsDS3andBB(string mapName, MSB64.MSBVersion version)
+        {
+            var cylinder = new DbgPrimWireCylinder(
+               location: Transform.Default,
+               range: 1.0f,
+               height: 1,
+               numSegments: 12,
+               color: Color.Cyan);
+
+            var sphere = new DbgPrimWireSphere(Transform.Default, 1f, 12, 12, Color.Red);
+
+            var circle = new DbgPrimWireSphere(Transform.Default, 1f, 12, 12, Color.Fuchsia);
+
+            var point = new DbgPrimWireSphere(Transform.Default, 0.25f, 4, 4, Color.Lime);
+
+            var box = new DbgPrimWireBox(Transform.Default, Vector3.One, Color.Yellow);
+
+            var msb = MSB64.Read(GetInterrootPath($@"map\MapStudio\{mapName}.msb.dcx"), version);
+
+            foreach (var msbBox in msb.Regions.Boxes)
+            {
+                var newBox = box.Instantiate(msbBox.Name, new Transform(msbBox.Position.X, msbBox.Position.Y, msbBox.Position.Z,
+                    MathHelper.ToRadians(msbBox.Rotation.X), MathHelper.ToRadians(msbBox.Rotation.Y), MathHelper.ToRadians(msbBox.Rotation.Z),
+                    msbBox.Length, msbBox.Height, msbBox.Width));
+                DBG.AddPrimitive(newBox);
+            }
+
+            foreach (var msbSphere in msb.Regions.Spheres)
+            {
+                var newSphere = sphere.Instantiate(msbSphere.Name, new Transform(msbSphere.Position.X, msbSphere.Position.Y, msbSphere.Position.Z,
+                    MathHelper.ToRadians(msbSphere.Rotation.X), MathHelper.ToRadians(msbSphere.Rotation.Y), MathHelper.ToRadians(msbSphere.Rotation.Z),
+                    msbSphere.Radius, msbSphere.Radius, msbSphere.Radius));
+                DBG.AddPrimitive(newSphere);
+            }
+
+            foreach (var msbCylinder in msb.Regions.Cylinders)
+            {
+                var newCylinder = cylinder.Instantiate(msbCylinder.Name, new Transform(msbCylinder.Position.X, msbCylinder.Position.Y, msbCylinder.Position.Z,
+                    MathHelper.ToRadians(msbCylinder.Rotation.X), MathHelper.ToRadians(msbCylinder.Rotation.Y), MathHelper.ToRadians(msbCylinder.Rotation.Z),
+                    msbCylinder.Radius, msbCylinder.Height, msbCylinder.Radius));
+                DBG.AddPrimitive(newCylinder);
+            }
+
+            foreach (var msbPoint in msb.Regions.Points)
+            {
+                var newPoint = point.Instantiate(msbPoint.Name, new Transform(msbPoint.Position.X, msbPoint.Position.Y, msbPoint.Position.Z,
+                    MathHelper.ToRadians(msbPoint.Rotation.X), MathHelper.ToRadians(msbPoint.Rotation.Y), MathHelper.ToRadians(msbPoint.Rotation.Z)));
+            }
+
+            // I think circles are probably just beta spheres kek
+            foreach (var msbCircle in msb.Regions.Circles)
+            {
+                var newCircle = circle.Instantiate(msbCircle.Name, new Transform(msbCircle.Position.X, msbCircle.Position.Y, msbCircle.Position.Z,
+                    MathHelper.ToRadians(msbCircle.Rotation.X), MathHelper.ToRadians(msbCircle.Rotation.Y), MathHelper.ToRadians(msbCircle.Rotation.Z),
+                    msbCircle.Radius, msbCircle.Radius, msbCircle.Radius));
+                DBG.AddPrimitive(newCircle);
+            }
+        }
+
+        public static void LoadMsbRegionsDS1(string mapName)
+        {
+            var cylinder = new DbgPrimWireCylinder(
+               location: Transform.Default,
+               range: 1.0f,
+               height: 1,
+               numSegments: 12,
+               color: Color.Cyan);
+
+            var sphere = new DbgPrimWireSphere(Transform.Default, 1f, 12, 12, Color.Red);
+
+            var point = new DbgPrimWireSphere(Transform.Default, 0.25f, 4, 4, Color.Lime);
+
+            var box = new DbgPrimWireBox(Transform.Default, Vector3.One, Color.Yellow);
+
+            var msb = DataFile.LoadFromFile<MSB>(InterrootLoader.GetInterrootPath($@"map\MapStudio\{mapName}.msb"));
+
+            foreach (var msbBox in msb.Regions.Boxes)
+            {
+                var newBox = box.Instantiate(msbBox.Name, new Transform(msbBox.PosX, msbBox.PosY, msbBox.PosZ,
+                    MathHelper.ToRadians(msbBox.RotX), MathHelper.ToRadians(msbBox.RotY), MathHelper.ToRadians(msbBox.RotZ),
+                    msbBox.WidthX, msbBox.HeightY, msbBox.DepthZ));
+                DBG.AddPrimitive(newBox);
+            }
+
+            foreach (var msbSphere in msb.Regions.Spheres)
+            {
+                var newSphere = sphere.Instantiate(msbSphere.Name, new Transform(msbSphere.PosX, msbSphere.PosY, msbSphere.PosZ,
+                    MathHelper.ToRadians(msbSphere.RotX), MathHelper.ToRadians(msbSphere.RotY), MathHelper.ToRadians(msbSphere.RotZ),
+                    msbSphere.Radius, msbSphere.Radius, msbSphere.Radius));
+                DBG.AddPrimitive(newSphere);
+            }
+
+            foreach (var msbCylinder in msb.Regions.Cylinders)
+            {
+                var newCylinder = cylinder.Instantiate(msbCylinder.Name, new Transform(msbCylinder.PosX, msbCylinder.PosY, msbCylinder.PosZ,
+                    MathHelper.ToRadians(msbCylinder.RotX), MathHelper.ToRadians(msbCylinder.RotY), MathHelper.ToRadians(msbCylinder.RotZ),
+                    msbCylinder.Radius, msbCylinder.Height, msbCylinder.Radius));
+                DBG.AddPrimitive(newCylinder);
+            }
+
+            foreach (var msbPoint in msb.Regions.Points)
+            {
+                var newPoint = point.Instantiate(msbPoint.Name, new Transform(msbPoint.PosX, msbPoint.PosY, msbPoint.PosZ,
+                    MathHelper.ToRadians(msbPoint.RotX), MathHelper.ToRadians(msbPoint.RotY), MathHelper.ToRadians(msbPoint.RotZ)));
+            }
         }
     }
 }

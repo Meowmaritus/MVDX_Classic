@@ -39,6 +39,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         {
             lock (LoadingTaskMan._lock_TaskDictEdit)
             {
+                MapMenuEntriesToTaskKeys.Clear();
                 Items.Clear();
 
                 foreach (var it in baseMenuItems)

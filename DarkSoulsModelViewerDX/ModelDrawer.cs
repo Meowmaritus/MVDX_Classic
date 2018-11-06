@@ -164,9 +164,9 @@ namespace DarkSoulsModelViewerDX
             return returnedModelInstances;
         }
 
-        public void AddMap(int area, int block, bool excludeScenery)
+        public void AddMap(string mapName, bool excludeScenery)
         {
-            InterrootLoader.LoadMapInBackground(area, block, excludeScenery, AddModelInstance);
+            InterrootLoader.LoadMapInBackground(mapName, excludeScenery, AddModelInstance);
         }
 
         private void DrawFlverAt(Model flver, Transform transform)

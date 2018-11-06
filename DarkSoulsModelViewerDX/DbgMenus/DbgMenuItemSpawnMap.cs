@@ -133,14 +133,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public override void OnClick()
         {
-            // THIS IS ACTUALLY HOW FROMSOFT DOES IT I SHIT YOU NOT
-            var area = int.Parse(IDList[IDIndex].Substring(1, 2));
-            var block = int.Parse(IDList[IDIndex].Substring(4, 2));
-
             if (IsRegionSpawner)
-                DBG.LoadMsbRegions(area, block);
+                InterrootLoader.LoadMsbRegions(IDList[IDIndex]);
             else
-               GFX.ModelDrawer.AddMap(area, block, false);
+               GFX.ModelDrawer.AddMap(IDList[IDIndex], false);
         }
 
         public override void UpdateUI()

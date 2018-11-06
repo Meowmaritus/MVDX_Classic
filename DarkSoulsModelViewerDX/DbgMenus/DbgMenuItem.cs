@@ -68,7 +68,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 CurrentMenu.RequestTextRefresh();
                             }
                         },
-                        new DbgMenuItemEnum<InterrootLoader.InterrootType>("Game Type", 
+                        new DbgMenuItemEnum<InterrootLoader.InterrootType>("Game Type",
                             v =>
                             {
                                 InterrootLoader.Type = v;
@@ -78,11 +78,22 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             nameOverrides: new Dictionary<InterrootLoader.InterrootType, string>
                             {
                                 { InterrootLoader.InterrootType.InterrootBloodborne, "Bloodborne" },
-                                { InterrootLoader.InterrootType.InterrootDS1, "Dark Souls I" },
+                                { InterrootLoader.InterrootType.InterrootDS1, "Dark Souls" },
+                                { InterrootLoader.InterrootType.InterrootDS1R, "Dark Souls Remastered" },
                                 // { InterrootLoader.InterrootType.InterrootDS2, "Dark Souls II" },
                                 { InterrootLoader.InterrootType.InterrootDS3, "Dark Souls III" },
                             }
-                            ),
+                        ),
+                        new DbgMenuItem()
+                        {
+                            Text = "Refresh Spawn Lists",
+                            ClickAction = m =>
+                            {
+                                DbgMenuItemSpawnChr.UpdateSpawnIDs();
+                                DbgMenuItemSpawnObj.UpdateSpawnIDs();
+                                DbgMenuItemSpawnMap.UpdateSpawnIDs();
+                            }
+                        },
                         new DbgMenuItemTaskKiller()
                         {
                             Text = "[LOAD TASK KILLER]"
@@ -105,8 +116,13 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         },
                         new DbgMenuItem()
                         {
-                            Text = "[CLICK TO CLEAR SCENE]",
+                            Text = "[CLICK TO CLEAR SCENE MODELS]",
                             ClickAction = (m) => GFX.ModelDrawer.ClearScene()
+                        },
+                         new DbgMenuItem()
+                        {
+                            Text = "[CLICK TO CLEAR SCENE REGIONS]",
+                            ClickAction = (m) => DBG.ClearPrimitives()
                         },
                         new DbgMenuItemSpawnChr()
                         {
