@@ -294,6 +294,17 @@
     <Error Condition="!Exists('..\packages\TeximpNet.1.4.0\build\TeximpNet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\TeximpNet.1.4.0\build\TeximpNet.targets'))" />
   </Target>
   <Import Project="..\packages\TeximpNet.1.4.0\build\TeximpNet.targets" Condition="Exists('..\packages\TeximpNet.1.4.0\build\TeximpNet.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>md "$(TargetDir)lib"
+for %25%25f in ($(TargetDir)*.dll) do (
+  move "%25%25f" "$(TargetDir)lib"
+  if exist "%25%25~dpnf.xml" (move "%25%25~dpnf.xml" "$(TargetDir)lib")
+  if exist "%25%25~dpnf.pdb" (move "%25%25~dpnf.pdb" "$(TargetDir)lib")
+)</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>rmdir /S /Q "$(TargetDir)lib"</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
