@@ -14,6 +14,7 @@ namespace DarkSoulsModelViewerDX
     {
         public Vector3 Position;
         public Vector2 TextureCoordinate;
+        public Vector2 TextureCoordinate2;
         public Vector3 Normal;
         public Vector3 Binormal;
         public Vector3 Tangent;
@@ -45,10 +46,11 @@ namespace DarkSoulsModelViewerDX
             VertexElement[] elements = new VertexElement[] {
                 new VertexElement(sizeof(float) * (0), VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
                 new VertexElement(sizeof(float) * (0 + 3), VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
-                new VertexElement(sizeof(float) * (0 + 3 + 2), VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
-                new VertexElement(sizeof(float) * (0 + 3 + 2 + 3), VertexElementFormat.Vector3, VertexElementUsage.Binormal, 0),
-                new VertexElement(sizeof(float) * (0 + 3 + 2 + 3 + 3), VertexElementFormat.Vector3, VertexElementUsage.Tangent, 0),
-                new VertexElement(sizeof(float) * (0 + 3 + 2 + 3 + 3 + 3), VertexElementFormat.Vector4, VertexElementUsage.Color, 0),
+                new VertexElement(sizeof(float) * (0 + 3 + 2), VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+                new VertexElement(sizeof(float) * (0 + 3 + 2 + 2), VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
+                new VertexElement(sizeof(float) * (0 + 3 + 2 + 2 + 3), VertexElementFormat.Vector3, VertexElementUsage.Binormal, 0),
+                new VertexElement(sizeof(float) * (0 + 3 + 2 + 2 + 3 + 3), VertexElementFormat.Vector3, VertexElementUsage.Tangent, 0),
+                new VertexElement(sizeof(float) * (0 + 3 + 2 + 2 + 3 + 3 + 3), VertexElementFormat.Vector4, VertexElementUsage.Color, 0),
 
             };
             VertexDeclaration declaration = new VertexDeclaration(elements);

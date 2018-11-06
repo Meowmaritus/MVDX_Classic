@@ -102,6 +102,18 @@ namespace DarkSoulsModelViewerDX.GFXShaders
             set => Parameters["SpecularMap"].SetValue(value);
         }
 
+        public Texture2D LightMap1
+        {
+            get => Parameters["LightMap1"].GetValueTexture2D();
+            set => Parameters["LightMap1"].SetValue(value);
+        }
+
+        public Texture2D LightMap2
+        {
+            get => Parameters["LightMap2"].GetValueTexture2D();
+            set => Parameters["LightMap2"].SetValue(value);
+        }
+
         public FlverShader(GraphicsDevice graphicsDevice, byte[] effectCode) : base(graphicsDevice, effectCode)
         {
         }

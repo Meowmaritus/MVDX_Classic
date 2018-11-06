@@ -1,13 +1,20 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2006
+VisualStudioVersion = 15.0.28010.2048
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarkSoulsModelViewerDX", "DarkSoulsModelViewerDX\DarkSoulsModelViewerDX.csproj", "{D523836E-9BD1-4663-9A49-9F86EB480F2E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeowDSIO", "MeowDSIO\MeowDSIO\MeowDSIO.csproj", "{4AD69470-8146-4D20-94F0-DA9844EEE5A2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoulsFormats", "SoulsFormats\SoulsFormats\SoulsFormats.csproj", "{22C664BD-877B-44DF-8ECF-2808522469A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.Framework.Windows", "MonoGame\MonoGame.Framework\MonoGame.Framework.Windows.csproj", "{7DE47032-A904-4C29-BD22-2D235E8D91BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.Framework.Net.Windows", "MonoGame\MonoGame.Framework\MonoGame.Framework.Net.Windows.csproj", "{87A71215-7CAC-4B80-9D43-1700DECFB828}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MonoGame", "MonoGame", "{6F4859F3-88D9-4F01-BAB6-D011E24AE80F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dark Souls IO", "Dark Souls IO", "{D1BDEB2B-399D-497D-9D47-7F0C5967661B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,9 +62,39 @@ Global
 		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|x64.Build.0 = Release|x64
 		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|x86.ActiveCfg = Release|Any CPU
 		{22C664BD-877B-44DF-8ECF-2808522469A8}.Release|x86.Build.0 = Release|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Debug|x64.Build.0 = Debug|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Debug|x86.Build.0 = Debug|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Release|x64.ActiveCfg = Release|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Release|x64.Build.0 = Release|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Release|x86.ActiveCfg = Release|Any CPU
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA}.Release|x86.Build.0 = Release|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Debug|x64.Build.0 = Debug|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Debug|x86.Build.0 = Debug|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Release|x64.ActiveCfg = Release|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Release|x64.Build.0 = Release|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Release|x86.ActiveCfg = Release|Any CPU
+		{87A71215-7CAC-4B80-9D43-1700DECFB828}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4AD69470-8146-4D20-94F0-DA9844EEE5A2} = {D1BDEB2B-399D-497D-9D47-7F0C5967661B}
+		{22C664BD-877B-44DF-8ECF-2808522469A8} = {D1BDEB2B-399D-497D-9D47-7F0C5967661B}
+		{7DE47032-A904-4C29-BD22-2D235E8D91BA} = {6F4859F3-88D9-4F01-BAB6-D011E24AE80F}
+		{87A71215-7CAC-4B80-9D43-1700DECFB828} = {6F4859F3-88D9-4F01-BAB6-D011E24AE80F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {305964B1-6068-4920-804B-F6729C4A7AED}

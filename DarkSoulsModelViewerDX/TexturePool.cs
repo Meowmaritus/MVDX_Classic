@@ -16,6 +16,7 @@ namespace DarkSoulsModelViewerDX
     public static class TexturePool
     {
         private static object _lock_IO = new object();
+        private static object _lock_pool = new object();
         //This might be weird because it doesn't follow convention :fatcat:
         public delegate void TextureLoadErrorDelegate(string texName, string error);
         public static event TextureLoadErrorDelegate OnLoadError;
@@ -29,11 +30,14 @@ namespace DarkSoulsModelViewerDX
 
         public static void Flush()
         {
-            foreach (var fetch in Fetches)
+            lock (_lock_pool)
             {
-                fetch.Value.Dispose();
+                foreach (var fetch in Fetches)
+                {
+                    fetch.Value.Dispose();
+                }
+                Fetches.Clear();
             }
-            Fetches.Clear();
         }
 
         public static void AddFetch(SoulsFormats.TPF tpf, string texName)
@@ -41,8 +45,15 @@ namespace DarkSoulsModelViewerDX
             string shortName = Path.GetFileNameWithoutExtension(texName);
             if (!Fetches.ContainsKey(shortName))
             {
-                var newFetch = new TextureFetchRequest(tpf, texName);
-                Fetches.Add(shortName, newFetch);
+                lock (_lock_pool)
+                {
+                    if (tpf.Platform == SoulsFormats.TPF.TPFPlatform.PS4)
+                    {
+                        tpf.ConvertPS4ToPC();
+                    }
+                    var newFetch = new TextureFetchRequest(tpf, texName);
+                    Fetches.Add(shortName, newFetch);
+                }
             }
                 
         }
@@ -61,7 +72,11 @@ namespace DarkSoulsModelViewerDX
             int i = 0;
             foreach (var t in tpfFiles)
             {
-                var tpf = SoulsFormats.TPF.Read(t.GetBytes());
+                SoulsFormats.TPF tpf = null;
+                lock (_lock_IO)
+                {
+                    tpf = SoulsFormats.TPF.Read(t.GetBytes());
+                }
                 AddTpf(tpf);
                 prog?.Report(1.0 * (++i) / tpfFiles.Count);
             }
@@ -238,7 +253,10 @@ namespace DarkSoulsModelViewerDX
             var shortName = Path.GetFileNameWithoutExtension(name);
             if (Fetches.ContainsKey(shortName))
             {
-                return Fetches[shortName].Fetch();
+                lock (_lock_pool)
+                {
+                    return Fetches[shortName].Fetch();
+                }
             }
             else
             {

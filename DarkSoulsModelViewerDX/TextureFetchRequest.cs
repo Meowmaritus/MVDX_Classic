@@ -24,6 +24,7 @@ namespace DarkSoulsModelViewerDX
         public string TexName;
         private Texture2D CachedTexture;
         private bool IsDX10;
+        private static object _lock_conversion = new object();
 
         public TextureFetchRequest(TPF tpf, string texName)
         {
@@ -33,9 +34,16 @@ namespace DarkSoulsModelViewerDX
 
         private byte[] FetchBytes()
         {
+            if (TPFReference == null)
+                return null;
             if (TPFReference.Platform == TPF.TPFPlatform.PS4)
             {
-                TPFReference.ConvertPS4ToPC();
+                lock (_lock_conversion)
+                {
+                    Console.WriteLine("Enter: " + TPFReference.Textures[0].Name);
+                    TPFReference.ConvertPS4ToPC();
+                    Console.WriteLine("Leave: " + TPFReference.Textures[0].Name);
+                }
             }
             else if (TPFReference.Platform == TPF.TPFPlatform.Xbone)
             {
@@ -85,9 +93,9 @@ namespace DarkSoulsModelViewerDX
                 case "DXT5":
                     return SurfaceFormat.Dxt5;
                 case "ATI1":
-                    return SurfaceFormat.Dxt1; // Monogame workaround :fatcat:
+                    return SurfaceFormat.ATI1; // Monogame workaround :fatcat:
                 case "ATI2":
-                    return SurfaceFormat.Dxt3;
+                    return SurfaceFormat.ATI2;
                 default:
                     throw new Exception($"Unknown DDS Type: {str}");
             }
@@ -143,12 +151,19 @@ namespace DarkSoulsModelViewerDX
                         surfaceFormat = SurfaceFormat.Dxt3;
                     else if (fmt == 76 || fmt == 77 || fmt == 78)
                         surfaceFormat = SurfaceFormat.Dxt5;
+                    else if (fmt == 79 || fmt == 80 || fmt == 81)
+                        surfaceFormat = SurfaceFormat.ATI1;
+                    else if (fmt == 82 || fmt == 83 || fmt == 84)
+                        surfaceFormat = SurfaceFormat.ATI2;
+                    else if (fmt == 97 || fmt == 98 || fmt == 99)
+                        surfaceFormat = SurfaceFormat.BC7;
                     else
                     {
                         // No DX10 texture support in monogame yet
                         IsDX10 = true;
                         CachedTexture = Main.DEFAULT_TEXTURE_MISSING;
                         header = null;
+                        TPFReference = null;
                         return CachedTexture;
                     }
                 }
@@ -179,6 +194,7 @@ namespace DarkSoulsModelViewerDX
 
                 CachedTexture = tex;
                 header = null;
+                TPFReference = null;
                 return CachedTexture;
             }
             

@@ -96,6 +96,7 @@ namespace DarkSoulsModelViewerDX
 
             graphics.PreferredBackBufferWidth = 1600;
             graphics.PreferredBackBufferHeight = 900;
+            graphics.GraphicsProfile = GraphicsProfile.HiDef;
             graphics.ApplyChanges();
 
             Window.AllowUserResizing = true;

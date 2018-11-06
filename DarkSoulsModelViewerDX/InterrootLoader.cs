@@ -31,6 +31,8 @@ namespace DarkSoulsModelViewerDX
 
         public static InterrootType Type = InterrootType.InterrootDS1;
 
+        public static string Interroot = @"C:\Program Files (x86)\steam\steamapps\common\Dark Souls Prepare to Die Edition\DATA";
+
         static InterrootLoader()
         {
             LoadInterrootPathAndInterrootType();
@@ -174,10 +176,10 @@ namespace DarkSoulsModelViewerDX
 
         public static string GetInterrootPath(string relPath)
         {
+            while (!Directory.Exists(Interroot))
+                Browse();
             return Frankenpath(Interroot, relPath);
         }
-
-        public static string Interroot = @"G:\SteamLibrary\steamapps\common\Dark Souls Prepare to Die Edition\DATA";
 
         // Utility function to detect and load a potentially DCX compressed BND
         public static BND LoadDecompressedBND(string path)
@@ -242,6 +244,8 @@ namespace DarkSoulsModelViewerDX
         {
             var bndName = GetInterrootPath($@"chr\c{id:D4}.chrbnd");
             var texBndName = GetInterrootPath($@"chr\c{id:D4}.texbnd");
+            // Used in Bloodborne
+            var texExtendedTpf = GetInterrootPath($@"chr\c{id:D4}_2.tpf.dcx");
 
             BND bnd = LoadDecompressedBND(bndName);
             if (bnd != null)
@@ -258,6 +262,15 @@ namespace DarkSoulsModelViewerDX
                 }
                 else
                 {
+                    if (File.Exists(texExtendedTpf))
+                    {
+                        SoulsFormats.TPF tpf = null;
+                        lock (_lock_IO)
+                        {
+                            tpf = SoulsFormats.TPF.Read(texExtendedTpf);
+                        }
+                        TexturePool.AddTpf(tpf);
+                    }
                     TexturePool.AddTextureBnd(bnd, null);
                 }
                 return models;

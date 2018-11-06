@@ -62,11 +62,30 @@ sampler2D SpecularMapSampler = sampler_state
 	MipFilter = linear;
 };
 
+texture2D LightMap1;
+sampler2D LightMap1Sampler = sampler_state
+{
+	Texture = <LightMap1>;
+	MinFilter = linear;
+	MagFilter = linear;
+	MipFilter = linear;
+};
+
+texture2D LightMap2;
+sampler2D LightMap2Sampler = sampler_state
+{
+	Texture = <LightMap2>;
+	MinFilter = linear;
+	MagFilter = linear;
+	MipFilter = linear;
+};
+
 // The input for the VertexShader
 struct VertexShaderInput
 {
     float4 Position : POSITION0;
 	float2 TexCoord : TEXCOORD0;
+	float2 TexCoord2 : TEXCOORD1;
 	float3 Normal : NORMAL0;
 	float3 Binormal : BINORMAL0;
 	float3 Tangent : TANGENT0;
@@ -77,8 +96,9 @@ struct VertexShaderOutput
 {
     float4 Position : POSITION0;
 	float2 TexCoord : TEXCOORD0;
-	float3 View : TEXCOORD1;
-	float3x3 WorldToTangentSpace : TEXCOORD2;
+	float2 TexCoord2 : TEXCOORD1;
+	float3 View : TEXCOORD2;
+	float3x3 WorldToTangentSpace : TEXCOORD3;
 	float3 Normal : NORMAL0;
 };
 
@@ -90,6 +110,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
 	output.TexCoord = input.TexCoord;
+	output.TexCoord2 = input.TexCoord2;
 
 	output.WorldToTangentSpace[0] = mul(normalize(input.Tangent), World);
 	output.WorldToTangentSpace[1] = mul(normalize(input.Binormal), World);
@@ -131,8 +152,10 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 	float4 reflect = normalize(2*diffuse*normal-float4(LightDirection,1.0));
 	float4 specular = pow(saturate(dot(reflect,input.View)),SpecularPower);
 
-    float4 outputColor =  color * AmbientColor * AmbientIntensity + 
-			color * DiffuseIntensity * DiffuseColor * diffuse + 
+	float4 lightmap = tex2D(LightMap1Sampler, input.TexCoord2);
+	
+    float4 outputColor =  color * AmbientColor * AmbientIntensity * lightmap + 
+			color * DiffuseIntensity * DiffuseColor * diffuse * lightmap + 
 			color * tex2D(SpecularMapSampler, input.TexCoord) * specular;
 
 	outputColor = float4(outputColor.xyz * color.w, color.w);

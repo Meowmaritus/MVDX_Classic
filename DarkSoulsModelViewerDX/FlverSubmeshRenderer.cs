@@ -34,10 +34,14 @@ namespace DarkSoulsModelViewerDX
         public string TexNameDiffuse { get; private set; } = null;
         public string TexNameSpecular { get; private set; } = null;
         public string TexNameNormal { get; private set; } = null;
+        public string TexNameDOL1 { get; private set; } = null;
+        public string TexNameDOL2 { get; private set; } = null;
 
         public Texture2D TexDataDiffuse { get; private set; } = null;
         public Texture2D TexDataSpecular { get; private set; } = null;
         public Texture2D TexDataNormal { get; private set; } = null;
+        public Texture2D TexDataDOL1 { get; private set; } = null;
+        public Texture2D TexDataDOL2 { get; private set; } = null;
 
         public GFXDrawStep DrawStep { get; private set; }
 
@@ -171,6 +175,10 @@ namespace DarkSoulsModelViewerDX
                     TexNameSpecular = matParam.Value;
                 else if (paramNameCheck == "G_BUMPMAPTEXTURE")
                     TexNameNormal = matParam.Value;
+                else if (paramNameCheck == "G_DOLTEXTURE1")
+                    TexNameDOL1 = matParam.Value;
+                else if (paramNameCheck == "G_DOLTEXTURE2")
+                    TexNameDOL2 = matParam.Value;
                 // DS1 params
                 else if (paramNameCheck == "G_DIFFUSE")
                     TexNameDiffuse = matParam.Value;
@@ -198,10 +206,19 @@ namespace DarkSoulsModelViewerDX
                 if (vert.UVs.Count > 0)
                 {
                     MeshVertices[i].TextureCoordinate = new Vector2(vert.UVs[0].X, vert.UVs[0].Y);
+                    if (vert.UVs.Count > 1)
+                    {
+                        MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                    }
+                    else
+                    {
+                        MeshVertices[i].TextureCoordinate2 = Vector2.Zero;
+                    }
                 }
                 else
                 {
                     MeshVertices[i].TextureCoordinate = Vector2.Zero;
+                    MeshVertices[i].TextureCoordinate2 = Vector2.Zero;
                 }
             }
 
@@ -267,6 +284,14 @@ namespace DarkSoulsModelViewerDX
 
             if (TexDataNormal == null && TexNameNormal != null)
                 TexDataNormal = TexturePool.FetchTexture(TexNameNormal);
+
+            if (TexDataDOL1 == null && TexNameDOL1 != null)
+            {
+                TexDataDOL1 = TexturePool.FetchTexture(TexNameDOL1);
+            }
+
+            if (TexDataDOL2 == null && TexNameDOL2 != null)
+                TexDataDOL2 = TexturePool.FetchTexture(TexNameDOL2);
         }
 
         public void Draw<T>(int lod, IGFXShader<T> shader, bool forceNoBackfaceCulling = false)
@@ -277,6 +302,8 @@ namespace DarkSoulsModelViewerDX
                 GFX.FlverShader.Effect.ColorMap = TexDataDiffuse ?? Main.DEFAULT_TEXTURE_DIFFUSE;
                 GFX.FlverShader.Effect.SpecularMap = TexDataSpecular ?? Main.DEFAULT_TEXTURE_SPECULAR;
                 GFX.FlverShader.Effect.NormalMap = TexDataNormal ?? Main.DEFAULT_TEXTURE_NORMAL;
+                GFX.FlverShader.Effect.LightMap1 = TexDataDOL1 ?? Main.DEFAULT_TEXTURE_DIFFUSE;
+                //GFX.FlverShader.Effect.LightMap2 = TexDataDOL2 ?? Main.DEFAULT_TEXTURE_DIFFUSE;
             }
                 
 
@@ -332,6 +359,12 @@ namespace DarkSoulsModelViewerDX
             //TexDataSpecular?.Dispose();
             TexDataSpecular = null;
             TexNameSpecular = null;
+
+            TexDataDOL1 = null;
+            TexNameDOL1 = null;
+
+            TexDataDOL2 = null;
+            TexNameDOL2 = null;
         }
     }
 }
