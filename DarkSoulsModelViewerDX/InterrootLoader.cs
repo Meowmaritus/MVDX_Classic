@@ -35,6 +35,8 @@ namespace DarkSoulsModelViewerDX
 
         static InterrootLoader()
         {
+            CFG.Init();
+
             TexturePool.OnLoadError += TexPool_OnLoadError;
         }
 
