@@ -95,6 +95,7 @@
     <Compile Include="DebugPrimitives\DbgPrimWireSphere.cs" />
     <Compile Include="DebugPrimitives\IDbgPrim.cs" />
     <Compile Include="LoadingTaskMan.cs" />
+    <Compile Include="Tests.cs" />
     <Compile Include="TextureFetchRequest.cs" />
     <Compile Include="CFG.cs" />
     <Compile Include="VertexPositionColorNormalTangentTexture.cs" />

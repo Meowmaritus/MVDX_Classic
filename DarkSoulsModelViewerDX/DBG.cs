@@ -75,7 +75,7 @@ namespace DarkSoulsModelViewerDX
                 DbgPrim_Grid.LabelDraw();
             foreach (var p in Primitives)
             {
-                if (ShowPrimitiveNametags)
+                if (ShowPrimitiveNametags && p.Name != null)
                     DrawTextOn3DLocation(p.Transform.Position, p.Name, p.NameColor, PrimitiveNametagSize, startAndEndSpriteBatchForMe: false);
 
                 p.LabelDraw();

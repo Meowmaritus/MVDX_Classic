@@ -34,7 +34,7 @@ namespace DarkSoulsModelViewerDX.DebugPrimitives
 
         private List<DbgLabel> DbgLabels = new List<DbgLabel>();
 
-        protected void AddDbgLabel(Vector3 position, float height, string text, Color color)
+        public void AddDbgLabel(Vector3 position, float height, string text, Color color)
         {
             DbgLabels.Add(new DbgLabel(position, height, text, color));
         }

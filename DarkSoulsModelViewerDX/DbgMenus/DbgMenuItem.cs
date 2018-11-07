@@ -42,6 +42,15 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 //        }
                 //    }
                 //},
+                new DbgMenuItem()
+                {
+                    Text = "<-- TESTS -->",
+                    ClickAction = m =>
+                    {
+                        m.Items.Clear();
+                        Tests.SetupTests(m.Items);
+                    }
+                },
                 new DbgMenuItemSceneList(isModelGroupingKind: false)
                 {
                     Text = "Scene Parts"
