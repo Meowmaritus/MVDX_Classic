@@ -271,7 +271,7 @@ namespace DarkSoulsModelViewerDX
             return null;
         }
 
-        public static void LoadMapInBackground(string mapName, bool excludeScenery, Action<ModelInstance> addMapModel)
+        public static void LoadMapInBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
         {
             
             if (Type == InterrootType.InterrootDS1)
@@ -310,8 +310,8 @@ namespace DarkSoulsModelViewerDX
             
         }
 
-        public static void LoadDS1MapInBackground(string mapName, bool excludeScenery, 
-            Action<ModelInstance> addMapModel, IProgress<double> progress)
+        public static void LoadDS1MapInBackground(string mapName, bool excludeScenery,
+            Action<Model, string, Transform> addMapModel, IProgress<double> progress)
         {
             var modelDir = GetInterrootPath($@"map\{mapName}");
             var modelDict = new Dictionary<string, Model>();
@@ -383,16 +383,9 @@ namespace DarkSoulsModelViewerDX
 
                 if (model != null)
                 {
-                    var partModelInstance = new ModelInstance(part.Name, model, new Transform(part.PosX, part.PosY, part.PosZ,
+                    addMapModel.Invoke(model, part.Name, new Transform(part.PosX, part.PosY, part.PosZ,
                         MathHelper.ToRadians(part.RotX), MathHelper.ToRadians(part.RotY), MathHelper.ToRadians(part.RotZ),
-                        part.ScaleX, part.ScaleY, part.ScaleZ), part.DrawGroup1, part.DrawGroup2, part.DrawGroup3, part.DrawGroup4);
-
-                    if (partSubtype == PartsParamSubtype.DummyNPCs || partSubtype == PartsParamSubtype.DummyObjects)
-                    {
-                        partModelInstance.IsDummyMapPart = true;
-                    }
-
-                    addMapModel.Invoke(partModelInstance);
+                        part.ScaleX, part.ScaleY, part.ScaleZ));
                 }
             }
 
@@ -443,7 +436,7 @@ namespace DarkSoulsModelViewerDX
         }
 
         public static void LoadBBMapInBackground(string mapName, bool excludeScenery, 
-            Action<ModelInstance> addMapModel, IProgress<double> progress)
+            Action<Model, string, Transform> addMapModel, IProgress<double> progress)
         {
             var modelDir = GetInterrootPath($@"map\{mapName}");
             var modelDict = new Dictionary<string, Model>();
@@ -479,11 +472,9 @@ namespace DarkSoulsModelViewerDX
 
                 if (model != null)
                 {
-                    var partModelInstance = new ModelInstance(part.Name, model, new Transform(part.Position.X, part.Position.Y, part.Position.Z,
+                    addMapModel.Invoke(model, part.Name, new Transform(part.Position.X, part.Position.Y, part.Position.Z,
                         MathHelper.ToRadians(part.Rotation.X), MathHelper.ToRadians(part.Rotation.Y), MathHelper.ToRadians(part.Rotation.Z),
-                        part.Scale.X, part.Scale.Y, part.Scale.Z), (int)part.DrawGroup1, (int)part.DrawGroup2, (int)part.DrawGroup3, (int)part.DrawGroup4);
-
-                    addMapModel.Invoke(partModelInstance);
+                        part.Scale.X, part.Scale.Y, part.Scale.Z));
                 }
             }
 
@@ -526,8 +517,9 @@ namespace DarkSoulsModelViewerDX
                         var models = LoadModelsFromBnd(bnd);
                         foreach (var m in models)
                         {
-                            GFX.ModelDrawer.AddModelInstance(
-                                new ModelInstance(shortName, m, spawnTransform, -1, -1, -1, -1));
+                            throw new NotImplementedException();
+                            //GFX.ModelDrawer.AddModelInstance(
+                            //    new ModelInstance(shortName, m, spawnTransform, -1, -1, -1, -1));
                         }
                     }
                     else if (upper.EndsWith(".FLVER") || upper.EndsWith(".FLVER.DCX"))
@@ -535,7 +527,8 @@ namespace DarkSoulsModelViewerDX
                         var flver = SoulsFormats.FLVER.Read(File.ReadAllBytes(fn));
                         var model = new Model(flver);
                         var modelInstance = new ModelInstance(shortName, model, spawnTransform, -1, -1, -1, -1);
-                        GFX.ModelDrawer.AddModelInstance(modelInstance);
+                        //GFX.ModelDrawer.AddModelInstance(modelInstance);
+                        throw new NotImplementedException();
                     }
                     prog?.Report(1.0 * (++i) / fileNames.Length);
                 }

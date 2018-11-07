@@ -15,7 +15,34 @@ namespace DarkSoulsModelViewerDX
         public bool IsVisible { get; set; } = true;
         public BoundingBox Bounds { get; private set; }
 
-        public List<FlverSubmeshRenderer> Submeshes { get; private set; }  = new List<FlverSubmeshRenderer>();
+        private List<ModelInstance> Instances = new List<ModelInstance>();
+        public int InstanceCount => Instances.Count;
+
+        VertexBuffer InstanceBuffer;
+        public VertexBufferBinding InstanceBufferBinding { get; private set; }
+
+
+        static VertexDeclaration instanceVertexDeclaration = new VertexDeclaration
+        (
+            new VertexElement(0, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0),
+            new VertexElement(16, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 1),
+            new VertexElement(32, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 2),
+            new VertexElement(48, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 3)
+        );
+
+        public void AddNewInstance(ModelInstance ins)
+        {
+            Instances.Add(ins);
+
+            if (InstanceBuffer != null)
+                InstanceBuffer.Dispose();
+
+            InstanceBuffer = new VertexBuffer(GFX.Device, instanceVertexDeclaration, Instances.Count, BufferUsage.WriteOnly);
+            InstanceBuffer.SetData(Instances.Select(x => x.Transform.WorldMatrix).ToArray());
+            InstanceBufferBinding = new VertexBufferBinding(InstanceBuffer, 0, 1);
+        }
+
+        private List<FlverSubmeshRenderer> Submeshes = new List<FlverSubmeshRenderer>();
 
         public Model(FLVER flver)
         {
@@ -23,7 +50,7 @@ namespace DarkSoulsModelViewerDX
             var subBoundsPoints = new List<Vector3>();
             foreach (var submesh in flver.Meshes)
             {
-                var smm = new FlverSubmeshRenderer(flver, submesh);
+                var smm = new FlverSubmeshRenderer(this, flver, submesh);
                 Submeshes.Add(smm);
                 subBoundsPoints.Add(smm.Bounds.Min);
                 subBoundsPoints.Add(smm.Bounds.Max);
@@ -50,10 +77,14 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-
-        public void Draw(Transform modelLocation, bool forceRender = false)
+        public void DebugDraw()
         {
-            var lod = GFX.World.GetLOD(modelLocation);
+            //TODO
+        }
+
+        public void Draw()
+        {
+            var lod = 0;// GFX.World.GetLOD(modelLocation);
             foreach (var submesh in Submeshes)
             {
                 submesh.Draw(lod, GFX.FlverShader);
@@ -78,6 +109,9 @@ namespace DarkSoulsModelViewerDX
 
                 Submeshes = null;
             }
+
+            InstanceBuffer?.Dispose();
+            InstanceBuffer = null;
         }
     }
 }

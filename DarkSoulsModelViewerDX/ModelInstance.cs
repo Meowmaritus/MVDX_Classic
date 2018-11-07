@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX
 {
-    public class ModelInstance : IDisposable
+    public class ModelInstance
     {
         public string Name;
-        public Model Model;
+        public readonly Model ModelReference;
         public Transform Transform = Transform.Default;
-        public bool IsVisible
-        {
-            get => Model.IsVisible;
-            set => Model.IsVisible = value;
-        }
+        //public bool IsVisible
+        //{
+        //    get => ModelReference.IsVisible;
+        //    set => ModelReference.IsVisible = value;
+        //}
         public bool IsDummyMapPart = false;
 
         public int DrawGroup1 = -1;
@@ -36,8 +36,8 @@ namespace DarkSoulsModelViewerDX
         }
 
         public BoundingBox WorldBounds => new BoundingBox(
-                    Vector3.Transform(Model.Bounds.Min, Transform.WorldMatrix),
-                    Vector3.Transform(Model.Bounds.Max, Transform.WorldMatrix)
+                    Vector3.Transform(ModelReference.Bounds.Min, Transform.WorldMatrix),
+                    Vector3.Transform(ModelReference.Bounds.Max, Transform.WorldMatrix)
                     );
 
         public Vector3 GetCenterPoint()
@@ -59,13 +59,13 @@ namespace DarkSoulsModelViewerDX
 
         public float GetRoughBoundsDiameter()
         {
-            return Model.Bounds.Min.Length() + Model.Bounds.Max.Length();
+            return ModelReference.Bounds.Min.Length() + ModelReference.Bounds.Max.Length();
         }
 
         public ModelInstance(string name, Model model, Transform transform, int drawGroup1, int drawGroup2, int drawGroup3, int drawGroup4)
         {
             Name = name;
-            Model = model;
+            ModelReference = model;
             Transform = transform;
             DrawGroup1 = drawGroup1;
             DrawGroup2 = drawGroup2;
@@ -73,34 +73,34 @@ namespace DarkSoulsModelViewerDX
             DrawGroup4 = drawGroup4;
         }
 
-        public void DrawDebugInfo()
-        {
-            if (DBG.ShowModelBoundingBoxes)
-                DBG.DrawBoundingBox(Model.Bounds, Color.Yellow, Transform);
+        //public void DrawDebugInfo()
+        //{
+        //    if (DBG.ShowModelBoundingBoxes)
+        //        DBG.DrawBoundingBox(Model.Bounds, Color.Yellow, Transform);
 
-            if (DBG.ShowModelSubmeshBoundingBoxes)
-            {
-                foreach (var sm in Model.Submeshes)
-                {
-                    DBG.DrawBoundingBox(sm.Bounds, Color.Orange, Transform);
-                }
-            }
+        //    if (DBG.ShowModelSubmeshBoundingBoxes)
+        //    {
+        //        foreach (var sm in Model.Submeshes)
+        //        {
+        //            DBG.DrawBoundingBox(sm.Bounds, Color.Orange, Transform);
+        //        }
+        //    }
             
-            if (DBG.ShowModelNames)
-                DBG.DrawTextOn3DLocation(GetTopCenterPoint(verticalOffset: 0.25f), Name, Color.Yellow, 0.5f, startAndEndSpriteBatchForMe: false);
-        }
+        //    if (DBG.ShowModelNames)
+        //        DBG.DrawTextOn3DLocation(GetTopCenterPoint(verticalOffset: 0.25f), Name, Color.Yellow, 0.5f);
+        //}
 
-        public void TryToLoadTextures()
-        {
-            Model.TryToLoadTextures();
-        }
+        //public void TryToLoadTextures()
+        //{
+        //    Model.TryToLoadTextures();
+        //}
 
-        public void Dispose()
-        {
-            Model.Dispose();
-            Model = null;
+        //public void Dispose()
+        //{
+        //    Model.Dispose();
+        //    Model = null;
 
-            Name = null;
-        }
+        //    Name = null;
+        //}
     }
 }

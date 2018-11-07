@@ -89,6 +89,7 @@ struct VertexShaderInput
 	float3 Normal : NORMAL0;
 	float3 Binormal : BINORMAL0;
 	float3 Tangent : TANGENT0;
+	float4x4 InstanceWorld : TEXCOORD2;
 };
 
 // The output from the vertex shader, used for later processing
@@ -106,7 +107,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 {
 	VertexShaderOutput output;
 
-	float4 worldPosition = mul(input.Position, World);
+	float4 worldPosition = mul(mul(input.Position, transpose(input.InstanceWorld)), World);
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
 	output.TexCoord = input.TexCoord;

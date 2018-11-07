@@ -30,6 +30,7 @@ namespace DarkSoulsModelViewerDX
         private bool HasNoLODs = true;
 
         VertexBuffer VertBuffer;
+        VertexBufferBinding VertBufferBinding;
 
         public string TexNameDiffuse { get; private set; } = null;
         public string TexNameSpecular { get; private set; } = null;
@@ -47,109 +48,12 @@ namespace DarkSoulsModelViewerDX
 
         public int VertexCount { get; private set; }
 
-        /*public FlverSubmeshRenderer(FlverSubmesh f)
+        public readonly Model Parent;
+
+        public FlverSubmeshRenderer(Model parent, FLVER flvr, FLVER.Mesh mesh)
         {
-            var shortMaterialName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(f.Material.MTDName);
-            if (shortMaterialName.EndsWith("_Alp") || shortMaterialName.EndsWith("_Edge"))
-            {
-                DrawStep = GFXDrawStep.AlphaEdge;
-            }
-            else
-            {
-                DrawStep = GFXDrawStep.Opaque;
-            }
+            Parent = parent;
 
-            foreach (var matParam in f.Material.Parameters)
-            {
-                if (matParam.Name.ToUpper() == "G_DIFFUSE")
-                    TexNameDiffuse = matParam.Value;
-                else if (matParam.Name.ToUpper() == "G_SPECULAR")
-                    TexNameSpecular = matParam.Value;
-                else if (matParam.Name.ToUpper() == "G_BUMPMAP")
-                    TexNameNormal = matParam.Value;
-            }
-
-            var MeshVertices = new VertexPositionColorNormalTangentTexture[f.Vertices.Count];
-            for (int i = 0; i < f.Vertices.Count; i++)
-            {
-                var vert = f.Vertices[i];
-                MeshVertices[i] = new VertexPositionColorNormalTangentTexture();
-
-                MeshVertices[i].Position = new Vector3(vert.Position.X, vert.Position.Y, vert.Position.Z);
-
-                if (vert.Normal != null && vert.BiTangent != null)
-                {
-                    MeshVertices[i].Normal = Vector3.Normalize(new Vector3(vert.Normal.X, vert.Normal.Y, vert.Normal.Z));
-                    MeshVertices[i].Tangent = Vector3.Normalize(new Vector3(vert.BiTangent.X, vert.BiTangent.Y, vert.BiTangent.Z));
-                    MeshVertices[i].Binormal = Vector3.Cross(Vector3.Normalize(MeshVertices[i].Normal), Vector3.Normalize(MeshVertices[i].Tangent)) * vert.BiTangent.W;
-                }
-
-                if (vert.UVs.Count > 0)
-                {
-                    MeshVertices[i].TextureCoordinate = vert.UVs[0];
-                }
-                else
-                {
-                    MeshVertices[i].TextureCoordinate = Vector2.Zero;
-                }
-
-                // We set the mesh's vertex color to that of a selected mesh.
-                // The shader with lighting ignores this so it will only show
-                // up on the primitive shader, which is what is used to draw
-                // the currently highlighted map piece
-                MeshVertices[i].Color = Main.SELECTED_MESH_COLOR.ToVector4();
-            }
-
-            VertexCount = MeshVertices.Length;
-
-            MeshFacesets = new List<FlverSubmeshRendererFaceSet>();
-
-            foreach (var faceset in f.FaceSets)
-            {
-                var newFaceSet = new FlverSubmeshRendererFaceSet()
-                {
-                    BackfaceCulling = faceset.CullBackfaces,
-                    IsTriangleStrip = faceset.IsTriangleStrip,
-                    IndexBuffer = new IndexBuffer(
-                                GFX.Device,
-                                IndexElementSize.SixteenBits,
-                                sizeof(short) * faceset.VertexIndices.Count,
-                                BufferUsage.None),
-                    IndexCount = faceset.VertexIndices.Count,
-                };
-
-                if (faceset.FlagsLOD1)
-                {
-                    newFaceSet.LOD = (byte)1;
-                    HasNoLODs = false;
-                }
-                else if (faceset.FlagsLOD2)
-                {
-                    newFaceSet.LOD = (byte)2;
-                    HasNoLODs = false;
-                }
-
-                newFaceSet.IndexBuffer.SetData(faceset.VertexIndices
-                    .Select(x =>
-                    {
-                        if (x == ushort.MaxValue)
-                            return (short)(-1);
-                        else
-                            return (short)x;
-                    })
-                    .ToArray());
-                MeshFacesets.Add(newFaceSet);
-            }
-
-            Bounds = BoundingBox.CreateFromPoints(MeshVertices.Select(x => x.Position));
-
-            VertBuffer = new VertexBuffer(GFX.Device,
-                typeof(VertexPositionColorNormalTangentTexture), MeshVertices.Length, BufferUsage.WriteOnly);
-            VertBuffer.SetData(MeshVertices);
-        }*/
-
-        public FlverSubmeshRenderer(FLVER flvr, FLVER.Mesh mesh)
-        {
             var shortMaterialName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(flvr.Materials[mesh.MaterialIndex].MTD);
             if (shortMaterialName.EndsWith("_Alp") ||
                 shortMaterialName.Contains("_Edge") ||
@@ -271,6 +175,8 @@ namespace DarkSoulsModelViewerDX
                 typeof(VertexPositionColorNormalTangentTexture), MeshVertices.Length, BufferUsage.WriteOnly);
             VertBuffer.SetData(MeshVertices);
 
+            VertBufferBinding = new VertexBufferBinding(VertBuffer, 0, 0);
+
             TryToLoadTextures();
         }
 
@@ -305,31 +211,30 @@ namespace DarkSoulsModelViewerDX
                 GFX.FlverShader.Effect.LightMap1 = TexDataDOL1 ?? Main.DEFAULT_TEXTURE_DIFFUSE;
                 //GFX.FlverShader.Effect.LightMap2 = TexDataDOL2 ?? Main.DEFAULT_TEXTURE_DIFFUSE;
             }
-                
+
+            GFX.Device.SetVertexBuffers(VertBufferBinding, Parent.InstanceBufferBinding);
 
             //foreach (var technique in shader.Effect.Techniques)
             //{
             //    shader.Effect.CurrentTechnique = technique;
-                foreach (EffectPass pass in shader.Effect.CurrentTechnique.Passes)
+            foreach (EffectPass pass in shader.Effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                foreach (var faceSet in MeshFacesets)
                 {
-                    pass.Apply();
+                    if (!HasNoLODs && faceSet.LOD != lod)
+                        continue;
 
-                    GFX.Device.SetVertexBuffer(VertBuffer);
+                    GFX.Device.Indices = faceSet.IndexBuffer;
 
-                    foreach (var faceSet in MeshFacesets)
-                    {
-                        if (!HasNoLODs && faceSet.LOD != lod)
-                            continue;
+                    GFX.BackfaceCulling = forceNoBackfaceCulling ? false : faceSet.BackfaceCulling;
 
-                        GFX.Device.Indices = faceSet.IndexBuffer;
+                    GFX.Device.DrawInstancedPrimitives(faceSet.IsTriangleStrip ? PrimitiveType.TriangleStrip : PrimitiveType.TriangleList, 0, 0,
+                        faceSet.IsTriangleStrip ? (faceSet.IndexCount - 2) : (faceSet.IndexCount / 3), Parent.InstanceCount);
 
-                        GFX.BackfaceCulling = forceNoBackfaceCulling ? false : faceSet.BackfaceCulling;
-
-                        GFX.Device.DrawIndexedPrimitives(faceSet.IsTriangleStrip ? PrimitiveType.TriangleStrip : PrimitiveType.TriangleList, 0, 0,
-                            faceSet.IsTriangleStrip ? (faceSet.IndexCount - 2) : (faceSet.IndexCount / 3));
-
-                    }
                 }
+            }
             //}
         }
 

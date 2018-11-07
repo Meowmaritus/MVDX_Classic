@@ -17,24 +17,26 @@ namespace DarkSoulsModelViewerDX
         public void RequestTextureLoad() => IsTextureLoadRequested = true;
 
         internal static object _lock_ModelLoad_Draw = new object();
-        public List<ModelInstance> ModelInstanceList { get; private set; } = new List<ModelInstance>();
+        public List<Model> Models = new List<Model>();
 
         public ModelInstance Selected = null;
         public bool HighlightSelectedPiece = true;
         public bool WireframeSelectedPiece = false;
 
-        public long Debug_VertexCount = 0;
-        public long Debug_SubmeshCount = 0;
+        //public long Debug_VertexCount = 0;
+        //public long Debug_SubmeshCount = 0;
 
         public void ClearScene()
         {
             lock (_lock_ModelLoad_Draw)
             {
-                foreach (var mi in ModelInstanceList)
+                foreach (var mi in Models)
+                {
                     mi.Dispose();
+                }
 
                 TexturePool.Flush();
-                ModelInstanceList.Clear();
+                Models?.Clear();
                 GC.Collect();
             }
         }
@@ -43,7 +45,7 @@ namespace DarkSoulsModelViewerDX
         {
             lock (_lock_ModelLoad_Draw)
             {
-                foreach (var m in ModelInstanceList)
+                foreach (var m in Models)
                     m.IsVisible = !m.IsVisible;
             }
         }
@@ -52,7 +54,7 @@ namespace DarkSoulsModelViewerDX
         {
             lock (_lock_ModelLoad_Draw)
             {
-                foreach (var m in ModelInstanceList)
+                foreach (var m in Models)
                     m.IsVisible = false;
             }
         }
@@ -61,22 +63,19 @@ namespace DarkSoulsModelViewerDX
         {
             lock (_lock_ModelLoad_Draw)
             {
-                foreach (var m in ModelInstanceList)
+                foreach (var m in Models)
                     m.IsVisible = true;
             }
         }
 
-        public void AddModelInstance(ModelInstance ins)
+        public void AddModelInstance(Model model, string name, Transform location)
         {
             lock (_lock_ModelLoad_Draw)
             {
-                ModelInstanceList.Add(ins);
+                if (!Models.Contains(model))
+                    Models.Add(model);
 
-                foreach (var submesh in ins.Model.Submeshes)
-                {
-                    Debug_VertexCount += submesh.VertexCount;
-                    Debug_SubmeshCount++;
-                }
+                model.AddNewInstance(new ModelInstance(name, model, location, -1, -1, -1, -1));
             }
             
         }
@@ -94,9 +93,9 @@ namespace DarkSoulsModelViewerDX
                     var newModels = AddChr(ID, new Transform(currentX, 0, 0, 0, 0, 0));
                     foreach (var mdl in newModels)
                     {
-                        float thisModelWidth = new Vector3(mdl.Model.Bounds.Max.X, 0, mdl.Model.Bounds.Max.Z).Length()
-                            + new Vector3(mdl.Model.Bounds.Min.X, 0, mdl.Model.Bounds.Min.Z).Length();
-                        mdl.Transform.Position.X += thisModelWidth / 2;
+                        float thisModelWidth = new Vector3(mdl.Bounds.Max.X, 0, mdl.Bounds.Max.Z).Length()
+                            + new Vector3(mdl.Bounds.Min.X, 0, mdl.Bounds.Min.Z).Length();
+                        //mdl.Transform.Position.X += thisModelWidth / 2;
                         currentX += thisModelWidth;
                     }
 
@@ -119,9 +118,9 @@ namespace DarkSoulsModelViewerDX
                     var newModels = AddObj(ID, new Transform(currentX, 0, 0, 0, 0, 0));
                     foreach (var mdl in newModels)
                     {
-                        float thisModelWidth = new Vector3(mdl.Model.Bounds.Max.X, 0, mdl.Model.Bounds.Max.Z).Length()
-                            + new Vector3(mdl.Model.Bounds.Min.X, 0, mdl.Model.Bounds.Min.Z).Length();
-                        mdl.Transform.Position.X += thisModelWidth / 2;
+                        float thisModelWidth = new Vector3(mdl.Bounds.Max.X, 0, mdl.Bounds.Max.Z).Length()
+                            + new Vector3(mdl.Bounds.Min.X, 0, mdl.Bounds.Min.Z).Length();
+                        //mdl.Transform.Position.X += thisModelWidth / 2;
                         currentX += thisModelWidth;
                     }
 
@@ -131,17 +130,16 @@ namespace DarkSoulsModelViewerDX
             });
         }
 
-        public List<ModelInstance> AddChr(int id, Transform location)
+        public List<Model> AddChr(int id, Transform location)
         {
             var models = InterrootLoader.LoadModelChr(id);
 
-            var returnedModelInstances = new List<ModelInstance>();
+            var returnedModelInstances = new List<Model>();
 
             for (int i = 0; i < models.Count; i++)
             {
-                var m = new ModelInstance($"c{id:D4}{(i > 0 ? $"[{i + 1}]" : "")}", models[i], location, -1, -1, -1, -1);
-                AddModelInstance(m);
-                returnedModelInstances.Add(m);
+                AddModelInstance(models[i], $"c{id:D4}{(i > 0 ? $"[{i + 1}]" : "")}", location);
+                returnedModelInstances.Add(models[i]);
             }
 
             GFX.ModelDrawer.RequestTextureLoad();
@@ -149,17 +147,20 @@ namespace DarkSoulsModelViewerDX
             return returnedModelInstances;
         }
 
-        public List<ModelInstance> AddObj(int id, Transform location)
+        public List<Model> AddObj(int id, Transform location)
         {
             var models = InterrootLoader.LoadModelObj(id);
 
-            var returnedModelInstances = new List<ModelInstance>();
+            var returnedModelInstances = new List<Model>();
 
             for (int i = 0; i < models.Count; i++)
             {
-                var m = new ModelInstance($"o{id:D4}{(i > 0 ? $"[{i + 1}]" : "")}", models[i], location, -1, -1, -1, -1);
-                AddModelInstance(m);
-                returnedModelInstances.Add(m);
+                if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS3)
+                    AddModelInstance(models[i], $"o{id:D6}{(i > 0 ? $"[{i + 1}]" : "")}", location);
+                else
+                    AddModelInstance(models[i], $"o{id:D4}{(i > 0 ? $"[{i + 1}]" : "")}", location);
+
+                returnedModelInstances.Add(models[i]);
             }
 
             GFX.ModelDrawer.RequestTextureLoad();
@@ -172,16 +173,16 @@ namespace DarkSoulsModelViewerDX
             InterrootLoader.LoadMapInBackground(mapName, excludeScenery, AddModelInstance);
         }
 
-        private void DrawFlverAt(Model flver, Transform transform)
-        {
-            GFX.World.ApplyViewToShader(GFX.FlverShader, transform);
-            flver.Draw(transform);
-        }
+        //private void DrawFlverAt(Model flver, Transform transform)
+        //{
+        //    GFX.World.ApplyViewToShader(GFX.FlverShader, transform);
+        //    flver.Draw(transform);
+        //}
 
-        public void DrawSpecific(int index)
-        {
-            DrawFlverAt(ModelInstanceList[index].Model, ModelInstanceList[index].Transform);
-        }
+        //public void DrawSpecific(int index)
+        //{
+        //    DrawFlverAt(ModelInstanceList[index].Model, ModelInstanceList[index].Transform);
+        //}
 
         public void Draw()
         {
@@ -192,31 +193,35 @@ namespace DarkSoulsModelViewerDX
             {
                 if (IsTextureLoadRequested)
                 {
-                    foreach (var ins in ModelInstanceList)
+                    foreach (var ins in Models)
                         ins.TryToLoadTextures();
                     IsTextureLoadRequested = false;
                 }
 
-                var drawOrderSortedModelInstances = ModelInstanceList
-                .Where(x => x.IsVisible && GFX.World.IsInFrustum(x.Model.Bounds, x.Transform))
-                .OrderByDescending(m => GFX.World.GetDistanceSquaredFromCamera(m.Transform));
+                //var drawOrderSortedModelInstances = ModelInstanceList
+                //.Where(x => x.IsVisible && GFX.World.IsInFrustum(x.Model.Bounds, x.Transform))
+                //.OrderByDescending(m => GFX.World.GetDistanceSquaredFromCamera(m.Transform));
 
-                if (Selected != null)
-                {
-                    foreach (var ins in drawOrderSortedModelInstances)
-                    {
-                        if (Selected.DrawgroupMatch(ins))
-                            DrawFlverAt(ins.Model, ins.Transform);
-                    }
-                }
-                else
-                {
-                    foreach (var ins in drawOrderSortedModelInstances)
-                    {
-                        DrawFlverAt(ins.Model, ins.Transform);
-                    }
-                }
+                //if (Selected != null)
+                //{
+                //    foreach (var ins in drawOrderSortedModelInstances)
+                //    {
+                //        if (Selected.DrawgroupMatch(ins))
+                //            DrawFlverAt(ins.Model, ins.Transform);
+                //    }
+                //}
+                //else
+                //{
+                //    foreach (var ins in drawOrderSortedModelInstances)
+                //    {
+                //        DrawFlverAt(ins.Model, ins.Transform);
+                //    }
+                //}
 
+                foreach (var mdl in Models)
+                {
+                    mdl.Draw();
+                }
                 
             }
         }
@@ -227,13 +232,13 @@ namespace DarkSoulsModelViewerDX
             {
                 if (Selected != null && (HighlightSelectedPiece || WireframeSelectedPiece))
                 {
-                    if (Selected.Model == null)
+                    if (Selected.ModelReference == null)
                     {
                         Selected = null;
                         return;
                     }
 
-                    GFX.World.ApplyViewToShader(GFX.DbgPrimShader, Selected.Transform);
+                    //GFX.World.ApplyViewToShader(GFX.DbgPrimShader, Selected.Transform);
 
                     var lod = GFX.World.GetLOD(Selected.Transform);
 
@@ -243,23 +248,25 @@ namespace DarkSoulsModelViewerDX
 
                     if (HighlightSelectedPiece)
                     {
-                        GFX.Wireframe = false;
+                        throw new NotImplementedException();
+                        //GFX.Wireframe = false;
 
-                        effect.VertexColorEnabled = true;
+                        //effect.VertexColorEnabled = true;
 
-                        foreach (var submesh in Selected.Model.Submeshes)
-                            submesh.Draw(lod, GFX.DbgPrimShader, forceNoBackfaceCulling: true);
+                        //foreach (var submesh in Selected.ModelReference.Submeshes)
+                        //    submesh.Draw(lod, GFX.DbgPrimShader, forceNoBackfaceCulling: true);
                     }
 
                     if (WireframeSelectedPiece)
                     {
-                        GFX.Wireframe = true;
-                        effect.VertexColorEnabled = false;
+                        throw new NotImplementedException();
+                        //GFX.Wireframe = true;
+                        //effect.VertexColorEnabled = false;
 
-                        foreach (var submesh in Selected.Model.Submeshes)
-                            submesh.Draw(lod, GFX.DbgPrimShader, forceNoBackfaceCulling: true);
+                        //foreach (var submesh in Selected.ModelReference.Submeshes)
+                        //    submesh.Draw(lod, GFX.DbgPrimShader, forceNoBackfaceCulling: true);
 
-                        GFX.Wireframe = oldWireframeSetting;
+                        //GFX.Wireframe = oldWireframeSetting;
                     }
 
                     effect.VertexColorEnabled = true;
@@ -272,9 +279,9 @@ namespace DarkSoulsModelViewerDX
             lock (_lock_ModelLoad_Draw)
             {
                 GFX.SpriteBatch.Begin();
-                foreach (var ins in ModelInstanceList)
+                foreach (var ins in Models)
                 {
-                    ins.DrawDebugInfo();
+                    ins.DebugDraw();
                 }
                 GFX.SpriteBatch.End();
             }

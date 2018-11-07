@@ -45,29 +45,31 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         private static void SetModelPrefixVisibility(string prefix, bool visibility)
         {
-            lock (ModelDrawer._lock_ModelLoad_Draw)
-            {
-                var modelsWithPrefix = GFX.ModelDrawer.ModelInstanceList.Where(x => x.Name.StartsWith(prefix));
-                if (modelsWithPrefix.Any())
-                {
-                    foreach (var m in modelsWithPrefix)
-                    {
-                        m.IsVisible = visibility;
-                    }
-                }
-            }
+            throw new NotImplementedException();
+            //lock (ModelDrawer._lock_ModelLoad_Draw)
+            //{
+            //    var modelsWithPrefix = GFX.ModelDrawer.ModelInstanceList.Where(x => x.Name.StartsWith(prefix));
+            //    if (modelsWithPrefix.Any())
+            //    {
+            //        foreach (var m in modelsWithPrefix)
+            //        {
+            //            m.IsVisible = visibility;
+            //        }
+            //    }
+            //}
 
         }
         private static bool GetModelPrefixVisibility(string prefix)
         {
-            lock (ModelDrawer._lock_ModelLoad_Draw)
-            {
-                var modelsWithPrefix = GFX.ModelDrawer.ModelInstanceList.Where(x => x.Name.StartsWith(prefix));
-                if (modelsWithPrefix.Any())
-                    return modelsWithPrefix.First().IsVisible;
-            }
+            throw new NotImplementedException();
+            //lock (ModelDrawer._lock_ModelLoad_Draw)
+            //{
+            //    var modelsWithPrefix = GFX.ModelDrawer.ModelInstanceList.Where(x => x.Name.StartsWith(prefix));
+            //    if (modelsWithPrefix.Any())
+            //        return modelsWithPrefix.First().IsVisible;
+            //}
 
-            return false;
+            //return false;
         }
 
         private void BuildSceneItems()
@@ -84,20 +86,20 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 {
                     Dictionary<string, int> modelNamePrefixes = new Dictionary<string, int>();
 
-                    foreach (var md in GFX.ModelDrawer.ModelInstanceList)
-                    {
-                        var underscoreIndex = md.Name.IndexOf('_');
-                        string modelNamePrefix = null;
-                        if (underscoreIndex >= 0)
-                            modelNamePrefix = md.Name.Substring(0, underscoreIndex);
-                        else
-                            modelNamePrefix = md.Name;
+                    //foreach (var md in GFX.ModelDrawer.ModelInstanceList)
+                    //{
+                    //    var underscoreIndex = md.Name.IndexOf('_');
+                    //    string modelNamePrefix = null;
+                    //    if (underscoreIndex >= 0)
+                    //        modelNamePrefix = md.Name.Substring(0, underscoreIndex);
+                    //    else
+                    //        modelNamePrefix = md.Name;
 
-                        if (!modelNamePrefixes.ContainsKey(modelNamePrefix))
-                            modelNamePrefixes.Add(modelNamePrefix, 1);
-                        else
-                            modelNamePrefixes[modelNamePrefix] = modelNamePrefixes[modelNamePrefix] + 1;
-                    }
+                    //    if (!modelNamePrefixes.ContainsKey(modelNamePrefix))
+                    //        modelNamePrefixes.Add(modelNamePrefix, 1);
+                    //    else
+                    //        modelNamePrefixes[modelNamePrefix] = modelNamePrefixes[modelNamePrefix] + 1;
+                    //}
 
                     foreach (var prefix in modelNamePrefixes)
                     {
@@ -108,14 +110,15 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 else
                 {
                     MapMenuEntriesToModels.Clear();
-                    foreach (var md in GFX.ModelDrawer.ModelInstanceList)
-                    {
-                        var menuItem = new DbgMenuItemBool($"{md.Name}", "SHOW", "HIDE",
-                            (b) => md.IsVisible = b, () => md.IsVisible);
 
-                        Items.Add(menuItem);
-                        MapMenuEntriesToModels.Add(menuItem, md);
-                    }
+                    //foreach (var md in GFX.ModelDrawer.ModelInstanceList)
+                    //{
+                    //    var menuItem = new DbgMenuItemBool($"{md.Name}", "SHOW", "HIDE",
+                    //        (b) => md.IsVisible = b, () => md.IsVisible);
+
+                    //    Items.Add(menuItem);
+                    //    MapMenuEntriesToModels.Add(menuItem, md);
+                    //}
                 }
 
                 
@@ -127,11 +130,11 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         {
             if (CurrentMenu == this)
             {
-                // If the amount of models changes, just rebuild the whole thing. 
-                if (Items.Count != (GFX.ModelDrawer.ModelInstanceList.Count + baseMenuItems.Count))
-                {
-                    BuildSceneItems();
-                }
+                //// If the amount of models changes, just rebuild the whole thing. 
+                //if (Items.Count != (GFX.ModelDrawer.ModelInstanceList.Count + baseMenuItems.Count))
+                //{
+                //    BuildSceneItems();
+                //}
                 
                 if (!IsModelGroupingKind)
                 {
