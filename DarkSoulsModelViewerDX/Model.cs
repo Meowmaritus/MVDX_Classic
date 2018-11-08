@@ -79,6 +79,10 @@ namespace DarkSoulsModelViewerDX
 
         public void DebugDraw()
         {
+            //foreach (var ins in Instances)
+            //{
+            //    throw new Exception("meow please");
+            //}
             //TODO
         }
 

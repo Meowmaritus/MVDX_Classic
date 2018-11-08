@@ -262,6 +262,9 @@
     <None Include="Content\DbgMenuFont.xnb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Content\DbgMenuFontSimple.xnb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Content\DbgMenuFontSmall.xnb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

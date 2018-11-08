@@ -146,6 +146,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         {
                             CustomColorFunction = () => Color.Cyan
                         },
+                        new DbgMenuItemBool("Move Camera to Models as they Spawn", "YES", "NO",
+                            (b) => GFX.ModelDrawer.GoToModelsAsTheySpawn = b, () => GFX.ModelDrawer.GoToModelsAsTheySpawn),
                         new DbgMenuItem()
                         {
                             Text = "Load All Characters Lineup",
@@ -186,7 +188,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         new DbgMenuItemGfxFlverShaderAdjust(),
                         //new DbgMenuItemGfxBlendStateAdjust(),
                         //new DbgMenuItemGfxDepthStencilStateAdjust(),
-                        new DbgMenuItemEnum<LODMode>("LOD Mode", v => GFX.LODMode = v, () => GFX.LODMode, 
+                        new DbgMenuItemEnum<LODMode>("LOD Mode", v => GFX.LODMode = v, () => GFX.LODMode,
                         nameOverrides: new Dictionary<LODMode, string>
                         {
                             { LODMode.ForceFullRes, "Force Full Resolution" },
@@ -197,8 +199,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             (f) => GFX.LOD1Distance = f, () => GFX.LOD1Distance),
                         new DbgMenuItemNumber("LOD2 Distance", 0, 10000, 1,
                             (f) => GFX.LOD2Distance = f, () => GFX.LOD2Distance),
-                         new DbgMenuItemBool("Show Map Region Names", "YES", "NO",
+                        new DbgMenuItemBool("Show Debug Primitive Nametags", "YES", "NO",
                             (b) => DBG.ShowPrimitiveNametags = b, () => DBG.ShowPrimitiveNametags),
+                        new DbgMenuItemBool("Show Fancy Text Labels", "YES", "NO",
+                            (b) => DBG.ShowFancyTextLabels = b, () => DBG.ShowFancyTextLabels),
+                        new DbgMenuItemNumber("Debug Primitive Nametag Size", 0.1f, 20.0f, 0.1f, 
+                            (v) => DBG.PrimitiveNametagSize = v, () => DBG.PrimitiveNametagSize),
                         new DbgMenuItemBool("Show Model Names", "YES", "NO",
                             (b) => DBG.ShowModelNames = b, () => DBG.ShowModelNames),
                         new DbgMenuItemBool("Show Model Bounding Boxes", "YES", "NO",
@@ -209,6 +215,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             (b) => DBG.ShowGrid = b, () => DBG.ShowGrid),
                         new DbgMenuItemBool("Textures", "ON", "OFF",
                             (b) => GFX.EnableTextures = b, () => GFX.EnableTextures),
+                        new DbgMenuItemBool("Lighting", "ON", "OFF",
+                            (b) => GFX.EnableLighting = b, () => GFX.EnableLighting),
                         new DbgMenuItemBool("Wireframe Mode", "ON", "OFF",
                             (b) => GFX.Wireframe = b, () => GFX.Wireframe),
                         new DbgMenuItemBool("View Frustum Culling (Experimental)", "ON", "OFF",
@@ -353,7 +361,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public const float MENU_MIN_SIZE_X = 256;
         public const float MENU_MIN_SIZE_Y = 128;
 
-        public static SpriteFont FONT => DBG.DEBUG_FONT_UI;
+        public static SpriteFont FONT => DBG.DEBUG_FONT;
         public static DbgMenuOpenState MenuOpenState = DbgMenuOpenState.Open;
         public static bool IsPauseRendering = false;
         public static DbgMenuItem CurrentMenu = new DbgMenuItem();
@@ -680,12 +688,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             if (MenuOpenState == DbgMenuOpenState.Open)
             {
                 var renderPauseStr = $"Render Pause:{(IsPauseRendering ? "Active" : "Inactive")}\n(Click RS / Press Pause Key)";
-                var renderPauseStrScale = DBG.DEBUG_FONT_BIG.MeasureString(renderPauseStr);
+                var renderPauseStrScale = DBG.DEBUG_FONT.MeasureString(renderPauseStr);
                 var renderPauseStrColor = !IsPauseRendering ? Color.White : Color.Yellow;
 
                 DBG.DrawOutlinedText(renderPauseStr,
                     new Vector2(8, GFX.Device.Viewport.Height - 20),
-                    renderPauseStrColor, DBG.DEBUG_FONT_BIG, scaleOrigin: new Vector2(0, renderPauseStrScale.Y), 
+                    renderPauseStrColor, DBG.DEBUG_FONT, scaleOrigin: new Vector2(0, renderPauseStrScale.Y), 
                     //scale: IsPauseRendering ? 1f : 0.75f,
                     startAndEndSpriteBatchForMe: false);
             }
@@ -711,7 +719,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
             //---- Draw full menu name
             DBG.DrawOutlinedText(sb.ToString(), darkTitleRect.TopLeftCorner() + new Vector2(8, 4), 
-                CustomColorFunction?.Invoke() ?? Color.White, DBG.DEBUG_FONT_BIG, startAndEndSpriteBatchForMe: false);
+                CustomColorFunction?.Invoke() ?? Color.White, DBG.DEBUG_FONT, startAndEndSpriteBatchForMe: false);
 
             if (Items.Count != 0)
             {

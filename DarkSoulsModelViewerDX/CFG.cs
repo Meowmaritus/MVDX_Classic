@@ -31,12 +31,16 @@ namespace DarkSoulsModelViewerDX
                 GFX.EnableFrustumCulling = Current.GFX_EnableFrustumCulling;
                 GFX.EnableTextures = Current.GFX_EnableTextures;
                 GFX.Wireframe = Current.GFX_Wireframe;
+                GFX.EnableLighting = Current.GFX_EnableLighting;
 
                 DBG.ShowModelNames = Current.DBG_ShowModelNames;
                 DBG.ShowModelBoundingBoxes = Current.DBG_ShowModelBoundingBoxes;
                 DBG.ShowModelSubmeshBoundingBoxes = Current.DBG_ShowModelSubmeshBoundingBoxes;
                 DBG.ShowPrimitiveNametags = Current.DBG_ShowPrimitiveNametags;
                 DBG.ShowGrid = Current.DBG_ShowGrid;
+                DBG.ShowFancyTextLabels = Current.DBG_ShowFancyTextLabels;
+
+                GFX.ModelDrawer.GoToModelsAsTheySpawn = Current.GFX_ModelDrawer_GoToModelsAsTheySpawn;
 
                 GFX.World.CameraMoveSpeed = Current.GFX_World_CameraMoveSpeed;
                 GFX.World.CameraTurnSpeedGamepad = Current.GFX_World_CameraTurnSpeedGamepad;
@@ -67,12 +71,16 @@ namespace DarkSoulsModelViewerDX
                 Current.GFX_EnableFrustumCulling = GFX.EnableFrustumCulling;
                 Current.GFX_EnableTextures = GFX.EnableTextures;
                 Current.GFX_Wireframe = GFX.Wireframe;
+                Current.GFX_EnableLighting = GFX.EnableLighting;
 
                 Current.DBG_ShowModelNames = DBG.ShowModelNames;
                 Current.DBG_ShowModelBoundingBoxes = DBG.ShowModelBoundingBoxes;
                 Current.DBG_ShowModelSubmeshBoundingBoxes = DBG.ShowModelSubmeshBoundingBoxes;
                 Current.DBG_ShowPrimitiveNametags = DBG.ShowPrimitiveNametags;
                 Current.DBG_ShowGrid = DBG.ShowGrid;
+                Current.DBG_ShowFancyTextLabels = DBG.ShowFancyTextLabels;
+
+                Current.GFX_ModelDrawer_GoToModelsAsTheySpawn = GFX.ModelDrawer.GoToModelsAsTheySpawn;
 
                 Current.GFX_World_CameraMoveSpeed = GFX.World.CameraMoveSpeed;
                 Current.GFX_World_CameraTurnSpeedGamepad = GFX.World.CameraTurnSpeedGamepad;
@@ -119,12 +127,16 @@ namespace DarkSoulsModelViewerDX
         public bool GFX_EnableTextures { get; set; } = true;
         public bool GFX_Wireframe { get; set; } = false;
         public bool GFX_EnableFrustumCulling { get; set; } = false;
+        public bool GFX_EnableLighting { get; set; } = true;
 
         public bool DBG_ShowModelNames { get; set; } = false;
         public bool DBG_ShowModelBoundingBoxes { get; set; } = false;
         public bool DBG_ShowModelSubmeshBoundingBoxes { get; set; } = false;
         public bool DBG_ShowGrid { get; set; } = true;
         public bool DBG_ShowPrimitiveNametags { get; set; } = false;
+        public bool DBG_ShowFancyTextLabels { get; set; } = false;
+
+        public bool GFX_ModelDrawer_GoToModelsAsTheySpawn { get; set; } = true;
 
         public float GFX_World_FieldOfView { get; set; } = 43.0f;
         public float GFX_World_CameraTurnSpeedGamepad { get; set; } = 1.5f;

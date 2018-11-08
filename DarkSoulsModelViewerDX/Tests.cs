@@ -13,39 +13,41 @@ namespace DarkSoulsModelViewerDX
 {
     public static class Tests
     {
-        static void TestMCG(string mapName)
+        static void TestMCP_MGC(string mapName)
         {
             if (InterrootLoader.Type != InterrootLoader.InterrootType.InterrootDS1)
                 return;
 
             //GFX.ModelDrawer.AddMap(mapName, false);
 
+            var box = new DbgPrimWireBox(Transform.Default, Vector3.One, Color.Red);
+            var mcp = DataFile.LoadFromFile<MCP>(InterrootLoader.GetInterrootPath($@"map\{mapName}\{mapName}.mcp"));
+            int bi = 0;
+            foreach (var mcpBox in mcp.Boxes)
+            {
+                var min = new Vector3(mcpBox.MinX, mcpBox.MinY, mcpBox.MinZ);
+                var max = new Vector3(mcpBox.MaxX, mcpBox.MaxY, mcpBox.MaxZ);
+                var size = max - min;
+                var center = min + (size / 2f);
+                DBG.AddPrimitive(box.Instantiate($"Box [{(bi++)}]", new Transform(center.X, center.Y, center.Z, 0, 0, 0, size.X, size.Y, size.Z)));
+            }
             var sphere = new DbgPrimWireSphere(Transform.Default, 0.35f, 32, 32, Color.Cyan);
-
             var mcg = DataFile.LoadFromFile<MCG>(InterrootLoader.GetInterrootPath($@"map\{mapName}\{mapName}.mcg"));
-
             var lines = new DbgPrimWire();
-
             List<Vector3> startPoints = new List<Vector3>();
             List<Vector3> endPoints = new List<Vector3>();
-
             for (int i = 0; i < mcg.Paths.Count; i++)
             {
                 var pointsThatReferenceThisShit = mcg.Points.Where(x => x.NearbyPathIndices.Contains(i)).ToList();
-
                 startPoints.Add(new Vector3(pointsThatReferenceThisShit[0].PosX, pointsThatReferenceThisShit[0].PosY, pointsThatReferenceThisShit[0].PosZ));
                 endPoints.Add(new Vector3(pointsThatReferenceThisShit[1].PosX, pointsThatReferenceThisShit[1].PosY, pointsThatReferenceThisShit[1].PosZ));
             }
-
-            void AddPath(int pathIndex, Color col)
-            {
+            void AddPath(int pathIndex, Color col) =>
                 lines.AddLine(startPoints[pathIndex], endPoints[pathIndex], col);
-            }
-
             void AddPathString(int pathIndex, string str, Color col)
             {
                 var position = (startPoints[pathIndex] + endPoints[pathIndex]) / 2.0f;
-                lines.AddDbgLabel(position, 1, str, col);
+                lines.AddDbgLabel(position, 5f, str, col);
             }
 
             //for (int i = 0; i < mcg.Paths.Count; i++)
@@ -80,7 +82,7 @@ namespace DarkSoulsModelViewerDX
                 int pidx = 0;
                 foreach (var adjPointIndex in mcg.Points[pointIndex].NearbyPointIndices)
                 {
-                    DBG.AddPrimitive(sphere.Instantiate($"INDEX IN POINT'S LIST:{pidx++}\nPoint Near [{adjPointIndex}]", new Transform(new Vector3(mcg.Points[adjPointIndex].PosX, mcg.Points[adjPointIndex].PosY, mcg.Points[adjPointIndex].PosZ), Vector3.Zero)));
+                    DBG.AddPrimitive(sphere.Instantiate($"INDEX IN POINT'S LIST:{pidx++}, Point Near [{adjPointIndex}]", new Transform(new Vector3(mcg.Points[adjPointIndex].PosX, mcg.Points[adjPointIndex].PosY, mcg.Points[adjPointIndex].PosZ), Vector3.Zero)));
                 }
 
                 pidx = 0;
@@ -109,11 +111,11 @@ namespace DarkSoulsModelViewerDX
         {
             menu.Add(new DbgMenuItem()
             {
-                Text = "TestMCG",
+                Text = "Test MGC & MCP",
                 Items = DbgMenuItemSpawnMap.IDList.Select(x => new DbgMenuItem()
                 {
                     Text = x,
-                    ClickAction = m => TestMCG(x)
+                    ClickAction = m => TestMCP_MGC(x)
                 }).ToList()
             });
         }

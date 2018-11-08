@@ -53,8 +53,13 @@ namespace DarkSoulsModelViewerDX
             * Matrix.CreateRotationY(EulerRotation.Y)
             * Matrix.CreateRotationZ(EulerRotation.Z);
 
-        public Matrix CameraViewMatrix => TranslationMatrix * RotationMatrix;
+        
         public Matrix WorldMatrix => ScaleMatrix * RotationMatrix * TranslationMatrix;
+
+        public Matrix CameraViewMatrix => Matrix.CreateTranslation(-Position.X, -Position.Y, -Position.Z)
+            * Matrix.CreateRotationY(EulerRotation.Y)
+            * Matrix.CreateRotationZ(EulerRotation.Z)
+            * Matrix.CreateRotationX(EulerRotation.X);
 
         private static Random rand = new Random();
         public static Transform RandomUnit(bool randomRot = false)

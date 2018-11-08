@@ -22,6 +22,7 @@ namespace DarkSoulsModelViewerDX
         public ModelInstance Selected = null;
         public bool HighlightSelectedPiece = true;
         public bool WireframeSelectedPiece = false;
+        public bool GoToModelsAsTheySpawn = true;
 
         //public long Debug_VertexCount = 0;
         //public long Debug_SubmeshCount = 0;
@@ -90,13 +91,20 @@ namespace DarkSoulsModelViewerDX
                 int i = 0;
                 foreach (int ID in DbgMenus.DbgMenuItemSpawnChr.IDList)
                 {
-                    var newModels = AddChr(ID, new Transform(currentX, 0, 0, 0, 0, 0));
+                    var newModelTrans = new Transform(currentX, 0, 0, 0, 0, 0);
+                    var newModels = AddChr(ID, newModelTrans);
                     foreach (var mdl in newModels)
                     {
                         float thisModelWidth = new Vector3(mdl.Bounds.Max.X, 0, mdl.Bounds.Max.Z).Length()
                             + new Vector3(mdl.Bounds.Min.X, 0, mdl.Bounds.Min.Z).Length();
                         //mdl.Transform.Position.X += thisModelWidth / 2;
                         currentX += thisModelWidth;
+                        if (GoToModelsAsTheySpawn)
+                        {
+                            GFX.World.GoToTransformAndLookAtIt(
+                                new Transform(newModelTrans.Position + mdl.Bounds.GetCenter(), newModelTrans.EulerRotation),
+                                (mdl.Bounds.Max - mdl.Bounds.Min).Length() * 1.5f);
+                        }
                     }
 
                     prog?.Report(1.0 * (++i) / DbgMenus.DbgMenuItemSpawnChr.IDList.Count);
@@ -115,13 +123,21 @@ namespace DarkSoulsModelViewerDX
                 int i = 0;
                 foreach (int ID in DbgMenus.DbgMenuItemSpawnObj.IDList)
                 {
-                    var newModels = AddObj(ID, new Transform(currentX, 0, 0, 0, 0, 0));
+                    var newModelTrans = new Transform(currentX, 0, 0, 0, 0, 0);
+                    var newModels = AddObj(ID, newModelTrans);
+                    
                     foreach (var mdl in newModels)
                     {
                         float thisModelWidth = new Vector3(mdl.Bounds.Max.X, 0, mdl.Bounds.Max.Z).Length()
                             + new Vector3(mdl.Bounds.Min.X, 0, mdl.Bounds.Min.Z).Length();
                         //mdl.Transform.Position.X += thisModelWidth / 2;
                         currentX += thisModelWidth;
+                        if (GoToModelsAsTheySpawn)
+                        {
+                            GFX.World.GoToTransformAndLookAtIt(
+                                new Transform(newModelTrans.Position + mdl.Bounds.GetCenter(), newModelTrans.EulerRotation),
+                                (mdl.Bounds.Max - mdl.Bounds.Min).Length() * 1.5f);
+                        }
                     }
 
                     prog?.Report(1.0 * (++i) / DbgMenus.DbgMenuItemSpawnObj.IDList.Count);

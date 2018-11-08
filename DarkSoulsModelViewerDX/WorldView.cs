@@ -21,7 +21,7 @@ namespace DarkSoulsModelViewerDX
 
         public Vector3 LightRotation = Vector3.Zero;
         public Vector3 LightDirectionVector => 
-            Vector3.Transform(Vector3.Forward,
+            Vector3.Transform(Vector3.Backward,
             Matrix.CreateRotationY(LightRotation.Y)
             * Matrix.CreateRotationZ(LightRotation.Z)
             * Matrix.CreateRotationX(LightRotation.X)
@@ -37,10 +37,28 @@ namespace DarkSoulsModelViewerDX
         public float CameraTurnSpeedMouse = 1.5f;
         public float CameraMoveSpeed = 10;
 
+        public static readonly Vector3 CameraDefaultPos = new Vector3(0, 1.5f, -13);
+        public static readonly Vector3 CameraDefaultRot = new Vector3(MathHelper.PiOver4 / 8, 0, 0);
+
         public void ResetCameraLocation()
         {
-            CameraTransform.Position = new Vector3(0, -1.5f, -13);
-            CameraTransform.EulerRotation = new Vector3(MathHelper.PiOver4 / 8, 0, 0);
+            CameraTransform.Position = CameraDefaultPos;
+            CameraTransform.EulerRotation = CameraDefaultRot;
+        }
+
+        public void LookAtTransform(Transform t)
+        {
+            var newLookDir = Vector3.Normalize(t.Position - (CameraTransform.Position));
+            CameraTransform.EulerRotation.Y = (float)Math.Atan2(-newLookDir.X, newLookDir.Z);
+            CameraTransform.EulerRotation.X = (float)Math.Asin(newLookDir.Y);
+            CameraTransform.EulerRotation.Z = 0;
+        }
+
+        public void GoToTransformAndLookAtIt(Transform t, float distance)
+        {
+            var positionOffset = Vector3.Transform(Vector3.Forward, t.RotationMatrix) * distance;
+            CameraTransform.Position = t.Position + positionOffset;
+            LookAtTransform(t);
         }
 
         public float GetDistanceSquaredFromCamera(Transform t)
@@ -67,13 +85,13 @@ namespace DarkSoulsModelViewerDX
         public void ApplyViewToShader<T>(IGFXShader<T> shader)
             where T : Effect
         {
-            shader.ApplyWorldView(MatrixWorld, CameraTransform.CameraViewMatrix, MatrixProjection);
+            shader.ApplyWorldView(Matrix.Identity, CameraTransform.CameraViewMatrix * Matrix.Invert(MatrixWorld), MatrixProjection);
         }
 
         public void ApplyViewToShader<T>(IGFXShader<T> shader, Transform modelTransform)
             where T : Effect
         {
-            shader.ApplyWorldView(modelTransform.WorldMatrix * MatrixWorld, CameraTransform.CameraViewMatrix, MatrixProjection);
+            shader.ApplyWorldView(modelTransform.WorldMatrix, CameraTransform.CameraViewMatrix * Matrix.Invert(MatrixWorld), MatrixProjection);
         }
 
         public bool IsInFrustum(BoundingBox objBounds, Transform objTransform)
@@ -206,7 +224,7 @@ namespace DarkSoulsModelViewerDX
 
         public void MoveCamera(float x, float y, float z, float speed)
         {
-            CameraTransform.Position += Vector3.Transform(new Vector3(-x, -y, z),
+            CameraTransform.Position += Vector3.Transform(new Vector3(x, y, z),
                 Matrix.CreateRotationX(-CameraTransform.EulerRotation.X)
                 * Matrix.CreateRotationY(-CameraTransform.EulerRotation.Y)
                 * Matrix.CreateRotationZ(-CameraTransform.EulerRotation.Z)
@@ -399,8 +417,8 @@ namespace DarkSoulsModelViewerDX
 
 
 
-                        CameraTransform.EulerRotation.Y += camH;
-                        CameraTransform.EulerRotation.X -= camV;
+                        CameraTransform.EulerRotation.Y -= camH;
+                        CameraTransform.EulerRotation.X += camV;
                     }
                 }
 
@@ -518,8 +536,8 @@ namespace DarkSoulsModelViewerDX
                     }
                     else
                     {
-                        CameraTransform.EulerRotation.Y += camH;
-                        CameraTransform.EulerRotation.X -= camV;
+                        CameraTransform.EulerRotation.Y -= camH;
+                        CameraTransform.EulerRotation.X += camV;
                     }
 
 

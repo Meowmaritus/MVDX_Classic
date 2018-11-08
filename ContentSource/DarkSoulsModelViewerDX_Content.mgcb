@@ -20,6 +20,13 @@
 /processorParam:TextureFormat=Color
 /build:DbgMenuFont.spritefont
 
+#begin DbgMenuFontSimple.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:DbgMenuFontSimple.spritefont
+
 #begin DbgMenuFontSmall.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor

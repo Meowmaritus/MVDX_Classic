@@ -76,6 +76,36 @@ namespace DarkSoulsModelViewerDX
 
         public static bool EnableFrustumCulling = false;
         public static bool EnableTextures = true;
+        public static bool EnableLighting
+        {
+            get
+            {
+                return FlverShader.Effect.SpecularPower != float.PositiveInfinity;
+            }
+            set
+            {
+                if (value)
+                {
+                    FlverShader.Effect.AmbientColor = new Vector4(1, 1, 1, 1);
+                    FlverShader.Effect.AmbientIntensity = 0.15f;
+                    FlverShader.Effect.DiffuseColor = new Vector4(1, 1, 1, 1);
+                    FlverShader.Effect.DiffuseIntensity = 1f;
+                    FlverShader.Effect.SpecularColor = new Vector4(1, 1, 1, 1);
+                    FlverShader.Effect.SpecularPower = 2.0f;
+                    FlverShader.Effect.NormalMapCustomZ = 1.0f;
+                }
+                else
+                {
+                    FlverShader.Effect.AmbientColor = new Vector4(1, 1, 1, 1);
+                    FlverShader.Effect.AmbientIntensity = 1;
+                    FlverShader.Effect.DiffuseColor = new Vector4(0, 0, 0, 0);
+                    FlverShader.Effect.DiffuseIntensity = 0;
+                    FlverShader.Effect.SpecularColor = new Vector4(0, 0, 0, 0);
+                    FlverShader.Effect.SpecularPower = float.PositiveInfinity;
+                    FlverShader.Effect.NormalMapCustomZ = 1.0f;
+                }
+            }
+        }
 
         private static RasterizerState HotSwapRasterizerState_BackfaceCullingOff_WireframeOff;
         private static RasterizerState HotSwapRasterizerState_BackfaceCullingOn_WireframeOff;
@@ -208,15 +238,17 @@ namespace DarkSoulsModelViewerDX
 
             FlverShader = new FlverShader(c.Load<Effect>(FlverShader__Name));
 
-            FlverShader.Effect.AmbientColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
-            FlverShader.Effect.AmbientIntensity = 0.25f;
-            FlverShader.Effect.DiffuseColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
+            FlverShader.Effect.AmbientColor = new Vector4(1, 1, 1, 1);
+            FlverShader.Effect.AmbientIntensity = 0.15f;
+            FlverShader.Effect.DiffuseColor = new Vector4(1, 1, 1, 1);
             FlverShader.Effect.DiffuseIntensity = 1f;
-            FlverShader.Effect.SpecularColor = new Vector4(0.75f, 0.75f, 0.75f, 1);
-            FlverShader.Effect.SpecularPower = 20f;
+            FlverShader.Effect.SpecularColor = new Vector4(1, 1, 1, 1);
+            FlverShader.Effect.SpecularPower = 2.0f;
             FlverShader.Effect.NormalMapCustomZ = 1.0f;
 
             DbgPrimShader = new DbgPrimShader(Device);
+
+            DbgPrimShader.Effect.VertexColorEnabled = true;
 
             SpriteBatch = new SpriteBatch(Device);
 
@@ -296,8 +328,8 @@ namespace DarkSoulsModelViewerDX
                 catch
                 {
                     var errText = $"Draw Call Failed ({CurrentStep.ToString()})";
-                    var errTextSize = DBG.DEBUG_FONT_HQ.MeasureString(errText);
-                    DBG.DrawOutlinedText(errText, new Vector2(Device.Viewport.Width / 2, Device.Viewport.Height / 2), Color.Red, DBG.DEBUG_FONT_HQ, 0, 0.25f, errTextSize / 2);
+                    var errTextSize = DBG.DEBUG_FONT_SIMPLE.MeasureString(errText);
+                    DBG.DrawOutlinedText(errText, new Vector2(Device.Viewport.Width / 2, Device.Viewport.Height / 2), Color.Red, DBG.DEBUG_FONT_SIMPLE, 0, 0.25f, errTextSize / 2);
                 }
             }
         }
