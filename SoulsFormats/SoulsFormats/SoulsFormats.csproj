@@ -92,6 +92,9 @@
     <Compile Include="Formats\FMG.cs" />
     <Compile Include="Formats\FILTPARAM.cs" />
     <Compile Include="Formats\GPARAM.cs" />
+    <Compile Include="Formats\MSB2\MSB2.cs" />
+    <Compile Include="Formats\MSB2\MSB2.ModelSection.cs" />
+    <Compile Include="Formats\MSB2\MSB2.PartsSection.cs" />
     <Compile Include="Formats\MSB3\MSB3.cs" />
     <Compile Include="Formats\MSB3\MSB3.BoneNamesSection.cs" />
     <Compile Include="Formats\MSB3\MSB3.PartsPoseSection.cs" />
@@ -110,6 +113,9 @@
     <Compile Include="Formats\MSB64\MSB64.PartsSection.cs" />
     <Compile Include="Formats\MSB64\MSB64.PointSection.cs" />
     <Compile Include="Formats\MSB64\MSB64.RouteSection.cs" />
+    <Compile Include="Formats\MSBD\MSBD.cs" />
+    <Compile Include="Formats\MSBD\MSBD.ModelSection.cs" />
+    <Compile Include="Formats\MSBD\MSBD.PartsSection.cs" />
     <Compile Include="Formats\MTD.cs" />
     <Compile Include="Formats\PARAM64.cs" />
     <Compile Include="Formats\PARAM64.Layout.cs" />

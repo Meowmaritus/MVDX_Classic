@@ -246,6 +246,43 @@ namespace DarkSoulsModelViewerDX
             GFX.ModelDrawer.RequestTextureLoad();
         }
 
+        public static void AddMapTexBXF4DS2(string area, IProgress<double> prog)
+        {
+            var dir = InterrootLoader.GetInterrootPath($"model\\map\\");
+            if (!Directory.Exists(dir))
+                return;
+
+            BXF4 bxf = null;
+            lock (_lock_IO)
+            {
+                bxf = BXF4.Read(dir + "\\t" + area.Substring(1) + ".tpfbhd", dir + "\\t" + area.Substring(1) + ".tpfbdt");
+            }
+
+            for (int i = 0; i < bxf.Files.Count; i++)
+            {
+                if (bxf.Files[i].Name.Contains(".tpf"))
+                {
+                    var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
+
+                    foreach (var tn in tpf.Textures)
+                    {
+                        AddFetch(tpf, tn.Name);
+                    }
+
+                    tpf = null;
+                }
+                GFX.ModelDrawer.RequestTextureLoad();
+                // Report each subfile as a tiny part of the bar
+                prog?.Report((i + 1.0) / bxf.Files.Count);
+            }
+            bxf = null;
+
+            //fileIndex++;
+            //prog?.Report((1.0 * fileIndex / mapTpfFileNames.Length));
+
+            GFX.ModelDrawer.RequestTextureLoad();
+        }
+
         public static Texture2D FetchTexture(string name)
         {
             if (name == null)

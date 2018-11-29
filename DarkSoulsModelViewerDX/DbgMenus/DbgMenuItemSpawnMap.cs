@@ -18,7 +18,9 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public static void UpdateSpawnIDs()
         {
-            var msbFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\map\MapStudio\"), @"*.msb")
+            var path = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"\map\" : @"\map\MapStudio\";
+            var search = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"m*" : @"*.msb";
+            var msbFiles = Directory.GetFileSystemEntries(InterrootLoader.GetInterrootPath(path), search)
                 .Select(Path.GetFileNameWithoutExtension);
             IDList = new List<string>();
             var IDSet = new HashSet<string>();
@@ -37,7 +39,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 }
             }
 
-            var msbFilesDCX = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\map\MapStudio\"), @"*.msb.dcx")
+            var msbFilesDCX = Directory.GetFileSystemEntries(InterrootLoader.GetInterrootPath(path), search + ".dcx")
                 .Select(Path.GetFileNameWithoutExtension).Select(Path.GetFileNameWithoutExtension);
             foreach (var cf in msbFilesDCX)
             {

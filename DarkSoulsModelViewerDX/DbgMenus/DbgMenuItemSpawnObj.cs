@@ -18,17 +18,24 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         {
             string[] objFiles = null;
 
-            if (InterrootLoader.Type != InterrootLoader.InterrootType.InterrootDS1)
+            if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS1)
             {
-                objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd.dcx")
+                objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd")
+                    .Select(Path.GetFileNameWithoutExtension)
+                    .ToArray();
+            }
+            else if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2)
+            {
+                objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\model\obj\"), @"*.bnd")
                     .Select(Path.GetFileNameWithoutExtension) //Remove .dcx
                     .Select(Path.GetFileNameWithoutExtension) //Remove .objbnd
                     .ToArray();
             }
             else
             {
-                objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd")
-                    .Select(Path.GetFileNameWithoutExtension)
+                objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.objbnd.dcx")
+                    .Select(Path.GetFileNameWithoutExtension) //Remove .dcx
+                    .Select(Path.GetFileNameWithoutExtension) //Remove .objbnd
                     .ToArray();
             }
 
@@ -37,7 +44,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             foreach (var cf in objFiles)
             {
                 if (int.TryParse(InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS3
-                    ? cf.Substring(1, 6) : cf.Substring(1, 4), out int id))
+                    ? cf.Substring(1, 6) : (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? cf.Substring(1, 7).Replace("_", "") : cf.Substring(1, 4), out int id))
                 {
                     IDList.Add(id);
                     IDSet.Add(id);

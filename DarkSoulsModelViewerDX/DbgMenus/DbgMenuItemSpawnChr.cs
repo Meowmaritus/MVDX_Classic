@@ -22,7 +22,9 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public static void UpdateSpawnIDs()
         {
-            var chrFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\chr\"), @"*.chrbnd")
+            var path = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"\model\chr\" : @"\chr\";
+            var extensionBase = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"*.bnd" : @"*.chrbnd";
+            var chrFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(path), extensionBase)
                 .Select(Path.GetFileNameWithoutExtension);
             IDList = new List<int>();
             var IDSet = new HashSet<int>();
@@ -35,7 +37,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 }
             }
 
-            var chrFilesDCX = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\chr\"), @"*.chrbnd.dcx")
+            var chrFilesDCX = Directory.GetFiles(InterrootLoader.GetInterrootPath(path), extensionBase + ".dcx")
                 .Select(Path.GetFileNameWithoutExtension).Select(Path.GetFileNameWithoutExtension);
             foreach (var cf in chrFilesDCX)
             {
