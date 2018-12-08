@@ -12,9 +12,17 @@ namespace DarkSoulsModelViewerDX.DbgMenus
     {
         public static List<string > IDList = new List<string>();
         private static bool NeedsTextUpdate = false;
-        public bool IsRegionSpawner { get; private set; } = false;
 
         public int IDIndex = 0;
+
+        public enum SpawnerType
+        {
+            SpawnModel,
+            SpawnRegion,
+            SpawnCollision,
+        };
+
+        public SpawnerType SpawnType;
 
         public static void UpdateSpawnIDs()
         {
@@ -58,18 +66,30 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             NeedsTextUpdate = true;
         }
 
-        public DbgMenuItemSpawnMap(bool isRegionSpawner)
+        public DbgMenuItemSpawnMap(SpawnerType spawnerType)
         {
-            IsRegionSpawner = isRegionSpawner;
+            SpawnType = spawnerType;
             UpdateSpawnIDs();
             UpdateText();
         }
 
         private void UpdateText()
         {
-            string actionText = IsRegionSpawner ? "Click to Spawn MAP - Event Regions" : "Click to Spawn MAP - Models";
+            string actionText = "";
+            if (SpawnType == SpawnerType.SpawnModel)
+            {
+                actionText = "Click to Spawn MAP - Models";
+            }
+            else if (SpawnType == SpawnerType.SpawnRegion)
+            {
+                actionText = "Click to Spawn MAP - Event Regions";
+            }
+            else if (SpawnType == SpawnerType.SpawnCollision)
+            {
+                actionText = "Click to Spawn MAP - Collision Meshes";
+            }
 
-            if (!IsRegionSpawner)
+            if (SpawnType == SpawnerType.SpawnModel)
             {
                 CustomColorFunction = () => (
                     LoadingTaskMan.IsTaskRunning($"{nameof(InterrootLoader.LoadMapInBackground)}_Textures[{IDList[IDIndex]}]")
@@ -135,10 +155,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public override void OnClick()
         {
-            if (IsRegionSpawner)
+            if (SpawnType == SpawnerType.SpawnRegion)
                 InterrootLoader.LoadMsbRegions(IDList[IDIndex]);
-            else
-               GFX.ModelDrawer.AddMap(IDList[IDIndex], false);
+            else if (SpawnType == SpawnerType.SpawnModel)
+                GFX.ModelDrawer.AddMap(IDList[IDIndex], false);
+            else if (SpawnType == SpawnerType.SpawnCollision)
+                GFX.ModelDrawer.AddMapCollision(IDList[IDIndex], false);
         }
 
         public override void UpdateUI()

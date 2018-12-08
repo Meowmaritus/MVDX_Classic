@@ -47,6 +47,10 @@ namespace DarkSoulsModelViewerDX
             {
                 lock (_lock_pool)
                 {
+                    if (tpf.Platform == SoulsFormats.TPF.TPFPlatform.PS3)
+                    {
+                        return;
+                    }
                     if (tpf.Platform == SoulsFormats.TPF.TPFPlatform.PS4)
                     {
                         tpf.ConvertPS4ToPC();

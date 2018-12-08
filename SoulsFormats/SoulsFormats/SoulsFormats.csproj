@@ -89,9 +89,12 @@
     <Compile Include="Formats\DRB.cs" />
     <Compile Include="Formats\ENFL.cs" />
     <Compile Include="Formats\FLVER.cs" />
+    <Compile Include="Formats\FLVERD.cs" />
     <Compile Include="Formats\FMG.cs" />
     <Compile Include="Formats\FILTPARAM.cs" />
     <Compile Include="Formats\GPARAM.cs" />
+    <Compile Include="Formats\HKX\Collision.cs" />
+    <Compile Include="Formats\HKX\HKX.cs" />
     <Compile Include="Formats\MSB2\MSB2.cs" />
     <Compile Include="Formats\MSB2\MSB2.ModelSection.cs" />
     <Compile Include="Formats\MSB2\MSB2.PartsSection.cs" />

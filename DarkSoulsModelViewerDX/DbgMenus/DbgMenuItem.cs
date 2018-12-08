@@ -89,7 +89,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                                 { InterrootLoader.InterrootType.InterrootBloodborne, "Bloodborne" },
                                 { InterrootLoader.InterrootType.InterrootDS1, "Dark Souls" },
                                 { InterrootLoader.InterrootType.InterrootDS1R, "Dark Souls Remastered" },
-                                // { InterrootLoader.InterrootType.InterrootDS2, "Dark Souls II" },
+                                { InterrootLoader.InterrootType.InterrootDS2, "Dark Souls II" },
                                 { InterrootLoader.InterrootType.InterrootDS3, "Dark Souls III" },
                             }
                         ),
@@ -141,8 +141,9 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         {
                             CustomColorFunction = () => Color.Cyan
                         },
-                        new DbgMenuItemSpawnMap(isRegionSpawner: false),
-                        new DbgMenuItemSpawnMap(isRegionSpawner: true)
+                        new DbgMenuItemSpawnMap(DbgMenuItemSpawnMap.SpawnerType.SpawnModel),
+                        new DbgMenuItemSpawnMap(DbgMenuItemSpawnMap.SpawnerType.SpawnRegion),
+                        new DbgMenuItemSpawnMap(DbgMenuItemSpawnMap.SpawnerType.SpawnCollision)
                         {
                             CustomColorFunction = () => Color.Cyan
                         },

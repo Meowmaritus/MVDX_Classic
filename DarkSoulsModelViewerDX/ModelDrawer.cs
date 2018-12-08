@@ -189,6 +189,11 @@ namespace DarkSoulsModelViewerDX
             InterrootLoader.LoadMapInBackground(mapName, excludeScenery, AddModelInstance);
         }
 
+        public void AddMapCollision(string mapName, bool excludeScenery)
+        {
+            InterrootLoader.LoadCollisionDS3InBackground(mapName, excludeScenery, AddModelInstance);
+        }
+
         //private void DrawFlverAt(Model flver, Transform transform)
         //{
         //    GFX.World.ApplyViewToShader(GFX.FlverShader, transform);

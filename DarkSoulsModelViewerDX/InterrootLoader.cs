@@ -27,6 +27,7 @@ namespace DarkSoulsModelViewerDX
             InterrootDS3,
             InterrootDS2,
             InterrootBloodborne,
+            InterrootDeS,
         };
 
         public static InterrootType Type = InterrootType.InterrootDS1;
@@ -46,25 +47,34 @@ namespace DarkSoulsModelViewerDX
             {
                 FileName = "DarkSoulsIII.exe",
                 Filter = "All Files (*.*)|*.*",
-                Title = "Select Game Executable (*.exe for PC, eboot.bin for PS4)",
+                Title = "Select Game Executable (*.exe for PC, eboot.bin for PS3/PS4)",
             };
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 if (dlg.FileName.ToUpper().EndsWith("EBOOT.BIN"))
                 {
-                    Type = InterrootType.InterrootBloodborne;
-                    string possibleInterroot = Path.Combine(new FileInfo(dlg.FileName).DirectoryName, "dvdroot_ps4");
-                    if (Directory.Exists(possibleInterroot))
+                    if (dlg.FileName.ToUpper().Contains("PS3_GAME"))
                     {
-                        Interroot = possibleInterroot;
-                        CFG.Save();
+                        Type = InterrootType.InterrootDeS;
+                        Interroot = new FileInfo(dlg.FileName).DirectoryName;
+                        MessageBox.Show("Automatically switched to Demon's Souls game type based on directory.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
                     }
                     else
                     {
-                        MessageBox.Show("A PS4 executable was selected but no /dvdroot_ps4/ folder was found next to it. Unable to determine data root path.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
+                        Type = InterrootType.InterrootBloodborne;
+                        string possibleInterroot = Path.Combine(new FileInfo(dlg.FileName).DirectoryName, "dvdroot_ps4");
+                        if (Directory.Exists(possibleInterroot))
+                        {
+                            Interroot = possibleInterroot;
+                            CFG.Save();
+                        }
+                        else
+                        {
+                            MessageBox.Show("A PS4 executable was selected but no /dvdroot_ps4/ folder was found next to it. Unable to determine data root path.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        MessageBox.Show("Automatically switched to Bloodborne game type since it is the PS4 exclusive one.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
                     }
-                    MessageBox.Show("Automatically switched to Bloodborne game type since it is the PS4 exclusive one.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
                 }
                 else
                 {
@@ -149,7 +159,9 @@ namespace DarkSoulsModelViewerDX
             {
                 lock (_lock_IO)
                 {
-                    bnd = DataFile.LoadFromDcxFile<BND>(path + ".dcx");
+                    var decomp = SoulsFormats.DCX.Decompress(path + ".dcx");
+                    //bnd = DataFile.LoadFromDcxFile<BND>(path + ".dcx");
+                    bnd = DataFile.LoadFromBytes<BND>(decomp, path + ".dcx");
                 }
             }
             return bnd;
@@ -186,7 +198,16 @@ namespace DarkSoulsModelViewerDX
         {
             var modelEntries = (Type == InterrootType.InterrootDS2) ? bnd.Where(x => x.Name.ToUpper().EndsWith(".FLV")) : bnd.Where(x => x.Name.ToUpper().EndsWith(".FLVER"));
             if (modelEntries.Any())
-                return modelEntries.Select(x => new Model(SoulsFormats.FLVER.Read(x.GetBytes()))).ToList();
+            {
+                if (Type == InterrootType.InterrootDeS)
+                {
+                    return modelEntries.Select(x => new Model(SoulsFormats.FLVERD.Read(x.GetBytes()))).ToList();
+                }
+                else
+                {
+                    return modelEntries.Select(x => new Model(SoulsFormats.FLVER.Read(x.GetBytes()))).ToList();
+                }
+            }
             else
                 return new List<Model>();
         }
@@ -200,6 +221,11 @@ namespace DarkSoulsModelViewerDX
                 bndName = GetInterrootPath($@"model\chr\c{id:D4}.bnd");
                 texBndName = GetInterrootPath($@"model\chr\c{id:D4}.texbnd");
             }
+            else if (Type == InterrootType.InterrootDeS)
+            {
+                bndName = GetInterrootPath($@"chr\c{id:D4}\c{id:D4}.chrbnd");
+                texBndName = "";
+            }
             else
             {
                 bndName = GetInterrootPath($@"chr\c{id:D4}.chrbnd");
@@ -207,6 +233,14 @@ namespace DarkSoulsModelViewerDX
             }
             // Used in Bloodborne
             var texExtendedTpf = GetInterrootPath($@"chr\c{id:D4}_2.tpf.dcx");
+
+            // Load the flver directly
+            if (Type == InterrootType.InterrootDeS)
+            {
+                var list = new List<Model>();
+                list.Add(new Model(FLVERD.Read(GetInterrootPath($@"chr\c{id:D4}\c{id:D4}.flver"))));
+                return list;
+            }
 
             BND bnd = LoadDecompressedBND(bndName);
             if (bnd != null)
@@ -749,6 +783,64 @@ namespace DarkSoulsModelViewerDX
             {
                 var newPoint = point.Instantiate(msbPoint.Name, new Transform(msbPoint.PosX, msbPoint.PosY, msbPoint.PosZ,
                     MathHelper.ToRadians(msbPoint.RotX), MathHelper.ToRadians(msbPoint.RotY), MathHelper.ToRadians(msbPoint.RotZ)));
+            }
+        }
+
+        public static void LoadCollisionDS3(string mapName)
+        {
+            var largepoint = new DbgPrimWireSphere(Transform.Default, 0.25f, 4, 4, Color.Red);
+            var smallpoint = new DbgPrimWireSphere(Transform.Default, 0.25f, 4, 4, Color.Green);
+            BXF4 hkxbdt = BXF4.Read(GetInterrootPath($@"map\{mapName}\l{mapName.Substring(1)}.hkxbhd"), GetInterrootPath($@"map\{mapName}\l{mapName.Substring(1)}.hkxbdt"));
+
+            foreach (var file in hkxbdt.Files)
+            {
+                HKX hkx = HKX.Read(file.Bytes, (Type == InterrootType.InterrootDS3) ? HKX.HKXVariation.HKXDS3 : HKX.HKXVariation.HKXBloodBorne);
+                foreach (var cl in hkx.DataSection.Objects)
+                {
+                    if (cl is HKX.FSNPCustomParamCompressedMeshShape)
+                    {
+                        var shape = (HKX.FSNPCustomParamCompressedMeshShape)cl;
+                        var data = shape.GetMeshShapeData();
+                        var min = data.BoundingBoxMin;
+                        var max = data.BoundingBoxMax;
+
+                        var large = data.LargeVertices.GetArrayData();
+                        if (large != null)
+                        {
+                            foreach (var point in large.Elements)
+                            {
+                                var pos = point.Decompress(min, max);
+                                var pt = largepoint.Instantiate("", new Transform(pos.X, pos.Y, pos.Z, 0.0f, 0.0f, 0.0f));
+                                DBG.AddPrimitive(pt);
+                            }
+                        }
+
+                        var small = data.SmallVertices.GetArrayData();
+                        if (small != null)
+                        {
+                            /*foreach (var point in small.Elements)
+                            {
+                                var pos = point.Decompress(min, max);
+                                var pt = smallpoint.Instantiate("", new Transform(pos.X, pos.Y, pos.Z, 0.0f, 0.0f, 0.0f));
+                                DBG.AddPrimitive(pt);
+                            }*/
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void LoadCollisionDS3InBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
+        {
+            BXF4 hkxbdt = BXF4.Read(GetInterrootPath($@"map\{mapName}\l{mapName.Substring(1)}.hkxbhd"), GetInterrootPath($@"map\{mapName}\l{mapName.Substring(1)}.hkxbdt"));
+
+            foreach (var file in hkxbdt.Files)
+            {
+                HKX hkx = HKX.Read(file.Bytes, (Type == InterrootType.InterrootDS3) ? HKX.HKXVariation.HKXDS3 : HKX.HKXVariation.HKXBloodBorne);
+
+                addMapModel.Invoke(new Model(hkx), file.Name, new Transform(0.0f, 0.0f, 0.0f,
+                        MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
+                        1.0f, 1.0f, 1.0f));
             }
         }
     }

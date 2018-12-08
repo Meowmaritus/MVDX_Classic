@@ -77,6 +77,65 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
+        public Model(FLVERD flver)
+        {
+            Submeshes = new List<FlverSubmeshRenderer>();
+            var subBoundsPoints = new List<Vector3>();
+            foreach (var submesh in flver.Meshes)
+            {
+                var smm = new FlverSubmeshRenderer(this, flver, submesh);
+                Submeshes.Add(smm);
+                subBoundsPoints.Add(smm.Bounds.Min);
+                subBoundsPoints.Add(smm.Bounds.Max);
+            }
+
+            //DEBUG//
+            //Console.WriteLine($"{flver.Meshes[0].DefaultBoneIndex}");
+            //Console.WriteLine();
+            //Console.WriteLine();
+            //foreach (var mat in flver.Materials)
+            //{
+            //    Console.WriteLine($"{mat.Name}: {mat.MTD}");
+            //}
+            /////////
+
+            if (Submeshes.Count == 0)
+            {
+                Bounds = new BoundingBox();
+                IsVisible = false;
+            }
+            else
+            {
+                Bounds = BoundingBox.CreateFromPoints(subBoundsPoints);
+            }
+        }
+
+        public Model(HKX hkx)
+        {
+            Submeshes = new List<FlverSubmeshRenderer>();
+            var subBoundsPoints = new List<Vector3>();
+            foreach (var col in hkx.DataSection.Objects)
+            {
+                if (col is HKX.FSNPCustomParamCompressedMeshShape)
+                {
+                    var smm = new FlverSubmeshRenderer(this, hkx, (HKX.FSNPCustomParamCompressedMeshShape)col);
+                    Submeshes.Add(smm);
+                    subBoundsPoints.Add(smm.Bounds.Min);
+                    subBoundsPoints.Add(smm.Bounds.Max);
+                }
+            }
+
+            if (Submeshes.Count == 0)
+            {
+                Bounds = new BoundingBox();
+                IsVisible = false;
+            }
+            else
+            {
+                Bounds = BoundingBox.CreateFromPoints(subBoundsPoints);
+            }
+        }
+
         public void DebugDraw()
         {
             //foreach (var ins in Instances)

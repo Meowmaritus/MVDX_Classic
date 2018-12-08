@@ -26,6 +26,10 @@ namespace DarkSoulsModelViewerDX.DbgMenus
             var extensionBase = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"*.bnd" : @"*.chrbnd";
             var chrFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(path), extensionBase)
                 .Select(Path.GetFileNameWithoutExtension);
+            if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDeS)
+            {
+                chrFiles = Directory.GetFileSystemEntries(InterrootLoader.GetInterrootPath(path), "c*").Select(Path.GetFileNameWithoutExtension);
+            }
             IDList = new List<int>();
             var IDSet = new HashSet<int>();
             foreach (var cf in chrFiles)

@@ -69,33 +69,33 @@ namespace DarkSoulsModelViewerDX
                 DrawStep = GFXDrawStep.Opaque;
             }
 
-            foreach (var matParam in flvr.Materials[mesh.MaterialIndex].Params)
+            foreach (var matParam in flvr.Materials[mesh.MaterialIndex].Textures)
             {
-                var paramNameCheck = matParam.Param.ToUpper();
+                var paramNameCheck = matParam.Type.ToUpper();
                 // DS3/BB
                 if (paramNameCheck == "G_DIFFUSETEXTURE")
-                    TexNameDiffuse = matParam.Value;
+                    TexNameDiffuse = matParam.Path;
                 else if (paramNameCheck == "G_SPECULARTEXTURE")
-                    TexNameSpecular = matParam.Value;
+                    TexNameSpecular = matParam.Path;
                 else if (paramNameCheck == "G_BUMPMAPTEXTURE")
-                    TexNameNormal = matParam.Value;
+                    TexNameNormal = matParam.Path;
                 else if (paramNameCheck == "G_DOLTEXTURE1")
-                    TexNameDOL1 = matParam.Value;
+                    TexNameDOL1 = matParam.Path;
                 else if (paramNameCheck == "G_DOLTEXTURE2")
-                    TexNameDOL2 = matParam.Value;
+                    TexNameDOL2 = matParam.Path;
                 // DS1 params
                 else if (paramNameCheck == "G_DIFFUSE")
-                    TexNameDiffuse = matParam.Value;
+                    TexNameDiffuse = matParam.Path;
                 else if (paramNameCheck == "G_SPECULAR")
-                    TexNameSpecular = matParam.Value;
+                    TexNameSpecular = matParam.Path;
                 else if (paramNameCheck == "G_BUMPMAP")
-                    TexNameNormal = matParam.Value;
+                    TexNameNormal = matParam.Path;
             }
 
-            var MeshVertices = new VertexPositionColorNormalTangentTexture[mesh.VertexGroups[0].Vertices.Count];
-            for (int i = 0; i < mesh.VertexGroups[0].Vertices.Count; i++)
+            var MeshVertices = new VertexPositionColorNormalTangentTexture[mesh.Vertices.Count];
+            for (int i = 0; i < mesh.Vertices.Count; i++)
             {
-                var vert = mesh.VertexGroups[0].Vertices[i];
+                var vert = mesh.Vertices[i];
                 MeshVertices[i] = new VertexPositionColorNormalTangentTexture();
 
                 MeshVertices[i].Position = new Vector3(vert.Position.X, vert.Position.Y, vert.Position.Z);
@@ -178,6 +178,231 @@ namespace DarkSoulsModelViewerDX
             VertBufferBinding = new VertexBufferBinding(VertBuffer, 0, 0);
 
             TryToLoadTextures();
+        }
+
+        public FlverSubmeshRenderer(Model parent, FLVERD flvr, FLVERD.Mesh mesh)
+        {
+            Parent = parent;
+
+            var shortMaterialName = MiscUtil.GetFileNameWithoutDirectoryOrExtension(flvr.Materials[mesh.MaterialIndex].MTD);
+            if (shortMaterialName.EndsWith("_Alp") ||
+                shortMaterialName.Contains("_Edge") ||
+                shortMaterialName.Contains("_Decal") ||
+                shortMaterialName.Contains("_Cloth") ||
+                shortMaterialName.Contains("_al") ||
+                shortMaterialName.Contains("BlendOpacity"))
+            {
+                DrawStep = GFXDrawStep.AlphaEdge;
+            }
+            else
+            {
+                DrawStep = GFXDrawStep.Opaque;
+            }
+
+            foreach (var matParam in flvr.Materials[mesh.MaterialIndex].Textures)
+            {
+                if (matParam == null)
+                {
+                    break;
+                }
+                var paramNameCheck = matParam.Type.ToUpper();
+                // DS3/BB
+                if (paramNameCheck == "G_DIFFUSETEXTURE")
+                    TexNameDiffuse = matParam.Path;
+                else if (paramNameCheck == "G_SPECULARTEXTURE")
+                    TexNameSpecular = matParam.Path;
+                else if (paramNameCheck == "G_BUMPMAPTEXTURE")
+                    TexNameNormal = matParam.Path;
+                else if (paramNameCheck == "G_DOLTEXTURE1")
+                    TexNameDOL1 = matParam.Path;
+                else if (paramNameCheck == "G_DOLTEXTURE2")
+                    TexNameDOL2 = matParam.Path;
+                // DS1 params
+                else if (paramNameCheck == "G_DIFFUSE")
+                    TexNameDiffuse = matParam.Path;
+                else if (paramNameCheck == "G_SPECULAR")
+                    TexNameSpecular = matParam.Path;
+                else if (paramNameCheck == "G_BUMPMAP")
+                    TexNameNormal = matParam.Path;
+            }
+
+            var MeshVertices = new VertexPositionColorNormalTangentTexture[mesh.Vertices.Count];
+            for (int i = 0; i < mesh.Vertices.Count; i++)
+            {
+                var vert = mesh.Vertices[i];
+                MeshVertices[i] = new VertexPositionColorNormalTangentTexture();
+
+                MeshVertices[i].Position = new Vector3(vert.Position.X, vert.Position.Y, vert.Position.Z);
+
+                if (vert.Normal != null && vert.Tangents != null && vert.Tangents.Count > 0)
+                {
+                    MeshVertices[i].Normal = Vector3.Normalize(new Vector3(vert.Normal.X, vert.Normal.Y, vert.Normal.Z));
+                    MeshVertices[i].Tangent = Vector3.Normalize(new Vector3(vert.Tangents[0].X, vert.Tangents[0].Y, vert.Tangents[0].Z));
+                    MeshVertices[i].Binormal = Vector3.Cross(Vector3.Normalize(MeshVertices[i].Normal), Vector3.Normalize(MeshVertices[i].Tangent)) * vert.Tangents[0].W;
+                }
+
+                if (vert.UVs.Count > 0)
+                {
+                    MeshVertices[i].TextureCoordinate = new Vector2(vert.UVs[0].X, vert.UVs[0].Y);
+                    if (vert.UVs.Count > 1)
+                    {
+                        MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                    }
+                    else
+                    {
+                        MeshVertices[i].TextureCoordinate2 = Vector2.Zero;
+                    }
+                }
+                else
+                {
+                    MeshVertices[i].TextureCoordinate = Vector2.Zero;
+                    MeshVertices[i].TextureCoordinate2 = Vector2.Zero;
+                }
+            }
+
+            VertexCount = MeshVertices.Length;
+
+            MeshFacesets = new List<FlverSubmeshRendererFaceSet>();
+
+            bool is32bit = false;
+
+            var tlist = mesh.ToTriangleList();
+            var newFaceSet = new FlverSubmeshRendererFaceSet()
+            {
+                BackfaceCulling = true,
+                IsTriangleStrip = true,
+                IndexBuffer = new IndexBuffer(
+                            GFX.Device,
+                            is32bit ? IndexElementSize.ThirtyTwoBits : IndexElementSize.SixteenBits,
+                            tlist.Length,
+                            BufferUsage.WriteOnly),
+                IndexCount = tlist.Length,
+            };
+
+            newFaceSet.IndexBuffer.SetData(tlist);
+
+            MeshFacesets.Add(newFaceSet);
+
+            Bounds = BoundingBox.CreateFromPoints(MeshVertices.Select(x => x.Position));
+
+            VertBuffer = new VertexBuffer(GFX.Device,
+                typeof(VertexPositionColorNormalTangentTexture), MeshVertices.Length, BufferUsage.WriteOnly);
+            VertBuffer.SetData(MeshVertices);
+
+            VertBufferBinding = new VertexBufferBinding(VertBuffer, 0, 0);
+
+            TryToLoadTextures();
+        }
+
+        // Used for collision rendering
+        public FlverSubmeshRenderer(Model parent, HKX colhkx, HKX.FSNPCustomParamCompressedMeshShape meshdata)
+        {
+            Parent = parent;
+
+            var coldata = meshdata.GetMeshShapeData();
+            var vertices = new VertexPositionColorNormalTangentTexture[coldata.SmallVertices.Size + coldata.LargeVertices.Size];
+            /*for (int i = 0; i < coldata.SmallVertices.Size; i++)
+            {
+                var vert = coldata.SmallVertices.GetArrayData().Elements[i].Decompress(coldata.BoundingBoxMin, coldata.BoundingBoxMax);
+                vertices[i] = new VertexPositionColorNormalTangentTexture();
+                vertices[i].Position = new Vector3(vert.X, vert.Y, vert.Z);
+            }*/
+
+            var largebase = coldata.SmallVertices.Size;
+            for (int i = 0; i < coldata.LargeVertices.Size; i++)
+            {
+                var vert = coldata.LargeVertices.GetArrayData().Elements[i].Decompress(coldata.BoundingBoxMin, coldata.BoundingBoxMax);
+                vertices[i+largebase] = new VertexPositionColorNormalTangentTexture();
+                vertices[i+largebase].Position = new Vector3(vert.X, vert.Y, vert.Z);
+            }
+
+            MeshFacesets = new List<FlverSubmeshRendererFaceSet>();
+            int ch = 0;
+            foreach (var chunk in coldata.Chunks.GetArrayData().Elements)
+            {
+                /*if (ch != 1)
+                {
+                    ch++;
+                    continue;
+                }
+                ch++;*/
+                List<ushort> indices = new List<ushort>();
+                for (int i = 0; i < chunk.ByteIndicesLength; i++)
+                {
+                    var tri = coldata.MeshIndices.GetArrayData().Elements[i + chunk.ByteIndicesIndex];
+                    if (tri.Idx2 == tri.Idx3 && tri.Idx1 != tri.Idx2)
+                    {
+                        if (tri.Idx0 < chunk.VertexIndicesLength)
+                        {
+                            ushort index = (ushort)((uint)tri.Idx0 + chunk.SmallVerticesBase);
+                            indices.Add(index);
+
+                            var vert = coldata.SmallVertices.GetArrayData().Elements[index].Decompress(chunk.SmallVertexScale, chunk.SmallVertexOffset);
+                            vertices[index] = new VertexPositionColorNormalTangentTexture();
+                            vertices[index].Position = new Vector3(vert.X, vert.Y, vert.Z);
+                        }
+                        else
+                        {
+                            indices.Add((ushort)(coldata.VertexIndices.GetArrayData().Elements[tri.Idx0 + chunk.VertexIndicesIndex - chunk.VertexIndicesLength].data + largebase));
+                        }
+
+                        if (tri.Idx1 < chunk.VertexIndicesLength)
+                        {
+                            ushort index = (ushort)((uint)tri.Idx1 + chunk.SmallVerticesBase);
+                            indices.Add(index);
+
+                            var vert = coldata.SmallVertices.GetArrayData().Elements[index].Decompress(chunk.SmallVertexScale, chunk.SmallVertexOffset);
+                            vertices[index] = new VertexPositionColorNormalTangentTexture();
+                            vertices[index].Position = new Vector3(vert.X, vert.Y, vert.Z);
+                        }
+                        else
+                        {
+                            indices.Add((ushort)(coldata.VertexIndices.GetArrayData().Elements[tri.Idx1 + chunk.VertexIndicesIndex - chunk.VertexIndicesLength].data + largebase));
+                        }
+
+                        if (tri.Idx2 < chunk.VertexIndicesLength)
+                        {
+                            ushort index = (ushort)((uint)tri.Idx2 + chunk.SmallVerticesBase);
+                            indices.Add(index);
+
+                            var vert = coldata.SmallVertices.GetArrayData().Elements[index].Decompress(chunk.SmallVertexScale, chunk.SmallVertexOffset);
+                            vertices[index] = new VertexPositionColorNormalTangentTexture();
+                            vertices[index].Position = new Vector3(vert.X, vert.Y, vert.Z);
+                        }
+                        else
+                        {
+                            indices.Add((ushort)(coldata.VertexIndices.GetArrayData().Elements[tri.Idx2 + chunk.VertexIndicesIndex - chunk.VertexIndicesLength].data + largebase));
+                        }
+                    }
+                }
+
+                if (indices.Count > 0)
+                {
+                    var newFaceSet = new FlverSubmeshRendererFaceSet()
+                    {
+                        BackfaceCulling = false,
+                        IsTriangleStrip = false,
+                        IndexBuffer = new IndexBuffer(
+                            GFX.Device,
+                            IndexElementSize.SixteenBits,
+                            indices.Count,
+                            BufferUsage.WriteOnly),
+                        IndexCount = indices.Count,
+                    };
+
+                    newFaceSet.IndexBuffer.SetData(indices.Select(x => (ushort)x).ToArray());
+
+                    MeshFacesets.Add(newFaceSet);
+                }
+            }
+
+            Bounds = BoundingBox.CreateFromPoints(vertices.Select(x => x.Position));
+
+            VertBuffer = new VertexBuffer(GFX.Device,
+                typeof(VertexPositionColorNormalTangentTexture), vertices.Length, BufferUsage.WriteOnly);
+            VertBuffer.SetData(vertices);
+
+            VertBufferBinding = new VertexBufferBinding(VertBuffer, 0, 0);
         }
 
         public void TryToLoadTextures()
