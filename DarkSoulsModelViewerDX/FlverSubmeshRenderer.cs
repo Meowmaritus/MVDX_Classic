@@ -112,7 +112,15 @@ namespace DarkSoulsModelViewerDX
                     MeshVertices[i].TextureCoordinate = new Vector2(vert.UVs[0].X, vert.UVs[0].Y);
                     if (vert.UVs.Count > 1)
                     {
-                        MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                        // Really stupid heuristic to determine light map UVs without reading mtd files or something
+                        if (vert.UVs.Count > 2 && flvr.Materials[mesh.MaterialIndex].Textures.Count > 11)
+                        {
+                            MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[2].X, vert.UVs[2].Y);
+                        }
+                        else
+                        {
+                            MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                        }
                     }
                     else
                     {
@@ -419,6 +427,10 @@ namespace DarkSoulsModelViewerDX
             if (TexDataDOL1 == null && TexNameDOL1 != null)
             {
                 TexDataDOL1 = TexturePool.FetchTexture(TexNameDOL1);
+                if (TexDataDOL1 == null)
+                {
+                    Console.WriteLine("Failed to load lightmap: " + TexNameDOL1);
+                }
             }
 
             if (TexDataDOL2 == null && TexNameDOL2 != null)

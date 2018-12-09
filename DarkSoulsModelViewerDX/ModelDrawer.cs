@@ -24,6 +24,8 @@ namespace DarkSoulsModelViewerDX
         public bool WireframeSelectedPiece = false;
         public bool GoToModelsAsTheySpawn = true;
 
+        public Dictionary<string, Vector4> LightmapAtlasMap = new Dictionary<string, Vector4>();
+
         //public long Debug_VertexCount = 0;
         //public long Debug_SubmeshCount = 0;
 
@@ -76,7 +78,13 @@ namespace DarkSoulsModelViewerDX
                 if (!Models.Contains(model))
                     Models.Add(model);
 
-                model.AddNewInstance(new ModelInstance(name, model, location, -1, -1, -1, -1));
+                var instance = new ModelInstance(name, model, location, -1, -1, -1, -1);
+                if (LightmapAtlasMap.ContainsKey(name))
+                {
+                    instance.Data.atlasScale = new Vector2(LightmapAtlasMap[name].X, LightmapAtlasMap[name].Y);
+                    instance.Data.atlasOffset = new Vector2(LightmapAtlasMap[name].Z, LightmapAtlasMap[name].W);
+                }
+                model.AddNewInstance(instance);
             }
             
         }
@@ -186,6 +194,15 @@ namespace DarkSoulsModelViewerDX
 
         public void AddMap(string mapName, bool excludeScenery)
         {
+            SoulsFormats.BTAB btab = InterrootLoader.LoadMapBtab(mapName);
+            if (btab != null)
+            {
+                foreach (var entry in btab.Entries)
+                {
+                    if (!LightmapAtlasMap.ContainsKey(mapName))
+                        LightmapAtlasMap.Add(entry.MSBPartName, new Vector4(entry.AtlasScale.X, entry.AtlasScale.Y, entry.AtlasOffset.X, entry.AtlasOffset.Y));
+                }
+            }
             InterrootLoader.LoadMapInBackground(mapName, excludeScenery, AddModelInstance);
         }
 

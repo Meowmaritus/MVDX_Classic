@@ -225,8 +225,8 @@ namespace DarkSoulsModelViewerDX
             if (scale < 0.25f)
                 return;
 
-            if (startAndEndSpriteBatchForMe)
-                GFX.SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            //if (startAndEndSpriteBatchForMe)
+            //    GFX.SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
             //GFX.SpriteBatch.DrawString(DEBUG_FONT_SIMPLE, text, 
             //    new Vector2(screenPos3D.X, screenPos3D.Y) - 
@@ -247,8 +247,8 @@ namespace DarkSoulsModelViewerDX
 
             
 
-            if (startAndEndSpriteBatchForMe)
-                GFX.SpriteBatch.End();
+            //if (startAndEndSpriteBatchForMe)
+            //    GFX.SpriteBatch.End();
 
         }
 

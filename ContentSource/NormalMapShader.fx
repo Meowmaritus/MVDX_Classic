@@ -90,6 +90,8 @@ struct VertexShaderInput
 	float3 Binormal : BINORMAL0;
 	float3 Tangent : TANGENT0;
 	float4x4 InstanceWorld : TEXCOORD2;
+	float2 AtlasScale : TEXCOORD6;
+	float2 AtlasOffset : TEXCOORD7;
 };
 
 // The output from the vertex shader, used for later processing
@@ -101,6 +103,7 @@ struct VertexShaderOutput
 	float3 View : TEXCOORD2;
 	float3x3 WorldToTangentSpace : TEXCOORD3;
 	float3 Normal : NORMAL0;
+	float4 DebugColor : TEXCOORD6;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -111,7 +114,7 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
 	output.TexCoord = input.TexCoord;
-	output.TexCoord2 = input.TexCoord2;
+	output.TexCoord2.xy = input.TexCoord2.xy * input.AtlasScale.xy + input.AtlasOffset.xy;
 
 	output.WorldToTangentSpace[0] = mul(normalize(input.Tangent), World);
 	output.WorldToTangentSpace[1] = mul(normalize(input.Binormal), World);
@@ -120,6 +123,9 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	output.View = normalize(float4(EyePosition,1.0) - worldPosition);
 
 	output.Normal = input.Normal;
+	
+	output.DebugColor.xy = input.AtlasScale.xy;
+	output.DebugColor.zw = input.AtlasOffset.xy;
 
     return output;
 }
@@ -160,7 +166,8 @@ float4 MainPS(VertexShaderOutput input) : COLOR
 			color * tex2D(SpecularMapSampler, input.TexCoord) * specular;
 
 	outputColor = float4(outputColor.xyz * color.w, color.w);
-
+	outputColor = outputColor;// * 0.001;
+	//outputColor += input.DebugColor;
 	return outputColor;
 
 	//float4 outputAndDbgNorm = lerp(outputColor, debugNormalColor, float4(DebugBlend_Normal, DebugBlend_Normal, DebugBlend_Normal, DebugBlend_Normal));

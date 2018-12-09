@@ -301,6 +301,13 @@ namespace DarkSoulsModelViewerDX
             }
             else
             {
+                if (Fetches.ContainsKey(shortName + "_atlas000"))
+                {
+                    lock (_lock_pool)
+                    {
+                        return Fetches[shortName + "_atlas000"].Fetch();
+                    }
+                }
                 return null;
             }
         }

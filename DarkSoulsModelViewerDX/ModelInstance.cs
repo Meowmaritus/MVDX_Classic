@@ -5,14 +5,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace DarkSoulsModelViewerDX
 {
     public class ModelInstance
     {
+        //[StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct InstanceData
+        {
+            public Matrix WorldMatrix;
+            public Vector2 atlasScale;
+            public Vector2 atlasOffset;
+        };
+
         public string Name;
         public readonly Model ModelReference;
-        public Transform Transform = Transform.Default;
+        public InstanceData Data;
+        public Transform Transform;
+
         //public bool IsVisible
         //{
         //    get => ModelReference.IsVisible;
@@ -66,15 +77,19 @@ namespace DarkSoulsModelViewerDX
         {
             Name = name;
             ModelReference = model;
+            Data = new InstanceData();
             Transform = transform;
+            Data.WorldMatrix = transform.WorldMatrix;
+            Data.atlasScale = new Vector2(1.0f, 1.0f);
+            Data.atlasOffset = new Vector2(0.0f, 0.0f);
             DrawGroup1 = drawGroup1;
             DrawGroup2 = drawGroup2;
             DrawGroup3 = drawGroup3;
             DrawGroup4 = drawGroup4;
         }
 
-        //public void DrawDebugInfo()
-        //{
+        public void DrawDebugInfo()
+        {
         //    if (DBG.ShowModelBoundingBoxes)
         //        DBG.DrawBoundingBox(Model.Bounds, Color.Yellow, Transform);
 
@@ -86,9 +101,9 @@ namespace DarkSoulsModelViewerDX
         //        }
         //    }
             
-        //    if (DBG.ShowModelNames)
-        //        DBG.DrawTextOn3DLocation(GetTopCenterPoint(verticalOffset: 0.25f), Name, Color.Yellow, 0.5f);
-        //}
+            if (DBG.ShowModelNames)
+                DBG.DrawTextOn3DLocation(GetTopCenterPoint(verticalOffset: 0.25f), Name, Color.Yellow, 0.5f);
+        }
 
         //public void TryToLoadTextures()
         //{

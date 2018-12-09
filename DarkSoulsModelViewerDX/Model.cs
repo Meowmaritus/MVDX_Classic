@@ -27,7 +27,9 @@ namespace DarkSoulsModelViewerDX
             new VertexElement(0, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0),
             new VertexElement(16, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 1),
             new VertexElement(32, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 2),
-            new VertexElement(48, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 3)
+            new VertexElement(48, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 3),
+            new VertexElement(64, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+            new VertexElement(72, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0)
         );
 
         public void AddNewInstance(ModelInstance ins)
@@ -38,7 +40,7 @@ namespace DarkSoulsModelViewerDX
                 InstanceBuffer.Dispose();
 
             InstanceBuffer = new VertexBuffer(GFX.Device, instanceVertexDeclaration, Instances.Count, BufferUsage.WriteOnly);
-            InstanceBuffer.SetData(Instances.Select(x => x.Transform.WorldMatrix).ToArray());
+            InstanceBuffer.SetData(Instances.Select(x => x.Data).ToArray());
             InstanceBufferBinding = new VertexBufferBinding(InstanceBuffer, 0, 1);
         }
 
@@ -138,10 +140,10 @@ namespace DarkSoulsModelViewerDX
 
         public void DebugDraw()
         {
-            //foreach (var ins in Instances)
-            //{
-            //    throw new Exception("meow please");
-            //}
+            foreach (var ins in Instances)
+            {
+                ins.DrawDebugInfo();
+            }
             //TODO
         }
 

@@ -317,6 +317,16 @@ namespace DarkSoulsModelViewerDX
             return null;
         }
 
+        public static BTAB LoadMapBtab(string mapName)
+        {
+            string filename = GetInterrootPath($@"map\{mapName}\{mapName}_0000.btab.dcx");
+            if (File.Exists(filename))
+            {
+                return BTAB.Read(filename);
+            }
+            return null;
+        }
+
         public static void LoadMapInBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
         {
             
@@ -653,8 +663,8 @@ namespace DarkSoulsModelViewerDX
                         var flver = SoulsFormats.FLVER.Read(File.ReadAllBytes(fn));
                         var model = new Model(flver);
                         var modelInstance = new ModelInstance(shortName, model, spawnTransform, -1, -1, -1, -1);
-                        //GFX.ModelDrawer.AddModelInstance(modelInstance);
-                        throw new NotImplementedException();
+                        GFX.ModelDrawer.AddModelInstance(model, "", Transform.Default);
+                        //throw new NotImplementedException();
                     }
                     prog?.Report(1.0 * (++i) / fileNames.Length);
                 }
