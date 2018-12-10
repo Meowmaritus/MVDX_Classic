@@ -49,7 +49,7 @@ namespace DarkSoulsModelViewerDX
                 {
                     if (tpf.Platform == SoulsFormats.TPF.TPFPlatform.PS3)
                     {
-                        return;
+                        tpf.ConvertPS3ToPC();
                     }
                     if (tpf.Platform == SoulsFormats.TPF.TPFPlatform.PS4)
                     {
@@ -77,11 +77,14 @@ namespace DarkSoulsModelViewerDX
             foreach (var t in tpfFiles)
             {
                 SoulsFormats.TPF tpf = null;
-                lock (_lock_IO)
+                if (t.Size > 0)
                 {
-                    tpf = SoulsFormats.TPF.Read(t.GetBytes());
+                    lock (_lock_IO)
+                    {
+                        tpf = SoulsFormats.TPF.Read(t.GetBytes());
+                    }
+                    AddTpf(tpf);
                 }
-                AddTpf(tpf);
                 prog?.Report(1.0 * (++i) / tpfFiles.Count);
             }
         }

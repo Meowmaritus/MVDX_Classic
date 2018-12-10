@@ -209,7 +209,7 @@ namespace DarkSoulsModelViewerDX
 
             foreach (var matParam in flvr.Materials[mesh.MaterialIndex].Textures)
             {
-                if (matParam == null)
+                if (matParam == null || matParam.Type == null)
                 {
                     break;
                 }
@@ -232,6 +232,8 @@ namespace DarkSoulsModelViewerDX
                     TexNameSpecular = matParam.Path;
                 else if (paramNameCheck == "G_BUMPMAP")
                     TexNameNormal = matParam.Path;
+                else if (paramNameCheck == "G_LIGHTMAP")
+                    TexNameDOL1 = matParam.Path;
             }
 
             var MeshVertices = new VertexPositionColorNormalTangentTexture[mesh.Vertices.Count];
@@ -277,8 +279,8 @@ namespace DarkSoulsModelViewerDX
             var tlist = mesh.ToTriangleList();
             var newFaceSet = new FlverSubmeshRendererFaceSet()
             {
-                BackfaceCulling = true,
-                IsTriangleStrip = true,
+                BackfaceCulling = false,
+                IsTriangleStrip = false,
                 IndexBuffer = new IndexBuffer(
                             GFX.Device,
                             is32bit ? IndexElementSize.ThirtyTwoBits : IndexElementSize.SixteenBits,

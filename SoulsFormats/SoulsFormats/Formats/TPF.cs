@@ -129,7 +129,20 @@ namespace SoulsFormats
             Platform = TPFPlatform.PC;
             foreach (Texture tex in Textures)
             {
-                tex.PS4ToPC();
+                tex.ConsoleToPC(TPFPlatform.PS4);
+            }
+        }
+
+        public void ConvertPS3ToPC()
+        {
+            if (Platform != TPFPlatform.PS3)
+            {
+                return;
+            }
+            Platform = TPFPlatform.PC;
+            foreach (Texture tex in Textures)
+            {
+                tex.ConsoleToPC(TPFPlatform.PS3);
             }
         }
 
@@ -322,7 +335,7 @@ namespace SoulsFormats
             // <summary>
             // Convert the internal format to PC tpf format
             // </summary>
-            public void PS4ToPC()
+            public void ConsoleToPC(TPFPlatform source)
             {
                 // Need to create a DDS Header
                 BinaryWriterEx bw = new BinaryWriterEx(false);
@@ -333,6 +346,19 @@ namespace SoulsFormats
                 bw.WriteUInt32((uint)Header.Width);
                 bw.WriteUInt32(((uint)Header.Width * (uint)Header.Height) / 2); // Dummy pitch size
                 bw.WriteUInt32(1); // Depth
+                if (source == TPFPlatform.PS3)
+                {
+                    // DeS sometimes has mipmap count set to 0 :trashcat:
+                    if (Mipmaps == 0)
+                    {
+                        var dim = Math.Max(Header.Width, Header.Height);
+                        while (dim >= 1)
+                        {
+                            Mipmaps++;
+                            dim >>= 1;
+                        }
+                    }
+                }
                 bw.WriteUInt32(Mipmaps);
                 for (int i = 0; i < 11; i++)
                 {
@@ -342,15 +368,15 @@ namespace SoulsFormats
                 bw.WriteInt32(32);
                 bw.WriteInt32(4); // Flags (compressed)
                 bool writeExtendedHeader = false;
-                if (Header.DXGIFormat == 71 || Header.DXGIFormat == 72)
+                if (Header.DXGIFormat == 71 || Header.DXGIFormat == 72 || (source == TPFPlatform.PS3 && (Format == 0 || Format == 1)))
                 {
                     bw.WriteASCII("DXT1");
                 }
-                else if (Header.DXGIFormat == 73 || Header.DXGIFormat == 74 || Header.DXGIFormat == 75)
+                else if (Header.DXGIFormat == 73 || Header.DXGIFormat == 74 || Header.DXGIFormat == 75 || (source == TPFPlatform.PS3 && (Format == 2 || Format == 3)))
                 {
                     bw.WriteASCII("DXT3");
                 }
-                else if (Header.DXGIFormat == 76 || Header.DXGIFormat == 77 || Header.DXGIFormat == 78)
+                else if (Header.DXGIFormat == 76 || Header.DXGIFormat == 77 || Header.DXGIFormat == 78 || (source == TPFPlatform.PS3 && (Format == 4 || Format == 5)))
                 {
                     bw.WriteASCII("DXT5");
                 }
@@ -361,6 +387,11 @@ namespace SoulsFormats
                 else if (Header.DXGIFormat == 82 || Header.DXGIFormat == 83 || Header.DXGIFormat == 84)
                 {
                     bw.WriteASCII("ATI2");
+                }
+                else if (source == TPFPlatform.PS3 && (Format == 9 || Format == 10))
+                {
+                    bw.WriteASCII("DXT1");
+                    Console.WriteLine("ARGB");
                 }
                 else
                 {
@@ -410,60 +441,63 @@ namespace SoulsFormats
                     unswizzled[i] = Bytes[i];
                 }
 
-                uint blockSize = 16;
-                if (Header.DXGIFormat == 71 || Header.DXGIFormat == 72 || Header.DXGIFormat == 79 || Header.DXGIFormat == 80 || Header.DXGIFormat == 81)
+                if (source == TPFPlatform.PS4)
                 {
-                    blockSize = 8;
-                }
-
-                int mipBase = 0;
-                int mipBaseSrc = 0;
-                for (int miplevel = 0; miplevel < Mipmaps; miplevel++)
-                {
-                    uint bytesPerLine = Math.Max((uint)Header.Width >> miplevel, 1) * blockSize / 4;
-                    int heightBlock = Math.Max((Header.Height / 4) >> miplevel, 1);
-                    int widthBlock = Math.Max((Header.Width / 4) >> miplevel, 1);
-                    // Convert swizzled to linear strided
-
-                    int index = 0;
-                    for (int y = 0; y < heightBlock; y++)
+                    uint blockSize = 16;
+                    if (Header.DXGIFormat == 71 || Header.DXGIFormat == 72 || Header.DXGIFormat == 79 || Header.DXGIFormat == 80 || Header.DXGIFormat == 81)
                     {
-                        for (int x = 0; x < widthBlock; x++)
+                        blockSize = 8;
+                    }
+
+                    int mipBase = 0;
+                    int mipBaseSrc = 0;
+                    for (int miplevel = 0; miplevel < Mipmaps; miplevel++)
+                    {
+                        uint bytesPerLine = Math.Max((uint)Header.Width >> miplevel, 1) * blockSize / 4;
+                        int heightBlock = Math.Max((Header.Height / 4) >> miplevel, 1);
+                        int widthBlock = Math.Max((Header.Width / 4) >> miplevel, 1);
+                        // Convert swizzled to linear strided
+
+                        int index = 0;
+                        for (int y = 0; y < heightBlock; y++)
                         {
-                            int mx = x;
-                            int my = y;
-                            if (widthBlock > 1 && heightBlock > 1)
+                            for (int x = 0; x < widthBlock; x++)
                             {
-                                MapBlockPosition(x, y, widthBlock, 2, out mx, out my);
-                            }
+                                int mx = x;
+                                int my = y;
+                                if (widthBlock > 1 && heightBlock > 1)
+                                {
+                                    MapBlockPosition(x, y, widthBlock, 2, out mx, out my);
+                                }
 
-                            if (widthBlock > 2 && heightBlock > 2)
-                            {
-                                MapBlockPosition(mx, my, widthBlock, 4, out mx, out my);
-                            }
+                                if (widthBlock > 2 && heightBlock > 2)
+                                {
+                                    MapBlockPosition(mx, my, widthBlock, 4, out mx, out my);
+                                }
 
-                            if (widthBlock > 4 && heightBlock > 4)
-                            {
-                                MapBlockPosition(mx, my, widthBlock, 8, out mx, out my);
-                            }
+                                if (widthBlock > 4 && heightBlock > 4)
+                                {
+                                    MapBlockPosition(mx, my, widthBlock, 8, out mx, out my);
+                                }
 
-                            int destinationIndex = (int)blockSize * (my * widthBlock + mx);
-                            for (int i = 0; i < blockSize; i++)
-                            {
-                                unswizzled[mipBase + destinationIndex + i] = Bytes[mipBaseSrc + index];
-                                index += 1;
+                                int destinationIndex = (int)blockSize * (my * widthBlock + mx);
+                                for (int i = 0; i < blockSize; i++)
+                                {
+                                    unswizzled[mipBase + destinationIndex + i] = Bytes[mipBaseSrc + index];
+                                    index += 1;
+                                }
                             }
                         }
-                    }
 
-                    mipBase += index;
-                    if (index < 512)
-                    {
-                        mipBaseSrc += 512;
-                    }
-                    else
-                    {
-                        mipBaseSrc += index;
+                        mipBase += index;
+                        if (index < 512)
+                        {
+                            mipBaseSrc += 512;
+                        }
+                        else
+                        {
+                            mipBaseSrc += index;
+                        }
                     }
                 }
 

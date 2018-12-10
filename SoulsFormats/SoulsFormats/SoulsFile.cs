@@ -23,6 +23,9 @@ namespace SoulsFormats
         /// </summary>
         public static bool Is(byte[] bytes)
         {
+            if (bytes.Length == 0)
+                return false;
+
             BinaryReaderEx br = new BinaryReaderEx(false, bytes);
             var dummy = new TFormat();
             return dummy.Is(Util.GetDecompressedBR(br, out _));
@@ -35,6 +38,9 @@ namespace SoulsFormats
         {
             using (FileStream stream = File.OpenRead(path))
             {
+                if (stream.Length == 0)
+                    return false;
+
                 BinaryReaderEx br = new BinaryReaderEx(false, stream);
                 var dummy = new TFormat();
                 return dummy.Is(Util.GetDecompressedBR(br, out _));
@@ -51,15 +57,11 @@ namespace SoulsFormats
         /// </summary>
         public static TFormat Read(byte[] bytes)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, bytes))
-            {
-                TFormat file = new TFormat();
-                using (var dcbr = Util.GetDecompressedBR(br, out file.Compression))
-                {
-                    file.Read(dcbr);
-                    return file;
-                }
-            }
+            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            TFormat file = new TFormat();
+            br = Util.GetDecompressedBR(br, out file.Compression);
+            file.Read(br);
+            return file;
         }
 
         /// <summary>
@@ -69,16 +71,11 @@ namespace SoulsFormats
         {
             using (FileStream stream = File.OpenRead(path))
             {
-                using (BinaryReaderEx br = new BinaryReaderEx(false, stream))
-                {
-                    TFormat file = new TFormat();
-                    using (var dcbr = Util.GetDecompressedBR(br, out file.Compression))
-                    {
-                        file.Read(dcbr);
-                        return file;
-                    }
-                }
-                    
+                BinaryReaderEx br = new BinaryReaderEx(false, stream);
+                TFormat file = new TFormat();
+                br = Util.GetDecompressedBR(br, out file.Compression);
+                file.Read(br);
+                return file;
             }
         }
 

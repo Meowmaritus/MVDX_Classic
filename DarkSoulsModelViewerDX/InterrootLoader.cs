@@ -235,12 +235,24 @@ namespace DarkSoulsModelViewerDX
             var texExtendedTpf = GetInterrootPath($@"chr\c{id:D4}_2.tpf.dcx");
 
             // Load the flver directly
-            if (Type == InterrootType.InterrootDeS)
+            /*if (Type == InterrootType.InterrootDeS)
             {
-                var list = new List<Model>();
-                list.Add(new Model(FLVERD.Read(GetInterrootPath($@"chr\c{id:D4}\c{id:D4}.flver"))));
-                return list;
-            }
+                if (File.Exists(GetInterrootPath($@"chr\c{id:D4}\c{id:D4}.flver")))
+                {
+                    var list = new List<Model>();
+                    list.Add(new Model(FLVERD.Read(GetInterrootPath($@"chr\c{id:D4}\c{id:D4}.flver"))));
+                    if (File.Exists(GetInterrootPath($@"chr\c{id:D4}\c{id:D4}.tpf")))
+                    {
+                        SoulsFormats.TPF tpf = null;
+                        lock (_lock_IO)
+                        {
+                            tpf = SoulsFormats.TPF.Read(GetInterrootPath($@"chr\c{id:D4}\c{id:D4}.tpf"));
+                        }
+                        TexturePool.AddTpf(tpf);
+                    }
+                    return list;
+                }
+            }*/
 
             BND bnd = LoadDecompressedBND(bndName);
             if (bnd != null)
@@ -317,6 +329,20 @@ namespace DarkSoulsModelViewerDX
             return null;
         }
 
+        public static SoulsFormats.FLVERD LoadMapFlverDeS(string noExtensionPath)
+        {
+            if (File.Exists(noExtensionPath + ".flver"))
+            {
+                // Usual case for DES
+                return SoulsFormats.FLVERD.Read(noExtensionPath + ".flver");
+            }
+            else if (File.Exists(noExtensionPath + ".flver.dcx"))
+            {
+                return SoulsFormats.FLVERD.Read(noExtensionPath + ".flver.dcx");
+            }
+            return null;
+        }
+
         public static BTAB LoadMapBtab(string mapName)
         {
             string filename = GetInterrootPath($@"map\{mapName}\{mapName}_0000.btab.dcx");
@@ -329,8 +355,28 @@ namespace DarkSoulsModelViewerDX
 
         public static void LoadMapInBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
         {
-            
-            if (Type == InterrootType.InterrootDS1)
+            if (Type == InterrootType.InterrootDeS)
+            {
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Models[{mapName}]", $"Loading {mapName} models...", prog =>
+                {
+                    LoadDeSMapInBackground(mapName, excludeScenery, addMapModel, prog);
+                });
+
+                LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Textures[{mapName}]", $"Loading {mapName} textures...", prog =>
+                {
+                    if (int.TryParse(mapName.Substring(1, 2), out int area))
+                    {
+                        var paths = Directory.GetFileSystemEntries(GetInterrootPath($@"map\{mapName.Substring(0, 3)}\"), "*.tpf.dcx");
+                        int i = 0;
+                        foreach (var file in paths)
+                        {
+                            TexturePool.AddTpfFromPath(file);
+                            prog?.Report(1.0 * (++i) / paths.Length);
+                        }
+                    }
+                });
+            }
+            else if (Type == InterrootType.InterrootDS1)
             {
                 LoadingTaskMan.DoLoadingTask($"{nameof(LoadMapInBackground)}_Models[{mapName}]", $"Loading {mapName} models...", prog =>
                 {
@@ -376,6 +422,64 @@ namespace DarkSoulsModelViewerDX
                 });   
             }
             
+        }
+
+        public static void LoadDeSMapInBackground(string mapName, bool excludeScenery,
+            Action<Model, string, Transform> addMapModel, IProgress<double> progress)
+        {
+            var modelDir = GetInterrootPath($@"map\{mapName}");
+            var modelDict = new Dictionary<string, Model>();
+            int area = int.Parse(mapName.Substring(4, 2));
+
+            Model loadModel(string modelName)
+            {
+                if (!modelDict.ContainsKey(modelName))
+                {
+                    SoulsFormats.FLVERD flver = null;
+
+                    lock (_lock_IO)
+                    {
+                        flver = LoadMapFlverDeS(GetInterrootPath($@"map\{mapName}\{modelName}"));
+                    }
+
+                    if (flver != null)
+                        modelDict.Add(modelName, new Model(flver));
+                }
+
+                if (modelDict.ContainsKey(modelName))
+                    return modelDict[modelName];
+                else
+                    return null;
+            }
+
+            var msb = MSBD.Read(GetInterrootPath($@"map\MapStudio\{mapName}.msb"));
+
+            void addMsbPart(MSBD.Part part)
+            {
+                var model = loadModel(part.ModelName);
+
+                if (model != null)
+                {
+                    addMapModel.Invoke(model, part.Name, new Transform(part.Position.X, part.Position.Y, part.Position.Z,
+                        MathHelper.ToRadians(part.Rotation.X), MathHelper.ToRadians(part.Rotation.Y), MathHelper.ToRadians(part.Rotation.Z),
+                        part.Scale.X, part.Scale.Y, part.Scale.Z));
+                }
+            }
+
+            // Be sure to update this count if more types of parts are loaded.
+            int totalNumberOfParts = msb.Parts.MapPieces.Count;
+
+            int i = 0;
+
+            foreach (var part in msb.Parts.MapPieces)
+            {
+                addMsbPart(part);
+                progress?.Report(1.0 * (++i) / totalNumberOfParts);
+            }
+
+            modelDict = null;
+
+            GFX.ModelDrawer.RequestTextureLoad();
         }
 
         public static void LoadDS1MapInBackground(string mapName, bool excludeScenery,

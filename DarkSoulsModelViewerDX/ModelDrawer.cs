@@ -195,6 +195,7 @@ namespace DarkSoulsModelViewerDX
         public void AddMap(string mapName, bool excludeScenery)
         {
             SoulsFormats.BTAB btab = InterrootLoader.LoadMapBtab(mapName);
+            LightmapAtlasMap = new Dictionary<string, Vector4>();
             if (btab != null)
             {
                 foreach (var entry in btab.Entries)
