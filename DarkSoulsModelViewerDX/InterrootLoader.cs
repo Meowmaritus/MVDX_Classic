@@ -1,18 +1,15 @@
-﻿using MeowDSIO;
-using SoulsFormats;
+﻿using DarkSoulsModelViewerDX.DebugPrimitives;
+using MeowDSIO;
 using MeowDSIO.DataFiles;
 using MeowDSIO.DataTypes.MSB;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SoulsFormats;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
-using DarkSoulsModelViewerDX.DebugPrimitives;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -143,15 +140,18 @@ namespace DarkSoulsModelViewerDX
         }
 
         // Utility function to detect and load a potentially DCX compressed BND
-        public static BND LoadDecompressedBND(string path)
+        public static IBinder LoadDecompressedBND(string path)
         {
+            IBinder bnd = null;
             // Search for the decompressed bnd
-            BND bnd = null;
             if (File.Exists(path))
             {
                 lock (_lock_IO)
                 {
-                    bnd = DataFile.LoadFromFile<BND>(path);
+                    if (BND3.Is(path))
+                        bnd = BND3.Read(path);
+                    else
+                        bnd = BND4.Read(path);
                 }
             }
             // Look for a compressed one if no decompressed one exists
@@ -160,8 +160,10 @@ namespace DarkSoulsModelViewerDX
                 lock (_lock_IO)
                 {
                     var decomp = SoulsFormats.DCX.Decompress(path + ".dcx");
-                    //bnd = DataFile.LoadFromDcxFile<BND>(path + ".dcx");
-                    bnd = DataFile.LoadFromBytes<BND>(decomp, path + ".dcx");
+                    if (BND3.Is(decomp))
+                        bnd = BND3.Read(decomp);
+                    else
+                        bnd = BND4.Read(decomp);
                 }
             }
             return bnd;
@@ -194,18 +196,18 @@ namespace DarkSoulsModelViewerDX
                 return SoulsFormats.TPF.Read(path);
         }
 
-        public static List<Model> LoadModelsFromBnd(BND bnd)
+        public static List<Model> LoadModelsFromBnd(IBinder bnd)
         {
-            var modelEntries = (Type == InterrootType.InterrootDS2) ? bnd.Where(x => x.Name.ToUpper().EndsWith(".FLV")) : bnd.Where(x => x.Name.ToUpper().EndsWith(".FLVER"));
+            var modelEntries = bnd.Files.Where(x => x.Name.ToUpper().EndsWith((Type == InterrootType.InterrootDS2) ? ".FLV" : ".FLVER"));
             if (modelEntries.Any())
             {
                 if (Type == InterrootType.InterrootDeS)
                 {
-                    return modelEntries.Select(x => new Model(SoulsFormats.FLVERD.Read(x.GetBytes()))).ToList();
+                    return modelEntries.Select(x => new Model(SoulsFormats.FLVERD.Read(x.Bytes))).ToList();
                 }
                 else
                 {
-                    return modelEntries.Select(x => new Model(SoulsFormats.FLVER.Read(x.GetBytes()))).ToList();
+                    return modelEntries.Select(x => new Model(SoulsFormats.FLVER.Read(x.Bytes))).ToList();
                 }
             }
             else
@@ -254,14 +256,14 @@ namespace DarkSoulsModelViewerDX
                 }
             }*/
 
-            BND bnd = LoadDecompressedBND(bndName);
+            IBinder bnd = LoadDecompressedBND(bndName);
             if (bnd != null)
             {
                 var models = LoadModelsFromBnd(bnd);
                 if (Type == InterrootType.InterrootDS3 || Type == InterrootType.InterrootDS2)
                 {
                     // DS2 and DS3 has separate texbnds for textures
-                    BND texbnd = LoadDecompressedBND(texBndName);
+                    IBinder texbnd = LoadDecompressedBND(texBndName);
                     if (texbnd != null)
                     {
                         TexturePool.AddTextureBnd(texbnd, null);
@@ -298,7 +300,7 @@ namespace DarkSoulsModelViewerDX
 
             var bndName = GetInterrootPath(bndPath);
 
-            BND bnd = LoadDecompressedBND(bndName);
+            IBinder bnd = LoadDecompressedBND(bndName);
             if (bnd != null)
             {
                 var models = LoadModelsFromBnd(bnd);
@@ -522,13 +524,13 @@ namespace DarkSoulsModelViewerDX
                                 var bnd = LoadDecompressedBND(GetInterrootPath(bndRelPath));
                                 if (bnd != null)
                                 {
-                                    foreach (var entry in bnd)
+                                    foreach (var entry in bnd.Files)
                                     {
                                         var compareName = entry.Name.ToUpper();
                                         if (flver == null && compareName.EndsWith(".FLVER"))
-                                            flver = SoulsFormats.FLVER.Read(entry.GetBytes());
+                                            flver = SoulsFormats.FLVER.Read(entry.Bytes);
                                         else if (compareName.EndsWith(".TPF"))
-                                            TexturePool.AddTpf(SoulsFormats.TPF.Read(entry.GetBytes()));
+                                            TexturePool.AddTpf(SoulsFormats.TPF.Read(entry.Bytes));
                                     }
                                 }
                                 break;
@@ -748,10 +750,13 @@ namespace DarkSoulsModelViewerDX
                     var upper = fn.ToUpper();
                     if (upper.EndsWith(".CHRBND") || upper.EndsWith(".OBJBND") || upper.EndsWith(".PARTSBND"))
                     {
-                        BND bnd = null;
+                        IBinder bnd = null;
                         lock (_lock_IO)
                         {
-                            bnd = DataFile.LoadFromFile<BND>(fn);
+                            if (BND3.Is(fn))
+                                bnd = BND3.Read(fn);
+                            else
+                                bnd = BND4.Read(fn);
                         }
                         TexturePool.AddTextureBnd(bnd, null);
                         var models = LoadModelsFromBnd(bnd);

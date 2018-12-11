@@ -7,7 +7,7 @@ namespace SoulsFormats
     /// <summary>
     /// A general-purpose headered file container used in DS1 and DSR. Extensions: .*bhd (header) and .*bdt (data)
     /// </summary>
-    public class BXF3
+    public class BXF3 : IBinder
     {
         #region Public Is
         /// <summary>
@@ -168,7 +168,9 @@ namespace SoulsFormats
         /// <summary>
         /// The files contained within this BXF3.
         /// </summary>
-        public List<File> Files;
+        public List<File> Files { get; set; }
+
+        IReadOnlyList<IBinderFile> IBinder.Files => Files;
 
         private string bhdTimestamp;
         /// <summary>
@@ -238,7 +240,7 @@ namespace SoulsFormats
             BDTTimestamp = bdtReader.ReadASCII(8).TrimEnd('\0');
             bdtReader.AssertInt32(0);
 
-            Files = new List<File>();
+            Files = new List<File>(bhd.FileHeaders.Count);
             for (int i = 0; i < bhd.FileHeaders.Count; i++)
             {
                 BHD3.FileHeader fileHeader = bhd.FileHeaders[i];
@@ -316,7 +318,7 @@ namespace SoulsFormats
                 br.AssertInt32(0);
                 br.AssertInt32(0);
 
-                FileHeaders = new List<FileHeader>();
+                FileHeaders = new List<FileHeader>(fileCount);
                 for (int i = 0; i < fileCount; i++)
                 {
                     FileHeaders.Add(new FileHeader(br, Format));
@@ -354,22 +356,22 @@ namespace SoulsFormats
         /// <summary>
         /// A generic file in a BXF3 container.
         /// </summary>
-        public class File
+        public class File : IBinderFile
         {
             /// <summary>
             /// The ID of this file, typically just its index in the file collection.
             /// </summary>
-            public int ID;
+            public int ID { get; set; }
 
             /// <summary>
             /// The name of the file, typically a virtual path.
             /// </summary>
-            public string Name;
+            public string Name { get; set; }
 
             /// <summary>
             /// The raw data of the file.
             /// </summary>
-            public byte[] Bytes;
+            public byte[] Bytes { get; set; }
 
             /// <summary>
             /// Create a new File with the specified information.
