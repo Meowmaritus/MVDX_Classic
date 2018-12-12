@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.DbgMenus
 {
@@ -29,6 +26,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                 objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\model\obj\"), @"*.bnd")
                     .Select(Path.GetFileNameWithoutExtension) //Remove .dcx
                     .Select(Path.GetFileNameWithoutExtension) //Remove .objbnd
+                    .ToArray();
+            }
+            else if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootNB)
+            {
+                objFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"\obj\"), @"*.bnd")
+                    .Select(Path.GetFileNameWithoutExtension)
                     .ToArray();
             }
             else

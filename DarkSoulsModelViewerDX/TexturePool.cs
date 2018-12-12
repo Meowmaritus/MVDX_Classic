@@ -64,23 +64,51 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public static void AddTextureBnd(IBinder chrbnd, IProgress<double> prog)
+        public static void AddTextureBnd(IBinder bnd, IProgress<double> prog)
         {
-            var tpfFiles = chrbnd.Files.Where(x => x.Name.EndsWith(".tpf")).ToList();
-            int i = 0;
-            foreach (var t in tpfFiles)
+            var tpfs = bnd.Files.Where(file => file.Name.EndsWith(".tpf")).ToList();
+            var tbnds = bnd.Files.Where(file => file.Name.ToLower().EndsWith(".tbnd")).ToList();
+
+            double total = tpfs.Count + tbnds.Count;
+            double tpfFraction = 0;
+            double tbndFraction = 0;
+            if (total > 0)
             {
-                TPF tpf = null;
-                if (t.Bytes.Length > 0)
+                tpfFraction = tpfs.Count / total;
+                tbndFraction = tbnds.Count / total;
+            }
+
+            for (int i = 0; i < tpfs.Count; i++)
+            {
+                var file = tpfs[i];
+                if (file.Bytes.Length > 0)
                 {
-                    lock (_lock_IO)
-                    {
-                        tpf = TPF.Read(t.Bytes);
-                    }
+                    TPF tpf = TPF.Read(file.Bytes);
                     AddTpf(tpf);
                 }
-                prog?.Report(1.0 * (++i) / tpfFiles.Count);
+
+                prog?.Report(i / tpfFraction);
             }
+
+            for (int i = 0; i < tbnds.Count; i++)
+            {
+                var file = tbnds[i];
+                if (file.Bytes.Length > 0)
+                {
+                    IBinder tbnd = BND3.Read(file.Bytes);
+                    for (int j = 0; j < tbnd.Files.Count; j++)
+                    {
+                        TPF tpf = TPF.Read(tbnd.Files[j].Bytes);
+                        AddTpf(tpf);
+
+                        prog?.Report(tpfFraction + i / tbndFraction + j / tbnd.Files.Count * (tbndFraction / tbnds.Count));
+                    }
+                }
+
+                prog?.Report(tpfFraction + i / tbndFraction);
+            }
+
+            prog?.Report(1);
         }
 
         public static void AddTpfFromPath(string path)
