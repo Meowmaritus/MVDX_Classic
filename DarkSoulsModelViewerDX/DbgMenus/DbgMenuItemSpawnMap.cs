@@ -1,16 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.DbgMenus
 {
     public class DbgMenuItemSpawnMap : DbgMenuItem
     {
-        public static List<string > IDList = new List<string>();
+        public static List<string> IDList = new List<string>();
         private static bool NeedsTextUpdate = false;
 
         public int IDIndex = 0;
@@ -26,8 +23,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
 
         public static void UpdateSpawnIDs()
         {
-            var path = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"\map\" : @"\map\MapStudio\";
-            var search = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"m*" : @"*.msb";
+            var path = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2 || InterrootLoader.Type == InterrootLoader.InterrootType.InterrootNB) ? @"\map\" : @"\map\MapStudio\";
+            var search = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2 || InterrootLoader.Type == InterrootLoader.InterrootType.InterrootNB) ? @"m*" : @"*.msb";
             var msbFiles = Directory.GetFileSystemEntries(InterrootLoader.GetInterrootPath(path), search)
                 .Select(Path.GetFileNameWithoutExtension);
             IDList = new List<string>();

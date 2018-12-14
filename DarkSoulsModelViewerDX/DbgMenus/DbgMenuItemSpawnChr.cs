@@ -1,9 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX.DbgMenus
 {
@@ -23,7 +20,7 @@ namespace DarkSoulsModelViewerDX.DbgMenus
         public static void UpdateSpawnIDs()
         {
             var path = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"\model\chr\" : @"\chr\";
-            var extensionBase = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2) ? @"*.bnd" : @"*.chrbnd";
+            var extensionBase = (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS2 || InterrootLoader.Type == InterrootLoader.InterrootType.InterrootNB) ? @"*.bnd" : @"*.chrbnd";
             var chrFiles = Directory.GetFiles(InterrootLoader.GetInterrootPath(path), extensionBase)
                 .Select(Path.GetFileNameWithoutExtension);
             if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDeS)

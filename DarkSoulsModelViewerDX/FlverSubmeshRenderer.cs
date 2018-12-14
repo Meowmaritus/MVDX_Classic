@@ -1,14 +1,12 @@
 ﻿using DarkSoulsModelViewerDX.GFXShaders;
 using MeowDSIO;
-//using MeowDSIO.DataTypes.FLVER;
-using SoulsFormats;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+//using MeowDSIO.DataTypes.FLVER;
+using SoulsFormats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -140,7 +138,7 @@ namespace DarkSoulsModelViewerDX
 
             foreach (var faceset in mesh.FaceSets)
             {
-                bool is32bit = (faceset.IndexSize == 0x20);
+                bool is32bit = faceset.IndexSize == 0x20;
 
                 var newFaceSet = new FlverSubmeshRendererFaceSet()
                 {
@@ -156,12 +154,12 @@ namespace DarkSoulsModelViewerDX
 
                 if (faceset.Flags == FLVER.FaceSet.FSFlags.LodLevel1)
                 {
-                    newFaceSet.LOD = (byte)1;
+                    newFaceSet.LOD = 1;
                     HasNoLODs = false;
                 }
                 else if (faceset.Flags == FLVER.FaceSet.FSFlags.LodLevel2)
                 {
-                    newFaceSet.LOD = (byte)2;
+                    newFaceSet.LOD = 2;
                     HasNoLODs = false;
                 }
 
@@ -274,8 +272,6 @@ namespace DarkSoulsModelViewerDX
 
             MeshFacesets = new List<FlverSubmeshRendererFaceSet>();
 
-            bool is32bit = false;
-
             var tlist = mesh.ToTriangleList();
             var newFaceSet = new FlverSubmeshRendererFaceSet()
             {
@@ -283,7 +279,7 @@ namespace DarkSoulsModelViewerDX
                 IsTriangleStrip = false,
                 IndexBuffer = new IndexBuffer(
                             GFX.Device,
-                            is32bit ? IndexElementSize.ThirtyTwoBits : IndexElementSize.SixteenBits,
+                            IndexElementSize.SixteenBits,
                             tlist.Length,
                             BufferUsage.WriteOnly),
                 IndexCount = tlist.Length,
@@ -322,8 +318,8 @@ namespace DarkSoulsModelViewerDX
             for (int i = 0; i < coldata.LargeVertices.Size; i++)
             {
                 var vert = coldata.LargeVertices.GetArrayData().Elements[i].Decompress(coldata.BoundingBoxMin, coldata.BoundingBoxMax);
-                vertices[i+largebase] = new VertexPositionColorNormalTangentTexture();
-                vertices[i+largebase].Position = new Vector3(vert.X, vert.Y, vert.Z);
+                vertices[i + largebase] = new VertexPositionColorNormalTangentTexture();
+                vertices[i + largebase].Position = new Vector3(vert.X, vert.Y, vert.Z);
             }
 
             MeshFacesets = new List<FlverSubmeshRendererFaceSet>();

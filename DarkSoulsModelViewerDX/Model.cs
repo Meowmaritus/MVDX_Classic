@@ -1,12 +1,9 @@
-﻿//using MeowDSIO.DataFiles;
-using SoulsFormats;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SoulsFormats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -85,10 +82,13 @@ namespace DarkSoulsModelViewerDX
             var subBoundsPoints = new List<Vector3>();
             foreach (var submesh in flver.Meshes)
             {
-                var smm = new FlverSubmeshRenderer(this, flver, submesh);
-                Submeshes.Add(smm);
-                subBoundsPoints.Add(smm.Bounds.Min);
-                subBoundsPoints.Add(smm.Bounds.Max);
+                if (submesh.ToTriangleList().Length > 0)
+                {
+                    var smm = new FlverSubmeshRenderer(this, flver, submesh);
+                    Submeshes.Add(smm);
+                    subBoundsPoints.Add(smm.Bounds.Min);
+                    subBoundsPoints.Add(smm.Bounds.Max);
+                }
             }
 
             //DEBUG//

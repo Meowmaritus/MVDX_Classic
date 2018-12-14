@@ -116,6 +116,9 @@
     <Compile Include="Formats\MSB64\MSB64.PartsSection.cs" />
     <Compile Include="Formats\MSB64\MSB64.PointSection.cs" />
     <Compile Include="Formats\MSB64\MSB64.RouteSection.cs" />
+    <Compile Include="Formats\MSBN\MSBN.cs" />
+    <Compile Include="Formats\MSBN\MSBN.ModelSection.cs" />
+    <Compile Include="Formats\MSBN\MSBN.PartsSection.cs" />
     <Compile Include="Formats\MSBD\MSBD.cs" />
     <Compile Include="Formats\MSBD\MSBD.ModelSection.cs" />
     <Compile Include="Formats\MSBD\MSBD.PartsSection.cs" />
@@ -123,6 +126,7 @@
     <Compile Include="Formats\PARAM64.cs" />
     <Compile Include="Formats\PARAM64.Layout.cs" />
     <Compile Include="Formats\DDS.cs" />
+    <Compile Include="IBinder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Formats\TPF.cs" />
     <Compile Include="SoulsFile.cs" />
