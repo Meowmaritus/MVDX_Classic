@@ -1025,13 +1025,17 @@ namespace DarkSoulsModelViewerDX
             {
                 LoadCollisionDeSInBackground(mapName, excludeScenery, addMapModel);
             }
-            if (Type == InterrootType.InterrootDS2)
+            else if (Type == InterrootType.InterrootDS2)
             {
                 LoadCollisionDS2InBackground(mapName, excludeScenery, addMapModel);
             }
-            if (Type == InterrootType.InterrootBloodborne || Type == InterrootType.InterrootDS3)
+            else if (Type == InterrootType.InterrootBloodborne || Type == InterrootType.InterrootDS3)
             {
                 LoadCollisionDS3InBackground(mapName, excludeScenery, addMapModel);
+            }
+            else if (Type == InterrootType.InterrootNB)
+            {
+                LoadCollisionNBInBackground(mapName, excludeScenery, addMapModel);
             }
         }
 
@@ -1082,6 +1086,25 @@ namespace DarkSoulsModelViewerDX
                 addMapModel.Invoke(new Model(hkx), file.Name, new Transform(0.0f, 0.0f, 0.0f,
                         MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
                         1.0f, 1.0f, 1.0f));
+            }
+        }
+
+        public static void LoadCollisionNBInBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
+        {
+            IBinder models;
+            lock (_lock_IO)
+                models = BND3.Read(GetInterrootPath($@"Map\{mapName}\{mapName}model_win32.bnd"));
+
+            foreach (var file in models.Files)
+            {
+                if (file.Name.EndsWith(".hkx"))
+                {
+                    HKX hkx = HKX.Read(file.Bytes);
+
+                    addMapModel.Invoke(new Model(hkx), file.Name, new Transform(0.0f, 0.0f, 0.0f,
+                            MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
+                            1.0f, 1.0f, 1.0f));
+                }
             }
         }
     }
