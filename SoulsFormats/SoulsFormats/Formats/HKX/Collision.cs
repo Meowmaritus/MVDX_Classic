@@ -9,7 +9,7 @@ namespace SoulsFormats
 {
     public partial class HKX
     {
-        // From's basic collision class
+        // From's basic collision class for DS3/BB
         public class FSNPCustomParamCompressedMeshShape : HKXObject
         {
             public byte Unk10;
@@ -59,7 +59,7 @@ namespace SoulsFormats
                 br.AssertUInt32(0xFFFFFFFF);
                 br.AssertUInt32(0);
 
-                MeshShapeData = ResolveGlobalReference(section, br);
+                MeshShapeData = ResolveGlobalReference(hkx, section, br);
 
                 Unk68 = new HKArray<HKUInt>(hkx, section, this, br, variation);
                 Unk78 = br.ReadInt32();
@@ -71,7 +71,7 @@ namespace SoulsFormats
 
                 br.AssertUInt64(0);
 
-                CustomParam = ResolveGlobalReference(section, br);
+                CustomParam = ResolveGlobalReference(hkx, section, br);
 
                 UnkA8 = new HKArray<HKUInt>(hkx, section, this, br, variation);
                 if (variation == HKXVariation.HKXDS3)
@@ -461,8 +461,8 @@ namespace SoulsFormats
             {
                 SectionOffset = (uint)br.Position;
 
-                br.AssertUInt64(0);
-                br.AssertUInt64(0);
+                AssertPointer(hkx, br);
+                AssertPointer(hkx, br);
 
                 Unk10 = new HKArray<UnknownStructure1>(hkx, section, this, br, variation);
                 BoundingBoxMin = br.ReadVector4();
@@ -491,8 +491,8 @@ namespace SoulsFormats
             {
                 SectionOffset = (uint)bw.Position - sectionBaseOffset;
 
-                bw.WriteUInt64(0);
-                bw.WriteUInt64(0);
+                WriteEmptyPointer(hkx, bw);
+                WriteEmptyPointer(hkx, bw);
 
                 Unk10.Write(hkx, section, bw, sectionBaseOffset, variation);
                 bw.WriteVector4(BoundingBoxMin);
@@ -523,6 +523,41 @@ namespace SoulsFormats
                 UnkA0.WriteReferenceData(hkx, section, bw, sectionBaseOffset, variation);
                 UnkB8.WriteReferenceData(hkx, section, bw, sectionBaseOffset, variation);
             }
-        };
+        }
+
+        // Used in DeS/DS1/DS2 to store collision mesh data
+        public class HKPStorageExtendedMeshShapeMeshSubpartStorage : HKXObject
+        {
+            public HKArray<HKVector4> Vertices;
+            public HKArray<HKUShort> Indices16;
+            public override void Read(HKX hkx, HKXSection section, BinaryReaderEx br, HKXVariation variation)
+            {
+                // By no means complete but currently quickly extracts most meshes
+                SectionOffset = (uint)br.Position;
+
+                // vtable stuff
+                AssertPointer(hkx, br);
+                AssertPointer(hkx, br);
+
+                Vertices = new HKArray<HKVector4>(hkx, section, this, br, variation);
+                if (variation != HKXVariation.HKSDeS)
+                {
+                    // Supposed to be 8-bit indices for collision, but doesn't seem to be used much if at all, so implement later
+                    AssertPointer(hkx, br);
+                    br.ReadUInt64();
+                }
+                Indices16 = new HKArray<HKUShort>(hkx, section, this, br, variation);
+
+                // More stuff to implement (seemingly unused)
+
+                DataSize = (uint)br.Position - SectionOffset;
+                ResolveDestinations(hkx, section);
+            }
+
+            public override void Write(HKX hkx, HKXSection section, BinaryWriterEx bw, uint sectionBaseOffset, HKXVariation variation)
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

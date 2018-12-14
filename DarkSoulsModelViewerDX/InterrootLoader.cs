@@ -944,6 +944,58 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
+        public static void LoadCollisionInBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
+        {
+            if (Type == InterrootType.InterrootDeS || Type == InterrootType.InterrootDS1)
+            {
+                LoadCollisionDeSInBackground(mapName, excludeScenery, addMapModel);
+            }
+            if (Type == InterrootType.InterrootDS2)
+            {
+                LoadCollisionDS2InBackground(mapName, excludeScenery, addMapModel);
+            }
+            if (Type == InterrootType.InterrootBloodborne || Type == InterrootType.InterrootDS3)
+            {
+                LoadCollisionDS3InBackground(mapName, excludeScenery, addMapModel);
+            }
+        }
+
+        public static void LoadCollisionDeSInBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
+        {
+            lock (_lock_IO)
+            {
+                var filelist = Directory.GetFiles(GetInterrootPath($@"map\{mapName}"), "l*.hkx");
+                foreach (var file in filelist)
+                {
+                    HKX hkx = HKX.Read(file);
+
+                    addMapModel.Invoke(new Model(hkx), Path.GetFileNameWithoutExtension(file), new Transform(0.0f, 0.0f, 0.0f,
+                            MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
+                            1.0f, 1.0f, 1.0f));
+                }
+            }
+        }
+
+        public static void LoadCollisionDS2InBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
+        {
+            BXF4 hkxbdt = null;
+            lock (_lock_IO)
+            {
+                hkxbdt = BXF4.Read(GetInterrootPath($@"model\map\l{mapName.Substring(1)}.hkxbhd"), GetInterrootPath($@"model\map\l{mapName.Substring(1)}.hkxbdt"));
+            }
+
+            foreach (var file in hkxbdt.Files)
+            {
+                if (!file.Name.EndsWith(".hkx.dcx"))
+                    continue;
+                HKX hkx = HKX.Read(file.Bytes);
+
+                addMapModel.Invoke(new Model(hkx), file.Name, new Transform(0.0f, 0.0f, 0.0f,
+                        MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
+                        1.0f, 1.0f, 1.0f));
+            }
+        }
+
         public static void LoadCollisionDS3InBackground(string mapName, bool excludeScenery, Action<Model, string, Transform> addMapModel)
         {
             BXF4 hkxbdt = BXF4.Read(GetInterrootPath($@"map\{mapName}\l{mapName.Substring(1)}.hkxbhd"), GetInterrootPath($@"map\{mapName}\l{mapName.Substring(1)}.hkxbdt"));

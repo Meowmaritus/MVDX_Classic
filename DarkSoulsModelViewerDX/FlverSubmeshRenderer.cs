@@ -415,6 +415,99 @@ namespace DarkSoulsModelViewerDX
             VertBufferBinding = new VertexBufferBinding(VertBuffer, 0, 0);
         }
 
+        public FlverSubmeshRenderer(Model parent, HKX colhkx, HKX.HKPStorageExtendedMeshShapeMeshSubpartStorage meshdata)
+        {
+            Parent = parent;
+
+            var vertices = new VertexPositionColorNormalTangentTexture[(meshdata.Indices16.Size / 4) * 3];
+
+            //for (int i = 0; i < meshdata.Vertices.Size; i++)
+            //{
+            //    var vert = meshdata.Vertices.GetArrayData().Elements[i];
+            //    vertices[i] = new VertexPositionColorNormalTangentTexture();
+            //    vertices[i].Position = new Vector3(vert.Vector.X, vert.Vector.Y, vert.Vector.Z);
+            //}
+
+            MeshFacesets = new List<FlverSubmeshRendererFaceSet>();
+            List<ushort> indices = new List<ushort>();
+            int j = 0;
+            for (var index = 0; index < meshdata.Indices16.Size / 4; index++)
+            {
+                var idx = meshdata.Indices16.GetArrayData().Elements;
+                var vtxs = meshdata.Vertices.GetArrayData().Elements;
+
+                var vert1 = vtxs[idx[index * 4].data].Vector;
+                var vert2 = vtxs[idx[index * 4 + 1].data].Vector;
+                var vert3 = vtxs[idx[index * 4 + 2].data].Vector;
+
+                vertices[index * 3].Position = new Vector3(vert1.X, vert1.Y, vert1.Z);
+                vertices[index * 3 + 1].Position = new Vector3(vert2.X, vert2.Y, vert2.Z);
+                vertices[index * 3 + 2].Position = new Vector3(vert3.X, vert3.Y, vert3.Z);
+
+                Vector3 a = new Vector3(vert2.X - vert1.X, vert2.Y - vert1.Y, vert2.Z - vert1.Z);
+                Vector3 b = new Vector3(vert3.X - vert1.X, vert3.Y - vert1.Y, vert3.Z - vert1.Z);
+
+                Vector3 normal = Vector3.Cross(a, b);
+                normal.Normalize();
+
+                vertices[index * 3].Normal = normal;
+                vertices[index * 3 + 1].Normal = normal;
+                vertices[index * 3 + 2].Normal = normal;
+
+                a.Normalize();
+                vertices[index * 3].Tangent = a;
+                vertices[index * 3 + 1].Tangent = a;
+                vertices[index * 3 + 2].Tangent = a;
+
+                vertices[index * 3].Binormal = Vector3.Cross(normal, a);
+                vertices[index * 3 + 1].Binormal = Vector3.Cross(normal, a);
+                vertices[index * 3 + 2].Binormal = Vector3.Cross(normal, a);
+
+                indices.Add((ushort)(index * 3));
+                indices.Add((ushort)(index * 3 + 1));
+                indices.Add((ushort)(index * 3 + 2));
+            }
+
+            if (indices.Count > 0)
+            {
+                var newFaceSet = new FlverSubmeshRendererFaceSet()
+                {
+                    BackfaceCulling = false,
+                    IsTriangleStrip = false,
+                    IndexBuffer = new IndexBuffer(
+                        GFX.Device,
+                        IndexElementSize.SixteenBits,
+                        indices.Count,
+                        BufferUsage.WriteOnly),
+                    IndexCount = indices.Count,
+                };
+
+                newFaceSet.IndexBuffer.SetData(indices.Select(x => (ushort)x).ToArray());
+
+                MeshFacesets.Add(newFaceSet);
+
+            }
+            else
+            {
+                vertices = new VertexPositionColorNormalTangentTexture[meshdata.Vertices.Size];
+
+                for (int i = 0; i < meshdata.Vertices.Size; i++)
+                {
+                    var vert = meshdata.Vertices.GetArrayData().Elements[i];
+                    vertices[i] = new VertexPositionColorNormalTangentTexture();
+                    vertices[i].Position = new Vector3(vert.Vector.X, vert.Vector.Y, vert.Vector.Z);
+                }
+            }
+
+            Bounds = BoundingBox.CreateFromPoints(vertices.Select(x => x.Position));
+
+            VertBuffer = new VertexBuffer(GFX.Device,
+                typeof(VertexPositionColorNormalTangentTexture), vertices.Length, BufferUsage.WriteOnly);
+            VertBuffer.SetData(vertices);
+
+            VertBufferBinding = new VertexBufferBinding(VertBuffer, 0, 0);
+        }
+
         public void TryToLoadTextures()
         {
             if (TexDataDiffuse == null && TexNameDiffuse != null)

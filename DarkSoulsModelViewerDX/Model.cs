@@ -125,6 +125,14 @@ namespace DarkSoulsModelViewerDX
                     subBoundsPoints.Add(smm.Bounds.Min);
                     subBoundsPoints.Add(smm.Bounds.Max);
                 }
+
+                if (col is HKX.HKPStorageExtendedMeshShapeMeshSubpartStorage)
+                {
+                    var smm = new FlverSubmeshRenderer(this, hkx, (HKX.HKPStorageExtendedMeshShapeMeshSubpartStorage)col);
+                    Submeshes.Add(smm);
+                    subBoundsPoints.Add(smm.Bounds.Min);
+                    subBoundsPoints.Add(smm.Bounds.Max);
+                }
             }
 
             if (Submeshes.Count == 0)

@@ -209,7 +209,7 @@ namespace DarkSoulsModelViewerDX
 
         public void AddMapCollision(string mapName, bool excludeScenery)
         {
-            InterrootLoader.LoadCollisionDS3InBackground(mapName, excludeScenery, AddModelInstance);
+            InterrootLoader.LoadCollisionInBackground(mapName, excludeScenery, AddModelInstance);
         }
 
         //private void DrawFlverAt(Model flver, Transform transform)
