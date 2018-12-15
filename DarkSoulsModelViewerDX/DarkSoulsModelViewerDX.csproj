@@ -95,6 +95,7 @@
     <Compile Include="DebugPrimitives\DbgPrimWireCylinder.cs" />
     <Compile Include="DebugPrimitives\DbgPrimWireSphere.cs" />
     <Compile Include="DebugPrimitives\IDbgPrim.cs" />
+    <Compile Include="GFXShaders\CollisionShader.cs" />
     <Compile Include="LoadingTaskMan.cs" />
     <Compile Include="Tests.cs" />
     <Compile Include="TextureFetchRequest.cs" />
@@ -260,6 +261,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Content\CollisionShader.xnb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Content\DbgMenuFont.xnb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

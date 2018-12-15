@@ -18,6 +18,12 @@ namespace DarkSoulsModelViewerDX
         VertexBuffer InstanceBuffer;
         public VertexBufferBinding InstanceBufferBinding { get; private set; }
 
+        public enum ModelType
+        {
+            ModelTypeFlver,
+            ModelTypeCollision,
+        };
+        ModelType Type;
 
         static VertexDeclaration instanceVertexDeclaration = new VertexDeclaration
         (
@@ -45,6 +51,8 @@ namespace DarkSoulsModelViewerDX
 
         public Model(FLVER flver)
         {
+            Type = ModelType.ModelTypeFlver;
+
             Submeshes = new List<FlverSubmeshRenderer>();
             var subBoundsPoints = new List<Vector3>();
             foreach (var submesh in flver.Meshes)
@@ -78,6 +86,8 @@ namespace DarkSoulsModelViewerDX
 
         public Model(FLVERD flver)
         {
+            Type = ModelType.ModelTypeFlver;
+
             Submeshes = new List<FlverSubmeshRenderer>();
             var subBoundsPoints = new List<Vector3>();
             foreach (var submesh in flver.Meshes)
@@ -114,6 +124,8 @@ namespace DarkSoulsModelViewerDX
 
         public Model(HKX hkx)
         {
+            Type = ModelType.ModelTypeCollision;
+
             Submeshes = new List<FlverSubmeshRenderer>();
             var subBoundsPoints = new List<Vector3>();
             foreach (var col in hkx.DataSection.Objects)
@@ -160,7 +172,14 @@ namespace DarkSoulsModelViewerDX
             var lod = 0;// GFX.World.GetLOD(modelLocation);
             foreach (var submesh in Submeshes)
             {
-                submesh.Draw(lod, GFX.FlverShader);
+                if (Type == ModelType.ModelTypeFlver)
+                {
+                    submesh.Draw(lod, GFX.FlverShader);
+                }
+                else
+                {
+                    submesh.Draw(lod, GFX.CollisionShader);
+                }
             }
         }
 

@@ -66,6 +66,7 @@ namespace DarkSoulsModelViewerDX
         public static float LOD2Distance = 400;
 
         public static IGFXShader<FlverShader> FlverShader;
+        public static IGFXShader<CollisionShader> CollisionShader;
         public static IGFXShader<DbgPrimShader> DbgPrimShader;
 
         public static Stopwatch FpsStopwatch = new Stopwatch();
@@ -124,6 +125,7 @@ namespace DarkSoulsModelViewerDX
         //public static DbgPrimShader DbgPrimShader;
         public static SpriteBatch SpriteBatch;
         const string FlverShader__Name = @"Content\NormalMapShader";
+        const string CollisionShader__Name = @"Content\CollisionShader";
 
         private static bool _wireframe = false;
         public static bool Wireframe
@@ -250,6 +252,10 @@ namespace DarkSoulsModelViewerDX
 
             DbgPrimShader.Effect.VertexColorEnabled = true;
 
+            CollisionShader = new CollisionShader(c.Load<Effect>(CollisionShader__Name));
+            CollisionShader.Effect.AmbientColor = new Vector4(0.2f, 0.5f, 0.9f, 1.0f);
+            CollisionShader.Effect.DiffuseColor = new Vector4(0.2f, 0.5f, 0.9f, 1.0f);
+
             SpriteBatch = new SpriteBatch(Device);
 
             HotSwapRasterizerState_BackfaceCullingOff_WireframeOff = Device.RasterizerState.GetCopyOfState();
@@ -280,6 +286,7 @@ namespace DarkSoulsModelViewerDX
 
             World.ApplyViewToShader(DbgPrimShader);
             World.ApplyViewToShader(FlverShader);
+            World.ApplyViewToShader(CollisionShader);
 
             Device.SamplerStates[0] = SamplerState.LinearWrap;
 
@@ -288,6 +295,8 @@ namespace DarkSoulsModelViewerDX
             FlverShader.Effect.ColorMap = Main.DEFAULT_TEXTURE_DIFFUSE;
             FlverShader.Effect.NormalMap = Main.DEFAULT_TEXTURE_NORMAL;
             FlverShader.Effect.SpecularMap = Main.DEFAULT_TEXTURE_SPECULAR;
+
+            CollisionShader.Effect.EyePosition = World.CameraTransform.Position;
 
         }
 
