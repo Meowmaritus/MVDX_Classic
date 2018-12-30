@@ -9,6 +9,7 @@
 * **DX11 Texture Support Patch To MonoGame**: Katalash
 * **Binder & DCX Container Parsing**: TKGP
 * **HKX Collision Parsing**: Katalash
+* **Post-Build Task**: TKGP
 
 ## Special Thanks
 * **River Nyxx**
