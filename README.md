@@ -10,6 +10,8 @@
 * **Binder & DCX Container Parsing**: TKGP
 * **HKX Collision Parsing**: Katalash
 * **Post-Build Task**: TKGP
+* **OVERALL OPTIMIZATION / POLISHING**: Meowmaritus & Katalash
+
 
 ## Special Thanks
 * **River Nyxx**
