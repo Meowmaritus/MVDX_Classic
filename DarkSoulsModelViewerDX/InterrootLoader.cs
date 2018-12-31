@@ -85,7 +85,7 @@ namespace DarkSoulsModelViewerDX
             return null;
         }
 
-        public static void Browse()
+        public static bool Browse()
         {
             OpenFileDialog dlg = new OpenFileDialog()
             {
@@ -113,7 +113,7 @@ namespace DarkSoulsModelViewerDX
                         if (!Directory.Exists(possibleInterroot))
                         {
                             MessageBox.Show("A PS4 executable was selected but no /dvdroot_ps4/ folder was found next to it. Unable to determine data root path.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
+                            return true;
                         }
 
                         Type = InterrootType.InterrootBloodborne;
@@ -130,7 +130,7 @@ namespace DarkSoulsModelViewerDX
                         if (!File.Exists(directory + $@"\map\MapViewList.loadlistlist"))
                         {
                             MessageBox.Show("It appears you have not extracted your game files. Please use UDSFM (https://www.nexusmods.com/darksouls/mods/1304/) to extract your game archives before using this tool.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
+                            return true;
                         }
                         Type = InterrootType.InterrootDS1;
                         MessageBox.Show("Automatically switched to Dark Souls game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
@@ -145,7 +145,7 @@ namespace DarkSoulsModelViewerDX
                         if (!File.Exists(directory + $@"\map\worldmaplist\worldmaplist.list"))
                         {
                             MessageBox.Show("It appears you have not extracted your game files. Please use UXM (https://www.nexusmods.com/darksouls3/mods/286) to extract your game archives before using this tool.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
+                            return true;
                         }
                         Type = InterrootType.InterrootDS2;
                         MessageBox.Show("Automatically switched to Dark Souls II game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
@@ -156,7 +156,7 @@ namespace DarkSoulsModelViewerDX
                         if (!File.Exists(directory + $@"\map\mapviewlist.loadlistlist"))
                         {
                             MessageBox.Show("It appears you have not extracted your game files. Please use UXM (https://www.nexusmods.com/darksouls3/mods/286) to extract your game archives before using this tool.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
+                            return true;
                         }
                         Type = InterrootType.InterrootDS3;
                         MessageBox.Show("Automatically switched to Dark Souls III game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
@@ -169,14 +169,16 @@ namespace DarkSoulsModelViewerDX
                     else
                     {
                         MessageBox.Show("Unrecognized file selected. Unable to determine data root path.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
+                        return true;
                     }
 
                     Interroot = directory;
                     CFG.Save();
                 }
+                ReloadMTDS();
+                return true;
             }
-            ReloadMTDS();
+            return false;
         }
 
         //This might be weird because it doesn't follow convention :fatcat:
@@ -209,7 +211,11 @@ namespace DarkSoulsModelViewerDX
         public static string GetInterrootPath(string relPath)
         {
             while (!Directory.Exists(Interroot))
-                Browse();
+            {
+                bool notcanceled = Browse();
+                if (!notcanceled)
+                    System.Environment.Exit(0);
+            }
             return Frankenpath(Interroot, relPath);
         }
 
