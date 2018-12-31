@@ -86,6 +86,8 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             () => InterrootLoader.Type,
                             nameOverrides: new Dictionary<InterrootLoader.InterrootType, string>
                             {
+                                { InterrootLoader.InterrootType.InterrootNB, "Ninja Blade" },
+                                { InterrootLoader.InterrootType.InterrootDeS, "Demon's Souls" },
                                 { InterrootLoader.InterrootType.InterrootBloodborne, "Bloodborne" },
                                 { InterrootLoader.InterrootType.InterrootDS1, "Dark Souls" },
                                 { InterrootLoader.InterrootType.InterrootDS1R, "Dark Souls Remastered" },
