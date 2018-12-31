@@ -19,12 +19,12 @@ namespace DarkSoulsModelViewerDX
 
         public enum InterrootType
         {
+            InterrootDeS,
             InterrootDS1,
             InterrootDS1R,
-            InterrootDS3,
             InterrootDS2,
+            InterrootDS3,
             InterrootBloodborne,
-            InterrootDeS,
             InterrootNB,
         };
 
