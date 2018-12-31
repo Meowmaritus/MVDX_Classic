@@ -276,7 +276,7 @@ namespace DarkSoulsModelViewerDX
             var tlist = mesh.ToTriangleList();
             var newFaceSet = new FlverSubmeshRendererFaceSet()
             {
-                BackfaceCulling = false,
+                BackfaceCulling = true,
                 IsTriangleStrip = false,
                 IndexBuffer = new IndexBuffer(
                             GFX.Device,
