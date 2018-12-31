@@ -1,4 +1,5 @@
 ﻿using DarkSoulsModelViewerDX.GFXShaders;
+using DarkSoulsModelViewerDX.DebugPrimitives;
 using MeowDSIO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -300,12 +301,34 @@ namespace DarkSoulsModelViewerDX
             TryToLoadTextures();
         }
 
+        private static void DebugBVHDraw(HKX.BVHNode node, DbgPrimWireBox shapeProto)
+        {
+            if (node.IsTerminal)
+            {
+                var box = shapeProto.Instantiate("", new Transform(new Vector3((node.Max.X + node.Min.X) / 2.0f, (node.Max.Y + node.Min.Y) / 2.0f, (node.Max.Z + node.Min.Z) / 2.0f), new Vector3(0, 0, 0), new Vector3(node.Max.X - node.Min.X, node.Max.Y - node.Min.Y, node.Max.Z - node.Min.Z)));
+                DBG.AddPrimitive(box);
+            }
+            if (!node.IsTerminal)
+            {
+                DebugBVHDraw(node.Left, shapeProto);
+                DebugBVHDraw(node.Right, shapeProto);
+            }
+        }
+
         // Used for collision rendering
         public FlverSubmeshRenderer(Model parent, HKX colhkx, HKX.FSNPCustomParamCompressedMeshShape meshdata)
         {
             Parent = parent;
 
             var coldata = meshdata.GetMeshShapeData();
+
+            var tree = coldata.getMeshBVH();
+            var box = new DbgPrimWireBox(Transform.Default, Vector3.One, Color.Cyan);
+            if (tree != null)
+            {
+                //DebugBVHDraw(tree, box);
+            }
+
             var vertices = new VertexPositionColorNormalTangentTexture[coldata.SmallVertices.Size + coldata.LargeVertices.Size];
             /*for (int i = 0; i < coldata.SmallVertices.Size; i++)
             {
@@ -332,6 +355,11 @@ namespace DarkSoulsModelViewerDX
                     continue;
                 }
                 ch++;*/
+                /*var tree2 = chunk.getChunkBVH();
+                if (tree2 != null)
+                {
+                    DebugBVHDraw(tree2, box);
+                }*/
                 List<ushort> indices = new List<ushort>();
                 for (int i = 0; i < chunk.ByteIndicesLength; i++)
                 {

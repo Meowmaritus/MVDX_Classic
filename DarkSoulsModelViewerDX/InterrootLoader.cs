@@ -30,7 +30,7 @@ namespace DarkSoulsModelViewerDX
 
         public static InterrootType Type = InterrootType.InterrootDS1;
 
-        public static string Interroot = @"C:\Program Files (x86)\steam\steamapps\common\Dark Souls Prepare to Die Edition\DATA";
+        public static string Interroot = @"";
 
         static InterrootLoader()
         {
