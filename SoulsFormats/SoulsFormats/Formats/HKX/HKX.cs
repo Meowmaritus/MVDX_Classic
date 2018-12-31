@@ -1106,9 +1106,9 @@ namespace SoulsFormats
             {
                 ClassNames = new List<HKXClassName>();
                 OffsetClassNamesMap = new Dictionary<uint, HKXClassName>();
-                while (br.ReadUInt32() != 0xFFFFFFFF)
+                while (br.ReadUInt16() != 0xFFFF)
                 {
-                    br.Position -= 4;
+                    br.Position -= 2;
                     uint stringStart = (uint)br.Position + 5;
                     var className = new HKXClassName(br);
                     ClassNames.Add(className);

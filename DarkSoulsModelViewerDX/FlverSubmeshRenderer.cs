@@ -68,6 +68,8 @@ namespace DarkSoulsModelViewerDX
                 DrawStep = GFXDrawStep.Opaque;
             }
 
+            bool hasLightmap = false;
+
             foreach (var matParam in flvr.Materials[mesh.MaterialIndex].Textures)
             {
                 var paramNameCheck = matParam.Type.ToUpper();
@@ -79,7 +81,10 @@ namespace DarkSoulsModelViewerDX
                 else if (paramNameCheck == "G_BUMPMAPTEXTURE")
                     TexNameNormal = matParam.Path;
                 else if (paramNameCheck == "G_DOLTEXTURE1")
+                {
                     TexNameDOL1 = matParam.Path;
+                    hasLightmap = true;
+                }
                 else if (paramNameCheck == "G_DOLTEXTURE2")
                     TexNameDOL2 = matParam.Path;
                 // DS1 params
@@ -89,7 +94,17 @@ namespace DarkSoulsModelViewerDX
                     TexNameSpecular = matParam.Path;
                 else if (paramNameCheck == "G_BUMPMAP")
                     TexNameNormal = matParam.Path;
+                else if (paramNameCheck == "G_LIGHTMAP")
+                {
+                    TexNameDOL1 = matParam.Path;
+                    hasLightmap = true;
+                }
+                // Alternate material params that work as diffuse
+
             }
+
+            // MTD lookup
+            MTD mtd = InterrootLoader.GetMTD(flvr.Materials[mesh.MaterialIndex].MTD);
 
             var MeshVertices = new VertexPositionColorNormalTangentTexture[mesh.Vertices.Count];
             for (int i = 0; i < mesh.Vertices.Count; i++)
@@ -109,16 +124,41 @@ namespace DarkSoulsModelViewerDX
                 if (vert.UVs.Count > 0)
                 {
                     MeshVertices[i].TextureCoordinate = new Vector2(vert.UVs[0].X, vert.UVs[0].Y);
-                    if (vert.UVs.Count > 1)
+                    if (vert.UVs.Count > 1 && hasLightmap)
                     {
-                        // Really stupid heuristic to determine light map UVs without reading mtd files or something
-                        if (vert.UVs.Count > 2 && flvr.Materials[mesh.MaterialIndex].Textures.Count > 11)
+                        if (mtd == null)
                         {
-                            MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[2].X, vert.UVs[2].Y);
+                            // Really stupid heuristic to determine light map UVs without reading mtd files or something
+                            if (vert.UVs.Count > 2 && flvr.Materials[mesh.MaterialIndex].Textures.Count > 11)
+                            {
+                                MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[2].X, vert.UVs[2].Y);
+                            }
+                            else
+                            {
+                                MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                            }
                         }
                         else
                         {
-                            MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                            // Better heuristic with MTDs
+                            int uvindex = mtd.Textures.Find(tex => tex.Type.ToUpper() == "G_LIGHTMAP" || tex.Type.ToUpper() == "G_DOLTEXTURE1").UVNumber;
+                            int uvoffset = 1;
+                            for (int j = 1; j < uvindex; j++)
+                            {
+                                if (!mtd.Textures.Any(t => (t.UVNumber == j)))
+                                {
+                                    uvoffset++;
+                                }
+                            }
+                            uvindex -= uvoffset;
+                            if (vert.UVs.Count > uvindex)
+                            {
+                                MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[uvindex].X, vert.UVs[uvindex].Y);
+                            }
+                            else
+                            {
+                                MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                            }
                         }
                     }
                     else
@@ -206,6 +246,8 @@ namespace DarkSoulsModelViewerDX
                 DrawStep = GFXDrawStep.Opaque;
             }
 
+            bool hasLightmap = false;
+
             foreach (var matParam in flvr.Materials[mesh.MaterialIndex].Textures)
             {
                 if (matParam == null || matParam.Type == null)
@@ -232,8 +274,14 @@ namespace DarkSoulsModelViewerDX
                 else if (paramNameCheck == "G_BUMPMAP")
                     TexNameNormal = matParam.Path;
                 else if (paramNameCheck == "G_LIGHTMAP")
+                {
                     TexNameDOL1 = matParam.Path;
+                    hasLightmap = true;
+                }
             }
+
+            // MTD lookup
+            MTD mtd = InterrootLoader.GetMTD(flvr.Materials[mesh.MaterialIndex].MTD);
 
             var MeshVertices = new VertexPositionColorNormalTangentTexture[mesh.Vertices.Count];
             for (int i = 0; i < mesh.Vertices.Count; i++)
@@ -253,9 +301,42 @@ namespace DarkSoulsModelViewerDX
                 if (vert.UVs.Count > 0)
                 {
                     MeshVertices[i].TextureCoordinate = new Vector2(vert.UVs[0].X, vert.UVs[0].Y);
-                    if (vert.UVs.Count > 1)
+                    if (vert.UVs.Count > 1 && hasLightmap)
                     {
-                        MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                        if (mtd == null)
+                        {
+                            // Really stupid heuristic to determine light map UVs without reading mtd files or something
+                            if (vert.UVs.Count > 2 && flvr.Materials[mesh.MaterialIndex].Textures.Count > 11)
+                            {
+                                MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[2].X, vert.UVs[2].Y);
+                            }
+                            else
+                            {
+                                MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                            }
+                        }
+                        else
+                        {
+                            // Better heuristic with MTDs
+                            int uvindex = mtd.Textures.Find(tex => tex.Type.ToUpper() == "G_LIGHTMAP" || tex.Type.ToUpper() == "G_DOLTEXTURE1").UVNumber;
+                            int uvoffset = 1;
+                            for (int j = 1; j < uvindex; j++)
+                            {
+                                if (!mtd.Textures.Any(t => (t.UVNumber == j)))
+                                {
+                                    uvoffset++;
+                                }
+                            }
+                            uvindex -= uvoffset;
+                            if (vert.UVs.Count > uvindex)
+                            {
+                                MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[uvindex].X, vert.UVs[uvindex].Y);
+                            }
+                            else
+                            {
+                                MeshVertices[i].TextureCoordinate2 = new Vector2(vert.UVs[1].X, vert.UVs[1].Y);
+                            }
+                        }
                     }
                     else
                     {
@@ -564,8 +645,12 @@ namespace DarkSoulsModelViewerDX
                 GFX.FlverShader.Effect.ColorMap = TexDataDiffuse ?? Main.DEFAULT_TEXTURE_DIFFUSE;
                 GFX.FlverShader.Effect.SpecularMap = TexDataSpecular ?? Main.DEFAULT_TEXTURE_SPECULAR;
                 GFX.FlverShader.Effect.NormalMap = TexDataNormal ?? Main.DEFAULT_TEXTURE_NORMAL;
-                GFX.FlverShader.Effect.LightMap1 = TexDataDOL1 ?? Main.DEFAULT_TEXTURE_DIFFUSE;
                 //GFX.FlverShader.Effect.LightMap2 = TexDataDOL2 ?? Main.DEFAULT_TEXTURE_DIFFUSE;
+            }
+
+            if (GFX.EnableLightmapping && !GFX.EnableLighting)
+            {
+                GFX.FlverShader.Effect.LightMap1 = TexDataDOL1 ?? Main.DEFAULT_TEXTURE_DIFFUSE;
             }
 
             GFX.Device.SetVertexBuffers(VertBufferBinding, Parent.InstanceBufferBinding);

@@ -21,6 +21,7 @@ namespace DarkSoulsModelViewerDX
         public bool GoToModelsAsTheySpawn = true;
 
         public Dictionary<string, Vector4> LightmapAtlasMap = new Dictionary<string, Vector4>();
+        public Dictionary<string, int> LightmapAtlasIndexMap = new Dictionary<string, int>();
 
         //public long Debug_VertexCount = 0;
         //public long Debug_SubmeshCount = 0;
@@ -121,6 +122,8 @@ namespace DarkSoulsModelViewerDX
             LoadingTaskMan.DoLoadingTask($"{nameof(TestAddAllChr)}", "Loading lineup of all characters...", prog =>
             {
                 ModelLineup(DbgMenus.DbgMenuItemSpawnChr.IDList, InterrootLoader.LoadModelChr, prog);
+                if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS1)
+                    TexturePool.AddAllExternalDS1TexturesInBackground();
             });
         }
 
@@ -129,6 +132,8 @@ namespace DarkSoulsModelViewerDX
             LoadingTaskMan.DoLoadingTask($"{nameof(TestAddAllObj)}", "Loading lineup of all objects...", prog =>
             {
                 ModelLineup(DbgMenus.DbgMenuItemSpawnObj.IDList, InterrootLoader.LoadModelObj, prog);
+                if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS1)
+                    TexturePool.AddAllExternalDS1TexturesInBackground();
             });
         }
 
@@ -174,12 +179,16 @@ namespace DarkSoulsModelViewerDX
         {
             SoulsFormats.BTAB btab = InterrootLoader.LoadMapBtab(mapName);
             LightmapAtlasMap = new Dictionary<string, Vector4>();
+            LightmapAtlasIndexMap = new Dictionary<string, int>();
             if (btab != null)
             {
                 foreach (var entry in btab.Entries)
                 {
-                    if (!LightmapAtlasMap.ContainsKey(mapName))
+                    if (!LightmapAtlasMap.ContainsKey(entry.MSBPartName))
+                    {
                         LightmapAtlasMap.Add(entry.MSBPartName, new Vector4(entry.AtlasScale.X, entry.AtlasScale.Y, entry.AtlasOffset.X, entry.AtlasOffset.Y));
+                        LightmapAtlasIndexMap.Add(entry.MSBPartName, entry.AtlasIndex);
+                    }
                 }
             }
             InterrootLoader.LoadMapInBackground(mapName, excludeScenery, AddModelInstance);

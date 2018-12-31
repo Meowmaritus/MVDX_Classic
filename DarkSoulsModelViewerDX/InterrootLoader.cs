@@ -32,11 +32,57 @@ namespace DarkSoulsModelViewerDX
 
         public static string Interroot = @"";
 
+        private static Dictionary<string, SoulsFormats.MTD> MTDCache;
+
         static InterrootLoader()
         {
             CFG.Init();
 
             TexturePool.OnLoadError += TexPool_OnLoadError;
+
+            if (Interroot != "")
+            {
+                ReloadMTDS();
+            }
+        }
+
+        private static void ReloadMTDS()
+        {
+            MTDCache = new Dictionary<string, SoulsFormats.MTD>();
+            IBinder mtdbnd;
+            try
+            {
+                if (Type == InterrootType.InterrootNB || Type == InterrootType.InterrootDeS || Type == InterrootType.InterrootDS1 || Type == InterrootType.InterrootDS1R)
+                {
+                    mtdbnd = BND3.Read(Interroot + $@"\mtd\Mtd.mtdbnd");
+                }
+                else if (Type == InterrootType.InterrootDS2)
+                {
+                    mtdbnd = BND4.Read(Interroot + $@"\Material\allmaterialbnd.bnd");
+                }
+                else
+                {
+                    mtdbnd = BND4.Read(Interroot + $@"\mtd\allmaterialbnd.mtdbnd.dcx");
+                }
+
+                foreach (var mtd in mtdbnd.Files)
+                {
+                    // Thanks P_DullLeather[DSB].mtd for having a duplicate entry for some reason
+                    if (!MTDCache.ContainsKey(Path.GetFileName(mtd.Name)))
+                        MTDCache.Add(Path.GetFileName(mtd.Name), SoulsFormats.MTD.Read(mtd.Bytes));
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Error: Failed to load material definitions for game. Models may look incorrect.");
+            }
+        }
+
+        public static SoulsFormats.MTD GetMTD(string path)
+        {
+            if (MTDCache.ContainsKey(Path.GetFileName(path)))
+                return MTDCache[Path.GetFileName(path)];
+            return null;
         }
 
         public static void Browse()
@@ -80,6 +126,12 @@ namespace DarkSoulsModelViewerDX
                 {
                     if (filename.Contains("darksouls.exe"))
                     {
+                        // Check for a meme file to make sure the user actually used UDSFM
+                        if (!File.Exists(directory + $@"\map\MapViewList.loadlistlist"))
+                        {
+                            MessageBox.Show("It appears you have not extracted your game files. Please use UDSFM (https://www.nexusmods.com/darksouls/mods/1304/) to extract your game archives before using this tool.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
                         Type = InterrootType.InterrootDS1;
                         MessageBox.Show("Automatically switched to Dark Souls game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
                     }
@@ -90,11 +142,22 @@ namespace DarkSoulsModelViewerDX
                     }
                     else if (filename.Contains("darksoulsii.exe"))
                     {
+                        if (!File.Exists(directory + $@"\map\worldmaplist\worldmaplist.list"))
+                        {
+                            MessageBox.Show("It appears you have not extracted your game files. Please use UXM (https://www.nexusmods.com/darksouls3/mods/286) to extract your game archives before using this tool.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
                         Type = InterrootType.InterrootDS2;
                         MessageBox.Show("Automatically switched to Dark Souls II game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
                     }
                     else if (filename.Contains("darksoulsiii.exe"))
                     {
+                        // Check for a meme file to make sure the user actually used UXM
+                        if (!File.Exists(directory + $@"\map\mapviewlist.loadlistlist"))
+                        {
+                            MessageBox.Show("It appears you have not extracted your game files. Please use UXM (https://www.nexusmods.com/darksouls3/mods/286) to extract your game archives before using this tool.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
                         Type = InterrootType.InterrootDS3;
                         MessageBox.Show("Automatically switched to Dark Souls III game type based on selected file.\nIf this is incorrect, be sure to modify the \"Game Type\" option below");
                     }
@@ -113,6 +176,7 @@ namespace DarkSoulsModelViewerDX
                     CFG.Save();
                 }
             }
+            ReloadMTDS();
         }
 
         //This might be weird because it doesn't follow convention :fatcat:
@@ -618,6 +682,8 @@ namespace DarkSoulsModelViewerDX
             modelDict = null;
 
             GFX.ModelDrawer.RequestTextureLoad();
+            if (Type == InterrootType.InterrootDS1)
+                TexturePool.AddAllExternalDS1TexturesInBackground();
         }
 
         public static void LoadDS2MapInBackground(string mapName, bool excludeScenery,
@@ -1067,11 +1133,19 @@ namespace DarkSoulsModelViewerDX
             {
                 if (!file.Name.EndsWith(".hkx.dcx"))
                     continue;
-                HKX hkx = HKX.Read(file.Bytes);
+                // Normally don't like to eat exceptions but some DS2 hkx files are messed up and don't even have collision (thanks B team)
+                try
+                {
+                    HKX hkx = HKX.Read(file.Bytes);
 
-                addMapModel.Invoke(new Model(hkx), file.Name, new Transform(0.0f, 0.0f, 0.0f,
-                        MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
-                        1.0f, 1.0f, 1.0f));
+                    addMapModel.Invoke(new Model(hkx), file.Name, new Transform(0.0f, 0.0f, 0.0f,
+                            MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
+                            1.0f, 1.0f, 1.0f));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Failed to load HKX file " + file.Name);
+                }
             }
         }
 
@@ -1081,11 +1155,18 @@ namespace DarkSoulsModelViewerDX
 
             foreach (var file in hkxbdt.Files)
             {
-                HKX hkx = HKX.Read(file.Bytes, (Type == InterrootType.InterrootDS3) ? HKX.HKXVariation.HKXDS3 : HKX.HKXVariation.HKXBloodBorne);
+                try
+                {
+                    HKX hkx = HKX.Read(file.Bytes, (Type == InterrootType.InterrootDS3) ? HKX.HKXVariation.HKXDS3 : HKX.HKXVariation.HKXBloodBorne);
 
-                addMapModel.Invoke(new Model(hkx), file.Name, new Transform(0.0f, 0.0f, 0.0f,
-                        MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
-                        1.0f, 1.0f, 1.0f));
+                    addMapModel.Invoke(new Model(hkx), file.Name, new Transform(0.0f, 0.0f, 0.0f,
+                            MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f), MathHelper.ToRadians(0.0f),
+                            1.0f, 1.0f, 1.0f));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Failed to load HKX file " + file.Name);
+                }
             }
         }
 

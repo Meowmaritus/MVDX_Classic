@@ -4,6 +4,7 @@ using SoulsFormats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -57,6 +58,15 @@ namespace DarkSoulsModelViewerDX
             var subBoundsPoints = new List<Vector3>();
             foreach (var submesh in flver.Meshes)
             {
+                // Blacklist some materials that don't have good shaders and just make the viewer look like a mess
+                var mtd = InterrootLoader.GetMTD(Path.GetFileName(flver.Materials[submesh.MaterialIndex].MTD));
+                if (mtd != null)
+                {
+                    if (mtd.ShaderPath.Contains("FRPG_Water_Env"))
+                        continue;
+                    if (mtd.ShaderPath.Contains("FRPG_Water_Reflect.spx"))
+                        continue;
+                }
                 var smm = new FlverSubmeshRenderer(this, flver, submesh);
                 Submeshes.Add(smm);
                 subBoundsPoints.Add(smm.Bounds.Min);
@@ -92,6 +102,16 @@ namespace DarkSoulsModelViewerDX
             var subBoundsPoints = new List<Vector3>();
             foreach (var submesh in flver.Meshes)
             {
+                // Blacklist some materials that don't have good shaders and just make the viewer look like a mess
+                var mtd = InterrootLoader.GetMTD(Path.GetFileName(flver.Materials[submesh.MaterialIndex].MTD));
+                if (mtd != null)
+                {
+                    if (mtd.ShaderPath.Contains("FRPG_Water_Env"))
+                        continue;
+                    if (mtd.ShaderPath.Contains("FRPG_Water_Reflect.spx"))
+                        continue;
+                }
+
                 if (submesh.ToTriangleList().Length > 0)
                 {
                     var smm = new FlverSubmeshRenderer(this, flver, submesh);

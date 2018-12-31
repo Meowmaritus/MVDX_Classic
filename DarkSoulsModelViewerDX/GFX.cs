@@ -107,6 +107,7 @@ namespace DarkSoulsModelViewerDX
                 }
             }
         }
+        public static bool EnableLightmapping = true;
 
         private static RasterizerState HotSwapRasterizerState_BackfaceCullingOff_WireframeOff;
         private static RasterizerState HotSwapRasterizerState_BackfaceCullingOn_WireframeOff;
