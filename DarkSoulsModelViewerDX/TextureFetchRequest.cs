@@ -45,6 +45,13 @@ namespace DarkSoulsModelViewerDX
                     Console.WriteLine("Leave: " + TPFReference.Textures[0].Name);
                 }
             }
+            else if (TPFReference.Platform == TPF.TPFPlatform.PS4)
+            {
+                lock (_lock_conversion)
+                {
+                    TPFReference.ConvertPS3ToPC();
+                }
+            }
             else if (TPFReference.Platform == TPF.TPFPlatform.Xbone)
             {
                 // Because there are actually xbone textures in the PC version for some dumb reason
@@ -136,69 +143,65 @@ namespace DarkSoulsModelViewerDX
             int width = header.dwWidth;
 
             int mipmapCount = header.dwMipMapCount;
-            using (var br = new BinaryReaderEx(false, textureBytes))
-            {
-                br.Skip((int)header.dataOffset);
+            var br = new BinaryReaderEx(false, textureBytes);
 
-                SurfaceFormat surfaceFormat;
-                if (header.ddspf.dwFourCC == "DX10")
-                {
-                    // See if there are DX9 textures
-                    int fmt = (int)header.header10.dxgiFormat;
-                    if (fmt == 70 || fmt == 71 || fmt == 72)
-                        surfaceFormat = SurfaceFormat.Dxt1;
-                    else if (fmt == 73 || fmt == 74 || fmt == 75)
-                        surfaceFormat = SurfaceFormat.Dxt3;
-                    else if (fmt == 76 || fmt == 77 || fmt == 78)
-                        surfaceFormat = SurfaceFormat.Dxt5;
-                    else if (fmt == 79 || fmt == 80 || fmt == 81)
-                        surfaceFormat = SurfaceFormat.ATI1;
-                    else if (fmt == 82 || fmt == 83 || fmt == 84)
-                        surfaceFormat = SurfaceFormat.ATI2;
-                    else if (fmt == 97 || fmt == 98 || fmt == 99)
-                        surfaceFormat = SurfaceFormat.BC7;
-                    else
-                    {
-                        // No DX10 texture support in monogame yet
-                        IsDX10 = true;
-                        CachedTexture = Main.DEFAULT_TEXTURE_MISSING;
-                        header = null;
-                        TPFReference = null;
-                        return CachedTexture;
-                    }
-                }
+            br.Skip((int)header.dataOffset);
+
+            SurfaceFormat surfaceFormat;
+            if (header.ddspf.dwFourCC == "DX10")
+            {
+                // See if there are DX9 textures
+                int fmt = (int)header.header10.dxgiFormat;
+                if (fmt == 70 || fmt == 71 || fmt == 72)
+                    surfaceFormat = SurfaceFormat.Dxt1;
+                else if (fmt == 73 || fmt == 74 || fmt == 75)
+                    surfaceFormat = SurfaceFormat.Dxt3;
+                else if (fmt == 76 || fmt == 77 || fmt == 78)
+                    surfaceFormat = SurfaceFormat.Dxt5;
+                else if (fmt == 79 || fmt == 80 || fmt == 81)
+                    surfaceFormat = SurfaceFormat.ATI1;
+                else if (fmt == 82 || fmt == 83 || fmt == 84)
+                    surfaceFormat = SurfaceFormat.ATI2;
+                else if (fmt == 97 || fmt == 98 || fmt == 99)
+                    surfaceFormat = SurfaceFormat.BC7;
                 else
                 {
-                    surfaceFormat = GetSurfaceFormatFromString(header.ddspf.dwFourCC);
+                    // No DX10 texture support in monogame yet
+                    IsDX10 = true;
+                    CachedTexture = Main.DEFAULT_TEXTURE_MISSING;
+                    header = null;
+                    TPFReference = null;
+                    return CachedTexture;
                 }
-                // Adjust width and height because from has some DXTC textures that have dimensions not a multiple of 4 :shrug:
-                Texture2D tex = new Texture2D(GFX.Device, GetNextMultipleOf4(width), GetNextMultipleOf4(height), true, surfaceFormat);
-                
-                for (int i = 0; i < mipmapCount; i++)
-                {
-                    try
-                    {
-                        int numTexels = GetNextMultipleOf4(width >> i) * GetNextMultipleOf4(height >> i);
-                        if (surfaceFormat == SurfaceFormat.Dxt1 || surfaceFormat == SurfaceFormat.Dxt1SRgb)
-                            numTexels /= 2;
-                        byte[] thisMipMap = br.ReadBytes(numTexels);
-                        tex.SetData(i, 0, null, thisMipMap, 0, numTexels);
-                        thisMipMap = null;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine($"Error loading {TexName}: {ex.Message}");
-                    }
-                    
-                }
-
-                CachedTexture = tex;
-                header = null;
-                TPFReference = null;
-                return CachedTexture;
             }
-            
+            else
+            {
+                surfaceFormat = GetSurfaceFormatFromString(header.ddspf.dwFourCC);
+            }
+            // Adjust width and height because from has some DXTC textures that have dimensions not a multiple of 4 :shrug:
+            Texture2D tex = new Texture2D(GFX.Device, GetNextMultipleOf4(width), GetNextMultipleOf4(height), true, surfaceFormat);
 
+            for (int i = 0; i < mipmapCount; i++)
+            {
+                try
+                {
+                    int numTexels = GetNextMultipleOf4(width >> i) * GetNextMultipleOf4(height >> i);
+                    if (surfaceFormat == SurfaceFormat.Dxt1 || surfaceFormat == SurfaceFormat.Dxt1SRgb)
+                        numTexels /= 2;
+                    byte[] thisMipMap = br.ReadBytes(numTexels);
+                    tex.SetData(i, 0, null, thisMipMap, 0, numTexels);
+                    thisMipMap = null;
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Error loading {TexName}: {ex.Message}");
+                }
+            }
+
+            CachedTexture = tex;
+            header = null;
+            TPFReference = null;
+            return CachedTexture;
         }
 
         public void Dispose()

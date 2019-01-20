@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace SoulsFormats
 {
     /// <summary>
-    /// A DS3 and BB file that seems to modify material parameters to light certain static objects. Used to darken objects in shadows for example.
+    /// A DS2/DS3 and BB file that specifies coordinates into a lightmap atlas to apply certain light maps to map parts
     /// </summary>
     public class BTAB : SoulsFile<BTAB>
     {
@@ -110,16 +111,15 @@ namespace SoulsFormats
             public string FLVERMaterialName;
 
             /// <summary>
-            /// Unknown.
+            /// Which atlas texture to use for lightmaps
             /// </summary>
-            public int Unk1C;
+            public int AtlasIndex;
 
-            // These floats are used to control the lighting/material parameters in some way.
-            // Seem to be between 0.0-1.0 and sum up to 1.0 in some cases
             /// <summary>
-            /// Unknown.
+            /// Used to scale and translate lightmap uvs to select a particular index for a map part
             /// </summary>
-            public float Unk20, Unk24, Unk28, Unk2C;
+            public Vector2 AtlasOffset;
+            public Vector2 AtlasScale;
 
             internal Entry(BinaryReaderEx br, long nameStart)
             {
@@ -131,11 +131,9 @@ namespace SoulsFormats
                 FLVERMaterialName = br.GetUTF16(nameStart + nameOffset2);
                 br.AssertInt32(0);
 
-                Unk1C = br.ReadInt32();
-                Unk20 = br.ReadSingle();
-                Unk24 = br.ReadSingle();
-                Unk28 = br.ReadSingle();
-                Unk2C = br.ReadSingle();
+                AtlasIndex = br.ReadInt32();
+                AtlasOffset = br.ReadVector2();
+                AtlasScale = br.ReadVector2();
                 br.AssertInt32(0);
             }
 
@@ -145,11 +143,9 @@ namespace SoulsFormats
                 bw.WriteInt32(0);
                 bw.WriteInt32(nameOffset2);
                 bw.WriteInt32(0);
-                bw.WriteInt32(Unk1C);
-                bw.WriteSingle(Unk20);
-                bw.WriteSingle(Unk24);
-                bw.WriteSingle(Unk28);
-                bw.WriteSingle(Unk2C);
+                bw.WriteInt32(AtlasIndex);
+                bw.WriteVector2(AtlasOffset);
+                bw.WriteVector2(AtlasScale);
                 bw.WriteInt32(0);
             }
 

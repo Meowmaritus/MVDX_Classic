@@ -1,18 +1,14 @@
-﻿using DarkSoulsModelViewerDX.GFXShaders;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX
 {
     public class ModelDrawer
     {
+        private const float LINEUP_PADDING = 0.5f;
+
         private bool IsTextureLoadRequested = false;
         public void RequestTextureLoad() => IsTextureLoadRequested = true;
 
@@ -23,6 +19,9 @@ namespace DarkSoulsModelViewerDX
         public bool HighlightSelectedPiece = true;
         public bool WireframeSelectedPiece = false;
         public bool GoToModelsAsTheySpawn = true;
+
+        public Dictionary<string, Vector4> LightmapAtlasMap = new Dictionary<string, Vector4>();
+        public Dictionary<string, int> LightmapAtlasIndexMap = new Dictionary<string, int>();
 
         //public long Debug_VertexCount = 0;
         //public long Debug_SubmeshCount = 0;
@@ -76,40 +75,55 @@ namespace DarkSoulsModelViewerDX
                 if (!Models.Contains(model))
                     Models.Add(model);
 
-                model.AddNewInstance(new ModelInstance(name, model, location, -1, -1, -1, -1));
+                var instance = new ModelInstance(name, model, location, -1, -1, -1, -1);
+                if (LightmapAtlasMap.ContainsKey(name))
+                {
+                    instance.Data.atlasScale = new Vector2(LightmapAtlasMap[name].X, LightmapAtlasMap[name].Y);
+                    instance.Data.atlasOffset = new Vector2(LightmapAtlasMap[name].Z, LightmapAtlasMap[name].W);
+                }
+                model.AddNewInstance(instance);
             }
-            
+
+        }
+
+        private void ModelLineup(List<int> ids, Func<int, List<Model>> loadModels, IProgress<double> prog)
+        {
+            float currentX = 0;
+
+            for (int i = 0; i < ids.Count; i++)
+            {
+                int id = ids[i];
+                List<Model> models = loadModels(id);
+                GFX.ModelDrawer.RequestTextureLoad();
+
+                for (int j = 0; j < models.Count; j++)
+                {
+                    Model model = models[j];
+                    // Offset to align model
+                    Transform transform = new Transform(currentX - model.Bounds.Min.X, 0, 0, 0, 0, 0);
+                    AddModelInstance(model, $"c{id:D4}{(j > 0 ? $"[{j + 1}]" : "")}", transform);
+                    // Model width + padding
+                    currentX += model.Bounds.Max.X - model.Bounds.Min.X + LINEUP_PADDING;
+
+                    if (GoToModelsAsTheySpawn)
+                    {
+                        GFX.World.GoToTransformAndLookAtIt(
+                            new Transform(transform.Position + model.Bounds.GetCenter() - new Vector3(model.Bounds.Min.X, 0, 0), transform.EulerRotation),
+                            (model.Bounds.Max - model.Bounds.Min).Length() * 1.5f);
+                    }
+                }
+
+                prog?.Report(1.0 * i / ids.Count);
+            }
         }
 
         public void TestAddAllChr()
         {
             LoadingTaskMan.DoLoadingTask($"{nameof(TestAddAllChr)}", "Loading lineup of all characters...", prog =>
             {
-                float currentX = 0;
-
-                //TexturePool.AddChrBndsThatEndIn9();
-                int i = 0;
-                foreach (int ID in DbgMenus.DbgMenuItemSpawnChr.IDList)
-                {
-                    var newModelTrans = new Transform(currentX, 0, 0, 0, 0, 0);
-                    var newModels = AddChr(ID, newModelTrans);
-                    foreach (var mdl in newModels)
-                    {
-                        float thisModelWidth = new Vector3(mdl.Bounds.Max.X, 0, mdl.Bounds.Max.Z).Length()
-                            + new Vector3(mdl.Bounds.Min.X, 0, mdl.Bounds.Min.Z).Length();
-                        //mdl.Transform.Position.X += thisModelWidth / 2;
-                        currentX += thisModelWidth;
-                        if (GoToModelsAsTheySpawn)
-                        {
-                            GFX.World.GoToTransformAndLookAtIt(
-                                new Transform(newModelTrans.Position + mdl.Bounds.GetCenter(), newModelTrans.EulerRotation),
-                                (mdl.Bounds.Max - mdl.Bounds.Min).Length() * 1.5f);
-                        }
-                    }
-
-                    prog?.Report(1.0 * (++i) / DbgMenus.DbgMenuItemSpawnChr.IDList.Count);
-                }
-
+                ModelLineup(DbgMenus.DbgMenuItemSpawnChr.IDList, InterrootLoader.LoadModelChr, prog);
+                if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS1)
+                    TexturePool.AddAllExternalDS1TexturesInBackground();
             });
         }
 
@@ -117,32 +131,9 @@ namespace DarkSoulsModelViewerDX
         {
             LoadingTaskMan.DoLoadingTask($"{nameof(TestAddAllObj)}", "Loading lineup of all objects...", prog =>
             {
-                float currentX = 0;
-
-                //TexturePool.AddObjBndsThatEndIn9();
-                int i = 0;
-                foreach (int ID in DbgMenus.DbgMenuItemSpawnObj.IDList)
-                {
-                    var newModelTrans = new Transform(currentX, 0, 0, 0, 0, 0);
-                    var newModels = AddObj(ID, newModelTrans);
-                    
-                    foreach (var mdl in newModels)
-                    {
-                        float thisModelWidth = new Vector3(mdl.Bounds.Max.X, 0, mdl.Bounds.Max.Z).Length()
-                            + new Vector3(mdl.Bounds.Min.X, 0, mdl.Bounds.Min.Z).Length();
-                        //mdl.Transform.Position.X += thisModelWidth / 2;
-                        currentX += thisModelWidth;
-                        if (GoToModelsAsTheySpawn)
-                        {
-                            GFX.World.GoToTransformAndLookAtIt(
-                                new Transform(newModelTrans.Position + mdl.Bounds.GetCenter(), newModelTrans.EulerRotation),
-                                (mdl.Bounds.Max - mdl.Bounds.Min).Length() * 1.5f);
-                        }
-                    }
-
-                    prog?.Report(1.0 * (++i) / DbgMenus.DbgMenuItemSpawnObj.IDList.Count);
-                }
-
+                ModelLineup(DbgMenus.DbgMenuItemSpawnObj.IDList, InterrootLoader.LoadModelObj, prog);
+                if (InterrootLoader.Type == InterrootLoader.InterrootType.InterrootDS1)
+                    TexturePool.AddAllExternalDS1TexturesInBackground();
             });
         }
 
@@ -186,7 +177,26 @@ namespace DarkSoulsModelViewerDX
 
         public void AddMap(string mapName, bool excludeScenery)
         {
+            SoulsFormats.BTAB btab = InterrootLoader.LoadMapBtab(mapName);
+            LightmapAtlasMap = new Dictionary<string, Vector4>();
+            LightmapAtlasIndexMap = new Dictionary<string, int>();
+            if (btab != null)
+            {
+                foreach (var entry in btab.Entries)
+                {
+                    if (!LightmapAtlasMap.ContainsKey(entry.MSBPartName))
+                    {
+                        LightmapAtlasMap.Add(entry.MSBPartName, new Vector4(entry.AtlasScale.X, entry.AtlasScale.Y, entry.AtlasOffset.X, entry.AtlasOffset.Y));
+                        LightmapAtlasIndexMap.Add(entry.MSBPartName, entry.AtlasIndex);
+                    }
+                }
+            }
             InterrootLoader.LoadMapInBackground(mapName, excludeScenery, AddModelInstance);
+        }
+
+        public void AddMapCollision(string mapName, bool excludeScenery)
+        {
+            InterrootLoader.LoadCollisionInBackground(mapName, excludeScenery, AddModelInstance);
         }
 
         //private void DrawFlverAt(Model flver, Transform transform)
@@ -238,7 +248,7 @@ namespace DarkSoulsModelViewerDX
                 {
                     mdl.Draw();
                 }
-                
+
             }
         }
 

@@ -9,7 +9,7 @@ namespace SoulsFormats
     /// <summary>
     /// An extended writer for binary data supporting big and little endianness, value reservation, and arrays.
     /// </summary>
-    public class BinaryWriterEx : IDisposable
+    public class BinaryWriterEx
     {
         private static readonly Encoding ASCII = Encoding.ASCII;
         private static readonly Encoding ShiftJIS = Encoding.GetEncoding("shift-jis");
@@ -54,11 +54,6 @@ namespace SoulsFormats
             reservations = new Dictionary<string, long>();
             Stream = stream;
             bw = new BinaryWriter(stream);
-        }
-
-        public void Dispose()
-        {
-            bw.Dispose();
         }
 
         private void WriteEndian(byte[] bytes)

@@ -1,15 +1,9 @@
-﻿using MeowDSIO;
-using MeowDSIO.DataFiles;
+﻿using Microsoft.Xna.Framework.Graphics;
 using SoulsFormats;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace DarkSoulsModelViewerDX
 {
@@ -40,14 +34,18 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public static void AddFetch(SoulsFormats.TPF tpf, string texName)
+        public static void AddFetch(TPF tpf, string texName)
         {
             string shortName = Path.GetFileNameWithoutExtension(texName);
             if (!Fetches.ContainsKey(shortName))
             {
                 lock (_lock_pool)
                 {
-                    if (tpf.Platform == SoulsFormats.TPF.TPFPlatform.PS4)
+                    if (tpf.Platform == TPF.TPFPlatform.PS3)
+                    {
+                        tpf.ConvertPS3ToPC();
+                    }
+                    if (tpf.Platform == TPF.TPFPlatform.PS4)
                     {
                         tpf.ConvertPS4ToPC();
                     }
@@ -55,10 +53,10 @@ namespace DarkSoulsModelViewerDX
                     Fetches.Add(shortName, newFetch);
                 }
             }
-                
+
         }
 
-        public static void AddTpf(SoulsFormats.TPF tpf)
+        public static void AddTpf(TPF tpf)
         {
             foreach (var tex in tpf.Textures)
             {
@@ -66,25 +64,56 @@ namespace DarkSoulsModelViewerDX
             }
         }
 
-        public static void AddTextureBnd(BND chrbnd, IProgress<double> prog)
+        public static void AddTextureBnd(IBinder bnd, IProgress<double> prog)
         {
-            var tpfFiles = chrbnd.Where(x => x.Name.EndsWith(".tpf")).ToList();
-            int i = 0;
-            foreach (var t in tpfFiles)
+            var tpfs = bnd.Files.Where(file => file.Name.EndsWith(".tpf")).ToList();
+            var tbnds = bnd.Files.Where(file => file.Name.ToLower().EndsWith(".tbnd")).ToList();
+
+            double total = tpfs.Count + tbnds.Count;
+            double tpfFraction = 0;
+            double tbndFraction = 0;
+            if (total > 0)
             {
-                SoulsFormats.TPF tpf = null;
-                lock (_lock_IO)
-                {
-                    tpf = SoulsFormats.TPF.Read(t.GetBytes());
-                }
-                AddTpf(tpf);
-                prog?.Report(1.0 * (++i) / tpfFiles.Count);
+                tpfFraction = tpfs.Count / total;
+                tbndFraction = tbnds.Count / total;
             }
+
+            for (int i = 0; i < tpfs.Count; i++)
+            {
+                var file = tpfs[i];
+                if (file.Bytes.Length > 0)
+                {
+                    TPF tpf = TPF.Read(file.Bytes);
+                    AddTpf(tpf);
+                }
+
+                prog?.Report(i / tpfFraction);
+            }
+
+            for (int i = 0; i < tbnds.Count; i++)
+            {
+                var file = tbnds[i];
+                if (file.Bytes.Length > 0)
+                {
+                    IBinder tbnd = BND3.Read(file.Bytes);
+                    for (int j = 0; j < tbnd.Files.Count; j++)
+                    {
+                        TPF tpf = TPF.Read(tbnd.Files[j].Bytes);
+                        AddTpf(tpf);
+
+                        prog?.Report(tpfFraction + i / tbndFraction + j / tbnd.Files.Count * (tbndFraction / tbnds.Count));
+                    }
+                }
+
+                prog?.Report(tpfFraction + i / tbndFraction);
+            }
+
+            prog?.Report(1);
         }
 
         public static void AddTpfFromPath(string path)
         {
-            SoulsFormats.TPF tpf = InterrootLoader.DirectLoadTpf(path);
+            TPF tpf = InterrootLoader.DirectLoadTpf(path);
             AddTpf(tpf);
         }
 
@@ -135,10 +164,10 @@ namespace DarkSoulsModelViewerDX
                 var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"chr"), "*9.chrbnd");
                 foreach (var ctew9 in chrbndsThatEndWith9)
                 {
-                    BND entityBnd = null;
+                    IBinder entityBnd = null;
                     lock (_lock_IO)
                     {
-                        entityBnd = DataFile.LoadFromFile<BND>(ctew9);
+                        entityBnd = BND3.Read(ctew9);
                     }
                     AddTextureBnd(entityBnd, prog);
                 }
@@ -152,10 +181,10 @@ namespace DarkSoulsModelViewerDX
                 var chrbndsThatEndWith9 = Directory.GetFiles(InterrootLoader.GetInterrootPath(@"obj"), "*9.objbnd");
                 foreach (var ctew9 in chrbndsThatEndWith9)
                 {
-                    BND entityBnd = null;
+                    IBinder entityBnd = null;
                     lock (_lock_IO)
                     {
-                        entityBnd = DataFile.LoadFromFile<BND>(ctew9);
+                        entityBnd = BND3.Read(ctew9);
                     }
                     AddTextureBnd(entityBnd, prog);
                 }
@@ -183,7 +212,7 @@ namespace DarkSoulsModelViewerDX
                 {
                     if (bxf.Files[i].Name.Contains(".tpf"))
                     {
-                        var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
+                        var tpf = TPF.Read(bxf.Files[i].Bytes);
 
                         foreach (var tn in tpf.Textures)
                         {
@@ -224,7 +253,7 @@ namespace DarkSoulsModelViewerDX
                 {
                     if (bxf.Files[i].Name.Contains(".tpf"))
                     {
-                        var tpf = SoulsFormats.TPF.Read(bxf.Files[i].Bytes);
+                        var tpf = TPF.Read(bxf.Files[i].Bytes);
 
                         foreach (var tn in tpf.Textures)
                         {
@@ -246,6 +275,43 @@ namespace DarkSoulsModelViewerDX
             GFX.ModelDrawer.RequestTextureLoad();
         }
 
+        public static void AddMapTexBXF4DS2(string area, IProgress<double> prog)
+        {
+            var dir = InterrootLoader.GetInterrootPath($"model\\map\\");
+            if (!Directory.Exists(dir))
+                return;
+
+            BXF4 bxf = null;
+            lock (_lock_IO)
+            {
+                bxf = BXF4.Read(dir + "\\t" + area.Substring(1) + ".tpfbhd", dir + "\\t" + area.Substring(1) + ".tpfbdt");
+            }
+
+            for (int i = 0; i < bxf.Files.Count; i++)
+            {
+                if (bxf.Files[i].Name.Contains(".tpf"))
+                {
+                    var tpf = TPF.Read(bxf.Files[i].Bytes);
+
+                    foreach (var tn in tpf.Textures)
+                    {
+                        AddFetch(tpf, tn.Name);
+                    }
+
+                    tpf = null;
+                }
+                GFX.ModelDrawer.RequestTextureLoad();
+                // Report each subfile as a tiny part of the bar
+                prog?.Report((i + 1.0) / bxf.Files.Count);
+            }
+            bxf = null;
+
+            //fileIndex++;
+            //prog?.Report((1.0 * fileIndex / mapTpfFileNames.Length));
+
+            GFX.ModelDrawer.RequestTextureLoad();
+        }
+
         public static Texture2D FetchTexture(string name)
         {
             if (name == null)
@@ -260,6 +326,13 @@ namespace DarkSoulsModelViewerDX
             }
             else
             {
+                if (Fetches.ContainsKey(shortName + "_atlas000"))
+                {
+                    lock (_lock_pool)
+                    {
+                        return Fetches[shortName + "_atlas000"].Fetch();
+                    }
+                }
                 return null;
             }
         }

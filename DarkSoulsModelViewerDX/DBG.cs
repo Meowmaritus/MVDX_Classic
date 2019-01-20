@@ -192,10 +192,10 @@ namespace DarkSoulsModelViewerDX
 
             // Project the 3d position first
             Vector3 screenPos3D_Top = GFX.Device.Viewport.Project(location + new Vector3(0, physicalHeight / 2, 0),
-                GFX.World.MatrixProjection, GFX.World.CameraTransform.CameraViewMatrix, GFX.World.MatrixWorld);
+               GFX.World.MatrixProjection, GFX.World.CameraTransform.CameraViewMatrix * Matrix.Invert(GFX.World.MatrixWorld), Matrix.Identity);
 
             Vector3 screenPos3D_Bottom = GFX.Device.Viewport.Project(location - new Vector3(0, physicalHeight / 2, 0),
-                GFX.World.MatrixProjection, GFX.World.CameraTransform.CameraViewMatrix, GFX.World.MatrixWorld);
+                GFX.World.MatrixProjection, GFX.World.CameraTransform.CameraViewMatrix * Matrix.Invert(GFX.World.MatrixWorld), Matrix.Identity);
 
             //Vector3 camNormal = Vector3.Transform(Vector3.Forward, CAMERA_ROTATION);
             //Vector3 directionFromCam = Vector3.Normalize(location - Vector3.Transform(WORLD_VIEW.CameraPosition, CAMERA_WORLD));
@@ -225,8 +225,8 @@ namespace DarkSoulsModelViewerDX
             if (scale < 0.25f)
                 return;
 
-            if (startAndEndSpriteBatchForMe)
-                GFX.SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            //if (startAndEndSpriteBatchForMe)
+            //    GFX.SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
             //GFX.SpriteBatch.DrawString(DEBUG_FONT_SIMPLE, text, 
             //    new Vector2(screenPos3D.X, screenPos3D.Y) - 
@@ -247,8 +247,8 @@ namespace DarkSoulsModelViewerDX
 
             
 
-            if (startAndEndSpriteBatchForMe)
-                GFX.SpriteBatch.End();
+            //if (startAndEndSpriteBatchForMe)
+            //    GFX.SpriteBatch.End();
 
         }
 

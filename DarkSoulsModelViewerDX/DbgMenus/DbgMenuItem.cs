@@ -86,10 +86,12 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             () => InterrootLoader.Type,
                             nameOverrides: new Dictionary<InterrootLoader.InterrootType, string>
                             {
+                                { InterrootLoader.InterrootType.InterrootNB, "Ninja Blade" },
+                                { InterrootLoader.InterrootType.InterrootDeS, "Demon's Souls" },
                                 { InterrootLoader.InterrootType.InterrootBloodborne, "Bloodborne" },
                                 { InterrootLoader.InterrootType.InterrootDS1, "Dark Souls" },
                                 { InterrootLoader.InterrootType.InterrootDS1R, "Dark Souls Remastered" },
-                                // { InterrootLoader.InterrootType.InterrootDS2, "Dark Souls II" },
+                                { InterrootLoader.InterrootType.InterrootDS2, "Dark Souls II" },
                                 { InterrootLoader.InterrootType.InterrootDS3, "Dark Souls III" },
                             }
                         ),
@@ -141,8 +143,9 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                         {
                             CustomColorFunction = () => Color.Cyan
                         },
-                        new DbgMenuItemSpawnMap(isRegionSpawner: false),
-                        new DbgMenuItemSpawnMap(isRegionSpawner: true)
+                        new DbgMenuItemSpawnMap(DbgMenuItemSpawnMap.SpawnerType.SpawnModel),
+                        new DbgMenuItemSpawnMap(DbgMenuItemSpawnMap.SpawnerType.SpawnRegion),
+                        new DbgMenuItemSpawnMap(DbgMenuItemSpawnMap.SpawnerType.SpawnCollision)
                         {
                             CustomColorFunction = () => Color.Cyan
                         },
@@ -201,26 +204,28 @@ namespace DarkSoulsModelViewerDX.DbgMenus
                             (f) => GFX.LOD2Distance = f, () => GFX.LOD2Distance),
                         new DbgMenuItemBool("Show Debug Primitive Nametags", "YES", "NO",
                             (b) => DBG.ShowPrimitiveNametags = b, () => DBG.ShowPrimitiveNametags),
-                        new DbgMenuItemBool("Show Fancy Text Labels", "YES", "NO",
-                            (b) => DBG.ShowFancyTextLabels = b, () => DBG.ShowFancyTextLabels),
+                        //new DbgMenuItemBool("Show Fancy Text Labels", "YES", "NO",
+                        //    (b) => DBG.ShowFancyTextLabels = b, () => DBG.ShowFancyTextLabels),
                         new DbgMenuItemNumber("Debug Primitive Nametag Size", 0.1f, 20.0f, 0.1f, 
                             (v) => DBG.PrimitiveNametagSize = v, () => DBG.PrimitiveNametagSize),
                         new DbgMenuItemBool("Show Model Names", "YES", "NO",
                             (b) => DBG.ShowModelNames = b, () => DBG.ShowModelNames),
-                        new DbgMenuItemBool("Show Model Bounding Boxes", "YES", "NO",
-                            (b) => DBG.ShowModelBoundingBoxes = b, () => DBG.ShowModelBoundingBoxes),
-                        new DbgMenuItemBool("Show Model Submesh Bounding Boxes", "YES", "NO",
-                            (b) => DBG.ShowModelSubmeshBoundingBoxes = b, () => DBG.ShowModelSubmeshBoundingBoxes),
+                        //new DbgMenuItemBool("Show Model Bounding Boxes", "YES", "NO",
+                        //    (b) => DBG.ShowModelBoundingBoxes = b, () => DBG.ShowModelBoundingBoxes),
+                        //new DbgMenuItemBool("Show Model Submesh Bounding Boxes", "YES", "NO",
+                        //    (b) => DBG.ShowModelSubmeshBoundingBoxes = b, () => DBG.ShowModelSubmeshBoundingBoxes),
                         new DbgMenuItemBool("Show Grid", "YES", "NO",
                             (b) => DBG.ShowGrid = b, () => DBG.ShowGrid),
                         new DbgMenuItemBool("Textures", "ON", "OFF",
                             (b) => GFX.EnableTextures = b, () => GFX.EnableTextures),
-                        new DbgMenuItemBool("Lighting", "ON", "OFF",
+                        new DbgMenuItemBool("Realtime Lighting", "ON", "OFF",
                             (b) => GFX.EnableLighting = b, () => GFX.EnableLighting),
+                        new DbgMenuItemBool("Lightmapping", "ON", "OFF",
+                            (b) => GFX.EnableLightmapping = b, () => GFX.EnableLightmapping),
                         new DbgMenuItemBool("Wireframe Mode", "ON", "OFF",
                             (b) => GFX.Wireframe = b, () => GFX.Wireframe),
-                        new DbgMenuItemBool("View Frustum Culling (Experimental)", "ON", "OFF",
-                            (b) => GFX.EnableFrustumCulling = b, () => GFX.EnableFrustumCulling),
+                        //new DbgMenuItemBool("View Frustum Culling (Experimental)", "ON", "OFF",
+                        //    (b) => GFX.EnableFrustumCulling = b, () => GFX.EnableFrustumCulling),
                         new DbgMenuItemNumber("Vertical Field of View (Degrees)", 20, 150, 1,
                             (f) => GFX.World.FieldOfView = f, () => GFX.World.FieldOfView,
                             (f) => $"{((int)(Math.Round(f)))}"),

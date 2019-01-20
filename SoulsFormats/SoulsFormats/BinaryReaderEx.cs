@@ -9,7 +9,7 @@ namespace SoulsFormats
     /// <summary>
     /// An extended reader for binary data supporting big and little endianness, value assertions, and arrays.
     /// </summary>
-    public class BinaryReaderEx : IDisposable
+    public class BinaryReaderEx
     {
         private static readonly Encoding ASCII = Encoding.ASCII;
         private static readonly Encoding ShiftJIS = Encoding.GetEncoding("shift-jis");
@@ -54,17 +54,12 @@ namespace SoulsFormats
             br = new BinaryReader(stream);
         }
 
-        public void Dispose()
-        {
-            br.Dispose();
-        }
-
         /// <summary>
         /// Reads length bytes and returns them in little-endian order by reversing them if big-endian reading is set.
         /// </summary>
         private byte[] ReadEndian(int length)
         {
-            byte[] bytes = br.ReadBytes(length);
+            byte[] bytes = ReadBytes(length);
             if (BigEndian)
                 Array.Reverse(bytes);
             return bytes;
@@ -122,7 +117,7 @@ namespace SoulsFormats
             {
                 string strValue = string.Format(valueFormat, value);
 
-                List<string> strOptions = new List<string>();
+                List<string> strOptions = new List<string>(options.Length);
                 foreach (T option in options)
                     strOptions.Add(string.Format(valueFormat, option));
 
@@ -941,8 +936,8 @@ namespace SoulsFormats
         /// </summary>
         public Vector2 ReadVector2()
         {
-            float x = br.ReadSingle();
-            float y = br.ReadSingle();
+            float x = ReadSingle();
+            float y = ReadSingle();
             return new Vector2(x, y);
         }
 
@@ -951,9 +946,9 @@ namespace SoulsFormats
         /// </summary>
         public Vector3 ReadVector3()
         {
-            float x = br.ReadSingle();
-            float y = br.ReadSingle();
-            float z = br.ReadSingle();
+            float x = ReadSingle();
+            float y = ReadSingle();
+            float z = ReadSingle();
             return new Vector3(x, y, z);
         }
 
@@ -962,10 +957,10 @@ namespace SoulsFormats
         /// </summary>
         public Vector4 ReadVector4()
         {
-            float x = br.ReadSingle();
-            float y = br.ReadSingle();
-            float z = br.ReadSingle();
-            float w = br.ReadSingle();
+            float x = ReadSingle();
+            float y = ReadSingle();
+            float z = ReadSingle();
+            float w = ReadSingle();
             return new Vector4(x, y, z, w);
         }
         #endregion

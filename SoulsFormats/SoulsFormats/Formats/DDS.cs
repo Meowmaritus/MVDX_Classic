@@ -21,8 +21,8 @@
 
         public DDS(byte[] bytes)
         {
-            using (BinaryReaderEx br = new BinaryReaderEx(false, bytes))
-            {
+            BinaryReaderEx br = new BinaryReaderEx(false, bytes);
+            
                 br.AssertASCII("DDS ");
                 br.AssertInt32(124);
                 dwFlags = br.ReadInt32();
@@ -48,7 +48,7 @@
                     header10 = null;
 
                 dataOffset = br.Position;
-            }
+            
         }
 
         public class PIXELFORMAT
